@@ -28,14 +28,13 @@ export const revalidate = 600;
 export default async function VehiculoDetallePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: vehiculo }, { data: categorias }] = await Promise.all([
-    supabase.from("vehiculos").select("*").eq("id", id).single<Vehiculo>(),
-    supabase.from("categorias").select("*"),
-  ]);
+  const { data: vehiculo } = await supabase.from("vehiculos").select("*").eq("id", id).single<Vehiculo>();
+  const { data: categoriasList } = await supabase.from("categorias").select("*");
+  const categorias = (categoriasList ?? []) as Categoria[];
 
   if (!vehiculo) notFound();
 
-  const categoriaLabel = (categorias ?? []).find((c) => c.slug === vehiculo.categoria)?.nombre ?? vehiculo.categoria;
+  const categoriaLabel = categorias.find((c: Categoria) => c.slug === vehiculo.categoria)?.nombre ?? vehiculo.categoria;
   const transmisionLabel = TRANSMISIONES.find((t) => t.value === vehiculo.transmision)?.label ?? vehiculo.transmision;
   const combustibleLabel = COMBUSTIBLES.find((c) => c.value === vehiculo.combustible)?.label ?? vehiculo.combustible;
 

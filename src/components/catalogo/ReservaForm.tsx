@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, differenceInDays, addDays } from "date-fns";
-import { es } from "date-fns/locale";
-import { Calendar } from "lucide-react";
+import { Calendar, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { reservaSchema, type ReservaFormData } from "@/lib/validations/reserva.schema";
 import { formatCurrency } from "@/lib/utils";
@@ -23,6 +22,11 @@ interface ReservaSuccess {
   id: string;
   total: number;
   dias: number;
+  nombreCliente: string;
+  emailCliente: string;
+  telefonoCliente: string;
+  fechaInicio: string;
+  fechaFin: string;
 }
 
 export function ReservaForm({ vehiculo }: ReservaFormProps) {
@@ -72,30 +76,68 @@ export function ReservaForm({ vehiculo }: ReservaFormProps) {
         return;
       }
 
-      setSuccess(json.data);
+      setSuccess({
+        ...json.data,
+        nombreCliente: data.nombreCliente,
+        emailCliente: data.emailCliente,
+        telefonoCliente: data.telefonoCliente,
+        fechaInicio: data.fechaInicio,
+        fechaFin: data.fechaFin,
+      });
     } catch {
       toast.error("Error de conexión. Intenta nuevamente.");
     }
   };
 
   if (success) {
+    const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
+    const waMsg = encodeURIComponent(
+      `🚗 *Nueva Reserva - RentaCar RD*\n\n` +
+      `*# Reserva:* ${success.id.slice(0, 8).toUpperCase()}\n` +
+      `*Vehículo:* ${vehiculo.nombre} (${vehiculo.marca} ${vehiculo.anio})\n` +
+      `*Cliente:* ${success.nombreCliente}\n` +
+      `*Email:* ${success.emailCliente}\n` +
+      `*Teléfono:* ${success.telefonoCliente}\n` +
+      `*Desde:* ${success.fechaInicio}\n` +
+      `*Hasta:* ${success.fechaFin}\n` +
+      `*Días:* ${success.dias}\n` +
+      `*Total:* RD$${success.total.toLocaleString("es-DO")}\n\n` +
+      `Quiero confirmar mi reserva. 🙏`
+    );
+
     return (
-      <div className="rounded-[var(--radius-xl)] border border-[var(--color-success)] bg-green-50 p-6 text-center space-y-3">
-        <div className="text-4xl">✅</div>
-        <h3 className="font-bold text-lg text-[var(--color-foreground)]">
-          ¡Reserva recibida!
-        </h3>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Tu solicitud fue registrada. Te contactaremos en breve para confirmar.
-        </p>
-        <div className="bg-white rounded-lg p-4 text-sm space-y-1">
-          <p><strong># Reserva:</strong> {success.id.slice(0, 8).toUpperCase()}</p>
-          <p><strong>Días:</strong> {success.dias}</p>
-          <p><strong>Total:</strong> {formatCurrency(success.total)}</p>
+      <div className="space-y-4">
+        <div className="rounded-[var(--radius-xl)] border border-[var(--color-success)] bg-green-50 p-6 text-center space-y-3">
+          <div className="text-4xl">✅</div>
+          <h3 className="font-bold text-lg text-[var(--color-foreground)]">
+            ¡Reserva recibida!
+          </h3>
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            Hola {success.nombreCliente}, tu solicitud fue registrada.
+            Recibirás un correo de confirmación en <strong>{success.emailCliente}</strong>.
+          </p>
+          <div className="bg-white rounded-lg p-4 text-sm space-y-1 text-left">
+            <p><strong># Reserva:</strong> {success.id.slice(0, 8).toUpperCase()}</p>
+            <p><strong>Vehículo:</strong> {vehiculo.nombre}</p>
+            <p><strong>Fechas:</strong> {success.fechaInicio} → {success.fechaFin}</p>
+            <p><strong>Días:</strong> {success.dias}</p>
+            <p><strong>Total:</strong> {formatCurrency(success.total)}</p>
+          </div>
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            El pago se realiza al recoger el vehículo.
+          </p>
         </div>
-        <p className="text-xs text-[var(--color-muted-foreground)]">
-          Recibirás un correo de confirmación. El pago se realiza al recoger el vehículo.
-        </p>
+
+        {/* Botón WhatsApp con toda la info */}
+        <a
+          href={`https://wa.me/${waNumber}?text=${waMsg}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full rounded-[var(--radius-lg)] bg-[#25D366] text-white py-3 text-sm font-semibold hover:bg-[#1fb855] transition-colors"
+        >
+          <MessageCircle className="size-5" />
+          Confirmar por WhatsApp
+        </a>
       </div>
     );
   }
@@ -150,76 +192,35 @@ export function ReservaForm({ vehiculo }: ReservaFormProps) {
 
       <div>
         <Label htmlFor="nombreCliente">Nombre completo</Label>
-        <Input
-          id="nombreCliente"
-          className="mt-1"
-          placeholder="ej. Juan Pérez"
-          {...register("nombreCliente")}
-        />
-        {errors.nombreCliente && (
-          <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.nombreCliente.message}</p>
-        )}
+        <Input id="nombreCliente" className="mt-1" placeholder="ej. Juan Pérez" {...register("nombreCliente")} />
+        {errors.nombreCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.nombreCliente.message}</p>}
       </div>
 
       <div>
         <Label htmlFor="emailCliente">Correo electrónico</Label>
-        <Input
-          id="emailCliente"
-          type="email"
-          className="mt-1"
-          placeholder="ej. juan@gmail.com"
-          {...register("emailCliente")}
-        />
-        {errors.emailCliente && (
-          <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.emailCliente.message}</p>
-        )}
+        <Input id="emailCliente" type="email" className="mt-1" placeholder="ej. juan@gmail.com" {...register("emailCliente")} />
+        {errors.emailCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.emailCliente.message}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="telefonoCliente">Teléfono</Label>
-          <Input
-            id="telefonoCliente"
-            className="mt-1"
-            placeholder="809-555-1234"
-            {...register("telefonoCliente")}
-          />
-          {errors.telefonoCliente && (
-            <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.telefonoCliente.message}</p>
-          )}
+          <Input id="telefonoCliente" className="mt-1" placeholder="809-555-1234" {...register("telefonoCliente")} />
+          {errors.telefonoCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.telefonoCliente.message}</p>}
         </div>
         <div>
           <Label htmlFor="cedulaCliente">Cédula</Label>
-          <Input
-            id="cedulaCliente"
-            className="mt-1"
-            placeholder="000-0000000-0"
-            {...register("cedulaCliente")}
-          />
-          {errors.cedulaCliente && (
-            <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.cedulaCliente.message}</p>
-          )}
+          <Input id="cedulaCliente" className="mt-1" placeholder="000-0000000-0" {...register("cedulaCliente")} />
+          {errors.cedulaCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.cedulaCliente.message}</p>}
         </div>
       </div>
 
       <div>
         <Label htmlFor="notas">Notas adicionales (opcional)</Label>
-        <Textarea
-          id="notas"
-          className="mt-1"
-          placeholder="Ej. necesito entrega en el aeropuerto..."
-          rows={3}
-          {...register("notas")}
-        />
+        <Textarea id="notas" className="mt-1" placeholder="Ej. necesito entrega en el aeropuerto..." rows={3} {...register("notas")} />
       </div>
 
-      <Button
-        type="submit"
-        variant="accent"
-        size="lg"
-        className="w-full"
-        disabled={isSubmitting || !vehiculo.disponible}
-      >
+      <Button type="submit" variant="accent" size="lg" className="w-full" disabled={isSubmitting || !vehiculo.disponible}>
         {isSubmitting ? "Enviando reserva..." : "Confirmar reserva"}
       </Button>
 

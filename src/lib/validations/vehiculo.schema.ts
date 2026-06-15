@@ -9,7 +9,7 @@ export const vehiculoSchema = z.object({
     .int()
     .min(1990, "El año debe ser 1990 o posterior")
     .max(new Date().getFullYear() + 1, "Año inválido"),
-  categoria: z.enum(["economico", "sedan", "suv", "pickup", "van", "lujo", "deportivo"]),
+  categoria: z.string().min(1, "Categoría requerida"),
   transmision: z.enum(["manual", "automatica"]),
   combustible: z.enum(["gasolina", "diesel", "hibrido", "electrico"]),
   pasajeros: z.number().int().min(1).max(20),
