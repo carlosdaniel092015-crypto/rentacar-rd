@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { contactoSchema } from "@/lib/validations/contacto.schema";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Rate limit simple
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
 
@@ -52,6 +50,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: "Formulario Web <noreply@rentacard.com>",
       to: "info@rentacard.com",

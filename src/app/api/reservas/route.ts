@@ -3,8 +3,6 @@ import { reservaSchema } from "@/lib/validations/reserva.schema";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Rate limiting simple en memoria (en producción usar Upstash Redis)
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
 
@@ -145,6 +143,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Enviar email de confirmación (best-effort, no bloquea la respuesta)
+  const resend = new Resend(process.env.RESEND_API_KEY);
   void resend.emails.send({
     from: "RentaCar RD <noreply@rentacard.com>",
     to: data.emailCliente,
