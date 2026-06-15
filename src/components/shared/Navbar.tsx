@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, Car } from "lucide-react";
+import { Menu, Car, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,12 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <Button asChild variant="outline" size="sm">
+            <Link href="/login" className="flex items-center gap-1.5">
+              <LogIn className="size-4" />
+              Login
+            </Link>
+          </Button>
           <Button asChild variant="accent" size="sm">
             <Link href="/catalogo">Reservar ahora</Link>
           </Button>
@@ -77,7 +83,13 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Button asChild variant="accent" className="mt-4 w-full">
+              <Button asChild variant="outline" className="mt-4 w-full">
+                <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2">
+                  <LogIn className="size-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button asChild variant="accent" className="w-full">
                 <Link href="/catalogo" onClick={() => setOpen(false)}>
                   Reservar ahora
                 </Link>
