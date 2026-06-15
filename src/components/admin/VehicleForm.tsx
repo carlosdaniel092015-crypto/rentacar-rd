@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { X, Upload, Star } from "lucide-react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { vehiculoSchema, type VehiculoFormData } from "@/lib/validations/vehiculo.schema";
 import { TRANSMISIONES, COMBUSTIBLES } from "@/lib/utils";
@@ -55,63 +57,87 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
           precio_dia: vehiculo.precio_dia,
           disponible: vehiculo.disponible,
           imagen_url: vehiculo.imagen_url ?? undefined,
+          imagenes_urls: vehiculo.imagenes_urls ?? [],
           descripcion: vehiculo.descripcion ?? undefined,
           caracteristicas: vehiculo.caracteristicas,
         }
       : { disponible: true, imagenes_urls: [], caracteristicas: [] },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const imagenesUrls = watch("imagenes_urls") ?? [];
+  const imagenPrincipal = watch("imagen_url");
 
+  const uploadFile = async (file: File): Promise<string | null> => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
     if (!allowed.includes(file.type)) {
-      toast.error("Solo se permiten imágenes JPG, PNG, WebP o AVIF.");
-      return;
+      toast.error(`${file.name}: solo JPG, PNG, WebP o AVIF.`);
+      return null;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("La imagen no puede superar 5MB.");
-      return;
+      toast.error(`${file.name}: supera 5MB.`);
+      return null;
     }
-
-    setUploading(true);
     const supabase = createClient();
     const ext = file.name.split(".").pop();
     const path = `vehiculos/${crypto.randomUUID()}.${ext}`;
     const { data, error } = await supabase.storage.from("vehiculos").upload(path, file);
+    if (error) { toast.error(`Error subiendo ${file.name}.`); return null; }
+    const { data: urlData } = supabase.storage.from("vehiculos").getPublicUrl(data.path);
+    return urlData.publicUrl;
+  };
 
-    if (error) {
-      toast.error("Error subiendo imagen.");
-    } else {
-      const { data: urlData } = supabase.storage.from("vehiculos").getPublicUrl(data.path);
-      setValue("imagen_url", urlData.publicUrl);
-      toast.success("Imagen subida correctamente.");
+  const handleMultiUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setUploading(true);
+
+    const urls: string[] = [];
+    for (const file of files) {
+      const url = await uploadFile(file);
+      if (url) urls.push(url);
     }
+
+    if (urls.length) {
+      const current = watch("imagenes_urls") ?? [];
+      const allUrls = [...current, ...urls];
+      setValue("imagenes_urls", allUrls);
+      // Si no hay imagen principal, usar la primera subida
+      if (!watch("imagen_url") && allUrls.length > 0) {
+        setValue("imagen_url", allUrls[0]);
+      }
+      toast.success(`${urls.length} imagen${urls.length > 1 ? "es" : ""} subida${urls.length > 1 ? "s" : ""}.`);
+    }
+
+    e.target.value = "";
     setUploading(false);
+  };
+
+  const removeImage = (url: string) => {
+    const updated = imagenesUrls.filter((u) => u !== url);
+    setValue("imagenes_urls", updated);
+    if (imagenPrincipal === url) {
+      setValue("imagen_url", updated[0] ?? undefined);
+    }
+  };
+
+  const setPrincipal = (url: string) => {
+    setValue("imagen_url", url);
+    toast.success("Imagen principal actualizada.");
   };
 
   const onSubmit = async (data: VehiculoFormData) => {
     const supabase = createClient();
-
     if (mode === "create") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from("vehiculos") as any).insert(data);
-      if (error) {
-        toast.error("Error creando vehículo.");
-        return;
-      }
+      if (error) { toast.error("Error creando vehículo."); return; }
       toast.success("Vehículo creado exitosamente.");
     } else if (vehiculo) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from("vehiculos") as any).update(data).eq("id", vehiculo.id);
-      if (error) {
-        toast.error("Error actualizando vehículo.");
-        return;
-      }
+      if (error) { toast.error("Error actualizando vehículo."); return; }
       toast.success("Vehículo actualizado.");
     }
-
     router.push("/admin/vehiculos");
     router.refresh();
   };
@@ -157,10 +183,7 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
             <div className="absolute z-50 mt-1 shadow-lg">
               <YearPicker
                 value={anioValue}
-                onChange={(y) => {
-                  setValue("anio", y);
-                  setShowYearPicker(false);
-                }}
+                onChange={(y) => { setValue("anio", y); setShowYearPicker(false); }}
                 min={1990}
                 max={new Date().getFullYear() + 1}
               />
@@ -169,15 +192,12 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
           {errors.anio && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.anio.message}</p>}
         </div>
 
-        {/* Categoría dinámica desde DB */}
         <div>
           <Label>Categoría</Label>
           <Select value={categoriaValue} onValueChange={(v) => setValue("categoria", v)}>
             <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
             <SelectContent>
-              {categorias.map((c) => (
-                <SelectItem key={c.id} value={c.slug}>{c.nombre}</SelectItem>
-              ))}
+              {categorias.map((c) => <SelectItem key={c.id} value={c.slug}>{c.nombre}</SelectItem>)}
             </SelectContent>
           </Select>
           {errors.categoria && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.categoria.message}</p>}
@@ -202,7 +222,6 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
           </Select>
         </div>
 
-        {/* Pasajeros → Filas de asientos */}
         <div>
           <Label>Filas de asientos</Label>
           <Input className="mt-1" type="number" min={1} max={20} placeholder="ej. 5" {...register("pasajeros", { valueAsNumber: true })} />
@@ -216,12 +235,70 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
         </div>
       </div>
 
-      <div>
-        <Label>Imagen principal</Label>
-        <Input type="file" accept="image/*" className="mt-1" onChange={handleImageUpload} disabled={uploading} />
-        {uploading && <p className="text-xs text-[var(--color-muted-foreground)] mt-1">Subiendo imagen...</p>}
-        {watch("imagen_url") && (
-          <p className="text-xs text-[var(--color-success)] mt-1">✓ Imagen cargada</p>
+      {/* Upload múltiple de imágenes */}
+      <div className="space-y-3">
+        <Label>Imágenes del vehículo</Label>
+        <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-xl)] p-6 cursor-pointer transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+          <Upload className="size-7 text-[var(--color-muted-foreground)]" />
+          <span className="text-sm font-medium text-[var(--color-foreground)]">
+            {uploading ? "Subiendo..." : "Haz clic o arrastra imágenes aquí"}
+          </span>
+          <span className="text-xs text-[var(--color-muted-foreground)]">
+            JPG, PNG, WebP, AVIF · Máx 5MB por imagen · Múltiples a la vez
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleMultiUpload}
+            disabled={uploading}
+          />
+        </label>
+
+        {/* Grid de previews */}
+        {imagenesUrls.length > 0 && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            {imagenesUrls.map((url) => (
+              <div key={url} className="relative group aspect-square rounded-[var(--radius-lg)] overflow-hidden border-2 border-[var(--color-border)] bg-[var(--color-muted)]"
+                style={{ borderColor: imagenPrincipal === url ? "var(--color-primary)" : undefined }}>
+                <Image src={url} alt="Imagen vehículo" fill className="object-cover" sizes="120px" />
+
+                {/* Badge principal */}
+                {imagenPrincipal === url && (
+                  <div className="absolute top-1 left-1 bg-[var(--color-primary)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <Star className="size-2.5" /> Principal
+                  </div>
+                )}
+
+                {/* Controles al hacer hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                  {imagenPrincipal !== url && (
+                    <button
+                      type="button"
+                      onClick={() => setPrincipal(url)}
+                      className="text-[10px] bg-white text-black font-semibold px-2 py-1 rounded w-full text-center hover:bg-yellow-100 transition-colors"
+                    >
+                      ⭐ Principal
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(url)}
+                    className="text-[10px] bg-red-500 text-white font-semibold px-2 py-1 rounded w-full text-center hover:bg-red-600 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <X className="size-3" /> Quitar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {imagenesUrls.length === 0 && (
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            La primera imagen que subas se usará como imagen principal. Puedes cambiarla después.
+          </p>
         )}
       </div>
 
