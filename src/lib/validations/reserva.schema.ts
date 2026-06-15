@@ -19,7 +19,9 @@ export const reservaSchema = z
       .regex(/^[\d\s+().-]{7,20}$/, "Teléfono inválido (ej: 809-555-1234)"),
     cedulaCliente: z
       .string()
-      .regex(/^\d{3}-\d{7}-\d{1}$/, "Cédula inválida (formato: 000-0000000-0)"),
+      .min(4, "Documento inválido")
+      .max(30, "Documento demasiado largo")
+      .trim(),
     fechaInicio: z.string().refine((val) => {
       const date = parseISO(val);
       return date >= startOfToday();

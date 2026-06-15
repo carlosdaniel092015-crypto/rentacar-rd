@@ -209,8 +209,8 @@ export function ReservaForm({ vehiculo }: ReservaFormProps) {
           {errors.telefonoCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.telefonoCliente.message}</p>}
         </div>
         <div>
-          <Label htmlFor="cedulaCliente">Cédula</Label>
-          <Input id="cedulaCliente" className="mt-1" placeholder="000-0000000-0" {...register("cedulaCliente")} />
+          <Label htmlFor="cedulaCliente">Cédula / Pasaporte</Label>
+          <Input id="cedulaCliente" className="mt-1" placeholder="ej. 00100000001 o AB123456" {...register("cedulaCliente")} />
           {errors.cedulaCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.cedulaCliente.message}</p>}
         </div>
       </div>
