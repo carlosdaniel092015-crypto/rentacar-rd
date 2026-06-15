@@ -9,6 +9,21 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      categorias: {
+        Row: {
+          id: string;
+          slug: string;
+          nombre: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          nombre: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["categorias"]["Insert"]>;
+      };
       vehiculos: {
         Row: {
           id: string;
@@ -16,7 +31,7 @@ export interface Database {
           marca: string;
           modelo: string;
           anio: number;
-          categoria: "economico" | "sedan" | "suv" | "pickup" | "van" | "lujo" | "deportivo";
+          categoria: string;
           transmision: "manual" | "automatica";
           combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
           pasajeros: number;
@@ -35,7 +50,7 @@ export interface Database {
           marca: string;
           modelo: string;
           anio: number;
-          categoria: "economico" | "sedan" | "suv" | "pickup" | "van" | "lujo" | "deportivo";
+          categoria: string;
           transmision: "manual" | "automatica";
           combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
           pasajeros: number;
@@ -92,6 +107,7 @@ export interface Database {
   };
 }
 
+export type Categoria = Database["public"]["Tables"]["categorias"]["Row"];
 export type Vehiculo = Database["public"]["Tables"]["vehiculos"]["Row"];
 export type VehiculoInsert = Database["public"]["Tables"]["vehiculos"]["Insert"];
 export type Reserva = Database["public"]["Tables"]["reservas"]["Row"];

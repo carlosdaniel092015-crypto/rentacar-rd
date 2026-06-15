@@ -1,14 +1,17 @@
 "use client";
 
 import { useFiltrosStore } from "@/store/filtros.store";
-import { CATEGORIAS } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import type { CategoriaVehiculo } from "@/lib/utils";
+import type { Categoria } from "@/types/database.types";
 
-export function VehicleFilters() {
+interface VehicleFiltersProps {
+  categorias: Categoria[];
+}
+
+export function VehicleFilters({ categorias }: VehicleFiltersProps) {
   const {
-    categorias,
+    categorias: categoriasFiltro,
     transmision,
     pasajeros,
     precioMax,
@@ -21,11 +24,11 @@ export function VehicleFilters() {
     limpiarFiltros,
   } = useFiltrosStore();
 
-  const toggleCategoria = (cat: CategoriaVehiculo) => {
-    if (categorias.includes(cat)) {
-      setCategorias(categorias.filter((c) => c !== cat));
+  const toggleCategoria = (slug: string) => {
+    if (categoriasFiltro.includes(slug)) {
+      setCategorias(categoriasFiltro.filter((c) => c !== slug));
     } else {
-      setCategorias([...categorias, cat]);
+      setCategorias([...categoriasFiltro, slug]);
     }
   };
 
@@ -38,23 +41,25 @@ export function VehicleFilters() {
         </Button>
       </div>
 
-      {/* Categoría */}
-      <div>
-        <Label className="block mb-3 text-sm font-medium">Categoría</Label>
-        <div className="space-y-2">
-          {CATEGORIAS.map((cat) => (
-            <label key={cat.value} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={categorias.includes(cat.value)}
-                onChange={() => toggleCategoria(cat.value)}
-                className="size-4 rounded border-[var(--color-border)] accent-[var(--color-primary)]"
-              />
-              <span className="text-sm">{cat.label}</span>
-            </label>
-          ))}
+      {/* Categoría dinámica */}
+      {categorias.length > 0 && (
+        <div>
+          <Label className="block mb-3 text-sm font-medium">Categoría</Label>
+          <div className="space-y-2">
+            {categorias.map((cat) => (
+              <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={categoriasFiltro.includes(cat.slug)}
+                  onChange={() => toggleCategoria(cat.slug)}
+                  className="size-4 rounded border-[var(--color-border)] accent-[var(--color-primary)]"
+                />
+                <span className="text-sm">{cat.nombre}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Transmisión */}
       <div>
@@ -76,9 +81,9 @@ export function VehicleFilters() {
         </div>
       </div>
 
-      {/* Pasajeros */}
+      {/* Filas de asientos */}
       <div>
-        <Label className="block mb-3 text-sm font-medium">Pasajeros</Label>
+        <Label className="block mb-3 text-sm font-medium">Filas de asientos</Label>
         <div className="space-y-2">
           {(["todos", "2-4", "5-7", "8+"] as const).map((p) => (
             <label key={p} className="flex items-center gap-2 cursor-pointer">
@@ -90,7 +95,7 @@ export function VehicleFilters() {
                 onChange={() => setPasajeros(p)}
                 className="size-4 accent-[var(--color-primary)]"
               />
-              <span className="text-sm">{p === "todos" ? "Todos" : `${p} pasajeros`}</span>
+              <span className="text-sm">{p === "todos" ? "Todas" : `${p} asientos`}</span>
             </label>
           ))}
         </div>
@@ -107,15 +112,15 @@ export function VehicleFilters() {
         <input
           type="range"
           min={500}
-          max={20000}
-          step={500}
+          max={500000}
+          step={1000}
           value={precioMax}
           onChange={(e) => setPrecioMax(Number(e.target.value))}
           className="w-full accent-[var(--color-primary)]"
         />
         <div className="flex justify-between text-xs text-[var(--color-muted-foreground)] mt-1">
           <span>RD$500</span>
-          <span>RD$20,000</span>
+          <span>RD$500,000</span>
         </div>
       </div>
 

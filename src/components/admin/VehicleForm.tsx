@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { vehiculoSchema, type VehiculoFormData } from "@/lib/validations/vehiculo.schema";
-import { CATEGORIAS, TRANSMISIONES, COMBUSTIBLES } from "@/lib/utils";
+import { TRANSMISIONES, COMBUSTIBLES } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Vehiculo } from "@/types/database.types";
+import { YearPicker } from "@/components/ui/year-picker";
+import type { Vehiculo, Categoria } from "@/types/database.types";
 
 interface VehicleFormProps {
   vehiculo?: Vehiculo;
@@ -23,6 +24,15 @@ interface VehicleFormProps {
 export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
+  const [showYearPicker, setShowYearPicker] = useState(false);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.from("categorias").select("*").order("nombre").then(({ data }) => {
+      if (data) setCategorias(data);
+    });
+  }, []);
 
   const {
     register,
@@ -106,6 +116,7 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
     router.refresh();
   };
 
+  const anioValue = watch("anio");
   const categoriaValue = watch("categoria");
   const transmisionValue = watch("transmision");
   const combustibleValue = watch("combustible");
@@ -128,21 +139,50 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
           <Input className="mt-1" placeholder="ej. RAV4" {...register("modelo")} />
           {errors.modelo && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.modelo.message}</p>}
         </div>
-        <div>
+
+        {/* Año con year picker */}
+        <div className="relative">
           <Label>Año</Label>
-          <Input className="mt-1" type="number" min={1990} max={new Date().getFullYear() + 1} {...register("anio", { valueAsNumber: true })} />
+          <button
+            type="button"
+            onClick={() => setShowYearPicker((v) => !v)}
+            className="mt-1 flex h-10 w-full items-center justify-between rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+          >
+            <span className={anioValue ? "text-[var(--color-foreground)]" : "text-[var(--color-muted-foreground)]"}>
+              {anioValue ?? "Seleccionar año"}
+            </span>
+            <span className="text-[var(--color-muted-foreground)]">▾</span>
+          </button>
+          {showYearPicker && (
+            <div className="absolute z-50 mt-1 shadow-lg">
+              <YearPicker
+                value={anioValue}
+                onChange={(y) => {
+                  setValue("anio", y);
+                  setShowYearPicker(false);
+                }}
+                min={1990}
+                max={new Date().getFullYear() + 1}
+              />
+            </div>
+          )}
           {errors.anio && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.anio.message}</p>}
         </div>
+
+        {/* Categoría dinámica desde DB */}
         <div>
           <Label>Categoría</Label>
-          <Select value={categoriaValue} onValueChange={(v) => setValue("categoria", v as VehiculoFormData["categoria"])}>
+          <Select value={categoriaValue} onValueChange={(v) => setValue("categoria", v)}>
             <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
             <SelectContent>
-              {CATEGORIAS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+              {categorias.map((c) => (
+                <SelectItem key={c.id} value={c.slug}>{c.nombre}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {errors.categoria && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.categoria.message}</p>}
         </div>
+
         <div>
           <Label>Transmisión</Label>
           <Select value={transmisionValue} onValueChange={(v) => setValue("transmision", v as VehiculoFormData["transmision"])}>
@@ -161,10 +201,14 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Pasajeros → Filas de asientos */}
         <div>
-          <Label>Pasajeros</Label>
-          <Input className="mt-1" type="number" min={1} max={20} {...register("pasajeros", { valueAsNumber: true })} />
+          <Label>Filas de asientos</Label>
+          <Input className="mt-1" type="number" min={1} max={20} placeholder="ej. 5" {...register("pasajeros", { valueAsNumber: true })} />
+          {errors.pasajeros && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.pasajeros.message}</p>}
         </div>
+
         <div>
           <Label>Precio por día (RD$)</Label>
           <Input className="mt-1" type="number" min={0} step={100} {...register("precio_dia", { valueAsNumber: true })} />

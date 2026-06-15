@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Car, LayoutDashboard, CalendarCheck, LogOut } from "lucide-react";
+import { Car, LayoutDashboard, CalendarCheck, LogOut, Tag } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 const navLinks = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/vehiculos", icon: Car, label: "Vehículos" },
+  { href: "/admin/categorias", icon: Tag, label: "Categorías" },
   { href: "/admin/reservas", icon: CalendarCheck, label: "Reservas" },
 ];
 

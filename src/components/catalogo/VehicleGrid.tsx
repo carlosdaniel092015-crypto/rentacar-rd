@@ -4,19 +4,20 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useFiltrosStore } from "@/store/filtros.store";
 import { VehicleCard } from "./VehicleCard";
-import type { Vehiculo } from "@/types/database.types";
+import type { Vehiculo, Categoria } from "@/types/database.types";
 
 interface VehicleGridProps {
   vehiculos: Vehiculo[];
+  categorias: Categoria[];
 }
 
-export function VehicleGrid({ vehiculos }: VehicleGridProps) {
-  const { categorias, transmision, pasajeros, precioMax, soloDisponibles } = useFiltrosStore();
+export function VehicleGrid({ vehiculos, categorias }: VehicleGridProps) {
+  const { categorias: categoriasFiltro, transmision, pasajeros, precioMax, soloDisponibles } = useFiltrosStore();
 
   const filtrados = useMemo(() => {
     return vehiculos.filter((v) => {
       if (soloDisponibles && !v.disponible) return false;
-      if (categorias.length > 0 && !categorias.includes(v.categoria)) return false;
+      if (categoriasFiltro.length > 0 && !categoriasFiltro.includes(v.categoria)) return false;
       if (transmision !== "todos" && v.transmision !== transmision) return false;
       if (v.precio_dia > precioMax) return false;
       if (pasajeros === "2-4" && (v.pasajeros < 2 || v.pasajeros > 4)) return false;
@@ -24,7 +25,7 @@ export function VehicleGrid({ vehiculos }: VehicleGridProps) {
       if (pasajeros === "8+" && v.pasajeros < 8) return false;
       return true;
     });
-  }, [vehiculos, categorias, transmision, pasajeros, precioMax, soloDisponibles]);
+  }, [vehiculos, categoriasFiltro, transmision, pasajeros, precioMax, soloDisponibles]);
 
   if (filtrados.length === 0) {
     return (
@@ -51,7 +52,7 @@ export function VehicleGrid({ vehiculos }: VehicleGridProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, duration: 0.4 }}
           >
-            <VehicleCard vehiculo={vehiculo} />
+            <VehicleCard vehiculo={vehiculo} categorias={categorias} />
           </motion.div>
         ))}
       </div>

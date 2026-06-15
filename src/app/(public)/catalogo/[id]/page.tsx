@@ -5,8 +5,8 @@ import { Users, Fuel, Zap, Calendar, CheckCircle2, MessageCircle } from "lucide-
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { ReservaForm } from "@/components/catalogo/ReservaForm";
-import { formatCurrency, CATEGORIAS, TRANSMISIONES, COMBUSTIBLES } from "@/lib/utils";
-import type { Vehiculo } from "@/types/database.types";
+import { formatCurrency, TRANSMISIONES, COMBUSTIBLES } from "@/lib/utils";
+import type { Vehiculo, Categoria } from "@/types/database.types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -28,11 +28,14 @@ export const revalidate = 600;
 export default async function VehiculoDetallePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: vehiculo } = await supabase.from("vehiculos").select("*").eq("id", id).single<Vehiculo>();
+  const [{ data: vehiculo }, { data: categorias }] = await Promise.all([
+    supabase.from("vehiculos").select("*").eq("id", id).single<Vehiculo>(),
+    supabase.from("categorias").select("*"),
+  ]);
 
   if (!vehiculo) notFound();
 
-  const categoriaLabel = CATEGORIAS.find((c) => c.value === vehiculo.categoria)?.label ?? vehiculo.categoria;
+  const categoriaLabel = (categorias ?? []).find((c) => c.slug === vehiculo.categoria)?.nombre ?? vehiculo.categoria;
   const transmisionLabel = TRANSMISIONES.find((t) => t.value === vehiculo.transmision)?.label ?? vehiculo.transmision;
   const combustibleLabel = COMBUSTIBLES.find((c) => c.value === vehiculo.combustible)?.label ?? vehiculo.combustible;
 

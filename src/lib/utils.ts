@@ -32,15 +32,15 @@ export function slugify(text: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
-export const CATEGORIAS = [
-  { value: "economico", label: "Económico" },
-  { value: "sedan", label: "Sedán" },
-  { value: "suv", label: "SUV" },
-  { value: "pickup", label: "Pickup" },
-  { value: "van", label: "Van" },
-  { value: "lujo", label: "Lujo" },
-  { value: "deportivo", label: "Deportivo" },
-] as const;
+export const CATEGORIAS_FALLBACK = [
+  { slug: "economico", nombre: "Económico" },
+  { slug: "sedan", nombre: "Sedán" },
+  { slug: "suv", nombre: "SUV" },
+  { slug: "pickup", nombre: "Pickup" },
+  { slug: "van", nombre: "Van" },
+  { slug: "lujo", nombre: "Lujo" },
+  { slug: "deportivo", nombre: "Deportivo" },
+];
 
 export const TRANSMISIONES = [
   { value: "manual", label: "Manual" },
@@ -62,7 +62,7 @@ export const ESTADOS_RESERVA = [
   { value: "cancelada", label: "Cancelada", color: "bg-red-100 text-red-800" },
 ] as const;
 
-export type CategoriaVehiculo = (typeof CATEGORIAS)[number]["value"];
+export type CategoriaVehiculo = string;
 export type TipoTransmision = (typeof TRANSMISIONES)[number]["value"];
 export type TipoCombustible = (typeof COMBUSTIBLES)[number]["value"];
 export type EstadoReserva = (typeof ESTADOS_RESERVA)[number]["value"];

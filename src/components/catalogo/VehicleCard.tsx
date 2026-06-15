@@ -4,15 +4,16 @@ import { Users, Fuel, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency, CATEGORIAS, TRANSMISIONES } from "@/lib/utils";
-import type { Vehiculo } from "@/types/database.types";
+import { formatCurrency, TRANSMISIONES } from "@/lib/utils";
+import type { Vehiculo, Categoria } from "@/types/database.types";
 
 interface VehicleCardProps {
   vehiculo: Vehiculo;
+  categorias: Categoria[];
 }
 
-export function VehicleCard({ vehiculo }: VehicleCardProps) {
-  const categoriaLabel = CATEGORIAS.find((c) => c.value === vehiculo.categoria)?.label ?? vehiculo.categoria;
+export function VehicleCard({ vehiculo, categorias }: VehicleCardProps) {
+  const categoriaLabel = categorias.find((c) => c.slug === vehiculo.categoria)?.nombre ?? vehiculo.categoria;
   const transmisionLabel = TRANSMISIONES.find((t) => t.value === vehiculo.transmision)?.label ?? vehiculo.transmision;
 
   return (
@@ -50,7 +51,7 @@ export function VehicleCard({ vehiculo }: VehicleCardProps) {
         <div className="flex items-center gap-4 text-xs text-[var(--color-muted-foreground)]">
           <span className="flex items-center gap-1">
             <Users className="size-3.5" />
-            {vehiculo.pasajeros} pas.
+            {vehiculo.pasajeros} asientos
           </span>
           <span className="flex items-center gap-1">
             <Zap className="size-3.5" />

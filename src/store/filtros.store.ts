@@ -21,7 +21,7 @@ const DEFAULTS = {
   categorias: [] as CategoriaVehiculo[],
   transmision: "todos" as const,
   pasajeros: "todos" as const,
-  precioMax: 20000,
+  precioMax: 500000,
   soloDisponibles: true,
 };
 

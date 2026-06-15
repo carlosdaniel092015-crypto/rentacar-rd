@@ -15,10 +15,11 @@ export const dynamic = "force-dynamic";
 
 export default async function CatalogoPage() {
   const supabase = await createClient();
-  const { data: vehiculos, error } = await supabase
-    .from("vehiculos")
-    .select("*")
-    .order("precio_dia", { ascending: true });
+
+  const [{ data: vehiculos, error }, { data: categorias }] = await Promise.all([
+    supabase.from("vehiculos").select("*").order("precio_dia", { ascending: true }),
+    supabase.from("categorias").select("*").order("nombre"),
+  ]);
 
   if (error) {
     return (
@@ -29,6 +30,8 @@ export default async function CatalogoPage() {
       </div>
     );
   }
+
+  const cats = categorias ?? [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
@@ -43,7 +46,7 @@ export default async function CatalogoPage() {
         {/* Sidebar filtros — desktop */}
         <aside className="hidden lg:block w-64 shrink-0">
           <div className="sticky top-24 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
-            <VehicleFilters />
+            <VehicleFilters categorias={cats} />
           </div>
         </aside>
 
@@ -59,12 +62,12 @@ export default async function CatalogoPage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 pt-10">
-                <VehicleFilters />
+                <VehicleFilters categorias={cats} />
               </SheetContent>
             </Sheet>
           </div>
 
-          <VehicleGrid vehiculos={vehiculos ?? []} />
+          <VehicleGrid vehiculos={vehiculos ?? []} categorias={cats} />
         </div>
       </div>
     </div>

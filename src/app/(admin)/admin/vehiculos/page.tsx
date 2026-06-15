@@ -4,9 +4,9 @@ import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, CATEGORIAS } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type { Metadata } from "next";
-import type { Vehiculo } from "@/types/database.types";
+import type { Vehiculo, Categoria } from "@/types/database.types";
 import { VehiculoActions } from "@/components/admin/VehiculoActions";
 
 export const metadata: Metadata = { title: "Vehículos | Admin" };
@@ -14,11 +14,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminVehiculosPage() {
   const supabase = await createClient();
-  const { data: vehiculosRaw } = await supabase
-    .from("vehiculos")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data: vehiculosRaw }, { data: categoriasList }] = await Promise.all([
+    supabase.from("vehiculos").select("*").order("created_at", { ascending: false }),
+    supabase.from("categorias").select("*"),
+  ]);
   const vehiculos = vehiculosRaw as Vehiculo[] | null;
+  const categorias = (categoriasList ?? []) as Categoria[];
 
   return (
     <div className="space-y-6">
@@ -51,7 +52,7 @@ export default async function AdminVehiculosPage() {
             </thead>
             <tbody className="divide-y divide-[var(--color-border)]">
               {(vehiculos ?? []).map((v) => {
-                const categoriaLabel = CATEGORIAS.find((c) => c.value === v.categoria)?.label ?? v.categoria;
+                const categoriaLabel = categorias.find((c) => c.slug === v.categoria)?.nombre ?? v.categoria;
                 return (
                   <tr key={v.id} className="hover:bg-[var(--color-muted)]/30">
                     <td className="px-4 py-3">
