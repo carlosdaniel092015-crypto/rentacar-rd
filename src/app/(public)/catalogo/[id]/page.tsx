@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Users, Fuel, Zap, Calendar, CheckCircle2, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { ReservaForm } from "@/components/catalogo/ReservaForm";
+import { VehicleGallery } from "@/components/catalogo/VehicleGallery";
 import { formatCurrency, TRANSMISIONES, COMBUSTIBLES } from "@/lib/utils";
 import type { Vehiculo, Categoria } from "@/types/database.types";
 
@@ -44,34 +44,13 @@ export default async function VehiculoDetallePage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
       <div className="lg:grid lg:grid-cols-[1.5fr_1fr] lg:gap-10">
-        {/* Galería */}
+        {/* Galería interactiva */}
         <div className="space-y-4">
-          <div className="relative aspect-[16/10] overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-muted)]">
-            {vehiculo.imagen_url ? (
-              <Image
-                src={vehiculo.imagen_url}
-                alt={vehiculo.nombre}
-                fill
-                priority
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 60vw"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-[var(--color-muted-foreground)]">
-                Sin imagen
-              </div>
-            )}
-          </div>
-
-          {vehiculo.imagenes_urls.length > 0 && (
-            <div className="grid grid-cols-4 gap-2">
-              {vehiculo.imagenes_urls.slice(0, 4).map((url, i) => (
-                <div key={i} className="relative aspect-square overflow-hidden rounded-lg bg-[var(--color-muted)]">
-                  <Image src={url} alt={`${vehiculo.nombre} ${i + 2}`} fill className="object-cover" sizes="120px" />
-                </div>
-              ))}
-            </div>
-          )}
+          <VehicleGallery
+            nombre={vehiculo.nombre}
+            imagenPrincipal={vehiculo.imagen_url}
+            imagenesUrls={vehiculo.imagenes_urls ?? []}
+          />
 
           {/* Info desktop */}
           <div className="hidden lg:block space-y-6 mt-6">
