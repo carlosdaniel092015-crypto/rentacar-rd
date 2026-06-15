@@ -47,6 +47,7 @@ export default async function VehiculoDetallePage({ params }: PageProps) {
         {/* Galería interactiva */}
         <div className="space-y-4">
           <VehicleGallery
+            id={vehiculo.id}
             nombre={vehiculo.nombre}
             imagenPrincipal={vehiculo.imagen_url}
             imagenesUrls={vehiculo.imagenes_urls ?? []}
