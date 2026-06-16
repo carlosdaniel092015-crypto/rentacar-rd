@@ -23,6 +23,12 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
+    fetch("/api/auth/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, success: !authError }),
+    }).catch(() => {});
+
     if (authError) {
       setError("Credenciales incorrectas. Verifica tu email y contraseña.");
       setLoading(false);

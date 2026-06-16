@@ -2,21 +2,32 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Car, LayoutDashboard, CalendarCheck, LogOut, Tag } from "lucide-react";
+import { Car, LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import type { Modulo } from "@/lib/equipo-shared";
 
 const navLinks = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/admin/vehiculos", icon: Car, label: "Vehículos" },
-  { href: "/admin/categorias", icon: Tag, label: "Categorías" },
-  { href: "/admin/reservas", icon: CalendarCheck, label: "Reservas" },
+  { href: "/admin", icon: LayoutDashboard, label: "Dashboard", modulo: null as Modulo | null },
+  { href: "/admin/vehiculos", icon: Car, label: "Vehículos", modulo: "vehiculos" as Modulo },
+  { href: "/admin/categorias", icon: Tag, label: "Categorías", modulo: "categorias" as Modulo },
+  { href: "/admin/reservas", icon: CalendarCheck, label: "Reservas", modulo: "reservas" as Modulo },
+  { href: "/admin/logs", icon: ScrollText, label: "Logs", modulo: "logs" as Modulo },
+  { href: "/admin/equipo", icon: Users, label: "Equipo", modulo: "equipo" as Modulo },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  rol: "principal" | "miembro";
+  accesos: Modulo[];
+}
+
+export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const links = navLinks.filter(
+    (link) => link.modulo === null || rol === "principal" || accesos.includes(link.modulo)
+  );
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -33,7 +44,7 @@ export function AdminSidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navLinks.map((link) => (
+        {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}

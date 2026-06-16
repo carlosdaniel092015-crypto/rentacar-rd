@@ -100,9 +100,37 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["reservas"]["Insert"]>;
       };
+      equipo: {
+        Row: {
+          id: string;
+          email: string;
+          nombre: string;
+          cargo: string;
+          rol: "principal" | "miembro";
+          accesos: string[];
+          activo: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          nombre: string;
+          cargo: string;
+          rol?: "principal" | "miembro";
+          accesos?: string[];
+          activo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["equipo"]["Insert"]>;
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      is_principal: { Args: { uid?: string }; Returns: boolean };
+      has_acceso: { Args: { modulo: string; uid?: string }; Returns: boolean };
+    };
     Enums: Record<string, never>;
   };
 }

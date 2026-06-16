@@ -1,7 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
 import { reservaSchema } from "@/lib/validations/reserva.schema";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logEvent } from "@/lib/server/audit";
+import { requireApiKey } from "@/lib/server/api-auth";
 import { Resend } from "resend";
+
+export const dynamic = "force-dynamic";
+
+const ESTADOS = ["pendiente", "confirmada", "en_curso", "completada", "cancelada"] as const;
+
+// Búsqueda de reservas para automatizaciones externas (requiere API key, expone PII).
+export async function GET(req: NextRequest) {
+  const authError = requireApiKey(req);
+  if (authError) return authError;
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  const cedula = searchParams.get("cedula");
+  const email = searchParams.get("email");
+  const estado = searchParams.get("estado");
+
+  if (estado && !ESTADOS.includes(estado as (typeof ESTADOS)[number])) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: `estado debe ser uno de: ${ESTADOS.join(", ")}` } },
+      { status: 422 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  let query = supabase.from("reservas").select("*");
+
+  if (id) query = query.eq("id", id);
+  if (cedula) query = query.eq("cedula_cliente", cedula);
+  if (email) query = query.eq("email_cliente", email);
+  if (estado) query = query.eq("estado", estado);
+
+  const { data: reservas, error } = await query.order("created_at", { ascending: false }).limit(100);
+
+  if (error) {
+    console.error("Error listando reservas:", error);
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true, data: reservas ?? [] });
+}
 
 // Rate limiting simple en memoria (en producción usar Upstash Redis)
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
@@ -136,6 +181,15 @@ export async function POST(req: NextRequest) {
       );
     }
     console.error("Error creando reserva:", { code: rError?.code, msg: rError?.message });
+    await logEvent({
+      type: "error",
+      level: "error",
+      ip,
+      path: "/api/reservas",
+      method: "POST",
+      message: "Error creando reserva",
+      details: { code: rError?.code, msg: rError?.message },
+    });
     return NextResponse.json(
       { ok: false, error: { code: "SERVER_ERROR", message: "Error interno. Intenta nuevamente." } },
       { status: 500 }

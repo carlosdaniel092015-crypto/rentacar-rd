@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { contactoSchema } from "@/lib/validations/contacto.schema";
 import { Resend } from "resend";
+import { logEvent } from "@/lib/server/audit";
 
 // Rate limit simple
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
@@ -71,6 +72,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("Error enviando email de contacto:", err);
+    await logEvent({
+      type: "error",
+      level: "error",
+      ip,
+      path: "/api/contacto",
+      method: "POST",
+      message: "Error enviando email de contacto",
+      details: { error: err instanceof Error ? err.message : String(err) },
+    });
     return NextResponse.json({ ok: false, error: "Error enviando mensaje." }, { status: 500 });
   }
 }
