@@ -7,9 +7,13 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl mb-4">
-              <Car className="size-6" />
-              RentaCar RD
+            <Link href="/" className="flex items-center gap-2 mb-4">
+              <span className="flex items-center justify-center size-8 rounded-lg bg-[var(--color-accent)] text-white shrink-0">
+                <Car className="size-5" />
+              </span>
+              <span className="text-xl font-extrabold tracking-tight text-white">
+                Renta<span className="text-[var(--color-accent)]">Car</span> RD
+              </span>
             </Link>
             <p className="text-sm opacity-80">
               Tu empresa de confianza para alquiler de vehículos en República Dominicana.

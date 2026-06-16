@@ -54,19 +54,19 @@ export default async function AdminVehiculosPage() {
               {(vehiculos ?? []).map((v) => {
                 const categoriaLabel = categorias.find((c) => c.slug === v.categoria)?.nombre ?? v.categoria;
                 return (
-                  <tr key={v.id} className="hover:bg-[var(--color-muted)]/30">
+                  <tr key={v.id} className="hover:bg-[var(--color-muted)]/30 cursor-pointer">
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
+                      <Link href={`/admin/vehiculos/${v.id}/editar`} className="flex items-center gap-3">
                         <div className="relative size-12 rounded-[var(--radius)] overflow-hidden bg-[var(--color-muted)] shrink-0">
                           {v.imagen_url && (
                             <Image src={v.imagen_url} alt={v.nombre} fill className="object-cover" sizes="48px" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium">{v.nombre}</p>
+                          <p className="font-medium hover:text-[var(--color-primary)] transition-colors">{v.nombre}</p>
                           <p className="text-xs text-[var(--color-muted-foreground)]">{v.marca} · {v.anio}</p>
                         </div>
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant="secondary">{categoriaLabel}</Badge>

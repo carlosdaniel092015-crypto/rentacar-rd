@@ -39,9 +39,13 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
 
   return (
     <aside className="w-64 shrink-0 bg-[var(--color-primary)] flex flex-col min-h-screen">
-      <div className="flex items-center gap-2 px-6 py-5 text-white font-bold text-lg border-b border-white/10">
-        <Car className="size-6" />
-        RentaCar RD
+      <div className="flex items-center gap-2 px-6 py-5 border-b border-white/10">
+        <span className="flex items-center justify-center size-8 rounded-lg bg-[var(--color-accent)] text-white shrink-0">
+          <Car className="size-5" />
+        </span>
+        <span className="text-lg font-extrabold tracking-tight text-white">
+          Renta<span className="text-[var(--color-accent)]">Car</span> RD
+        </span>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
