@@ -61,22 +61,29 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, nombre, cargo, accesos } = (body ?? {}) as Record<string, unknown>;
+  const { email, nombre, cargo, accesos, password: passwordInput } = (body ?? {}) as Record<string, unknown>;
 
   if (
     typeof email !== "string" || !email.includes("@") ||
     typeof nombre !== "string" || nombre.trim().length < 2 ||
     typeof cargo !== "string" || cargo.trim().length < 2 ||
-    !validarAccesos(accesos)
+    !validarAccesos(accesos) ||
+    (passwordInput !== undefined && (typeof passwordInput !== "string" || passwordInput.length < 8))
   ) {
     return NextResponse.json(
-      { ok: false, error: { code: "VALIDATION", message: "Datos inválidos. Revisa email, nombre, cargo y accesos." } },
+      {
+        ok: false,
+        error: {
+          code: "VALIDATION",
+          message: "Datos inválidos. Revisa email, nombre, cargo, accesos y que la contraseña tenga al menos 8 caracteres.",
+        },
+      },
       { status: 422 }
     );
   }
 
   const supabase = createAdminClient();
-  const password = generarPassword();
+  const password = typeof passwordInput === "string" ? passwordInput : generarPassword();
 
   const { data: nuevoUsuario, error: authError } = await supabase.auth.admin.createUser({
     email: email.toLowerCase().trim(),
@@ -100,6 +107,7 @@ export async function POST(req: NextRequest) {
       cargo: cargo.trim(),
       rol: "miembro",
       accesos,
+      debe_cambiar_password: true,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
     .select("id, email, nombre, cargo, rol, accesos, activo")

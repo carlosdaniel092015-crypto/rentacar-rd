@@ -13,7 +13,7 @@ export async function getCurrentMember(): Promise<MiembroEquipo | null> {
 
   const { data } = await supabase
     .from("equipo")
-    .select("id, email, nombre, cargo, rol, accesos, activo")
+    .select("id, email, nombre, cargo, rol, accesos, activo, debe_cambiar_password")
     .eq("id", user.id)
     .single<MiembroEquipo>();
 

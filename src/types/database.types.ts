@@ -109,6 +109,7 @@ export interface Database {
           rol: "principal" | "miembro";
           accesos: string[];
           activo: boolean;
+          debe_cambiar_password: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -120,6 +121,7 @@ export interface Database {
           rol?: "principal" | "miembro";
           accesos?: string[];
           activo?: boolean;
+          debe_cambiar_password?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -130,6 +132,8 @@ export interface Database {
     Functions: {
       is_principal: { Args: { uid?: string }; Returns: boolean };
       has_acceso: { Args: { modulo: string; uid?: string }; Returns: boolean };
+      debe_cambiar_password: { Args: { uid?: string }; Returns: boolean };
+      mark_password_changed: { Args: Record<string, never>; Returns: undefined };
     };
     Enums: Record<string, never>;
   };

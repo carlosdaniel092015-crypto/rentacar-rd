@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Check, X } from "lucide-react";
+import { Plus, Check, X, Dices, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,10 +72,15 @@ export function EquipoManager({ miembros, principalId }: EquipoManagerProps) {
   );
 }
 
+function generarPasswordAleatoria(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+}
+
 function CrearMiembroForm({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [nombre, setNombre] = useState("");
   const [cargo, setCargo] = useState("");
+  const [password, setPassword] = useState("");
   const [accesos, setAccesos] = useState<Modulo[]>([]);
   const [enviando, setEnviando] = useState(false);
 
@@ -84,19 +89,29 @@ function CrearMiembroForm({ onDone }: { onDone: () => void }) {
 
   const crear = async () => {
     if (!email.trim() || !nombre.trim() || !cargo.trim()) return;
+    if (password && password.length < 8) {
+      toast.error("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
     setEnviando(true);
     try {
       const res = await fetch("/api/equipo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), nombre: nombre.trim(), cargo: cargo.trim(), accesos }),
+        body: JSON.stringify({
+          email: email.trim(),
+          nombre: nombre.trim(),
+          cargo: cargo.trim(),
+          accesos,
+          ...(password ? { password } : {}),
+        }),
       });
       const json = await res.json();
       if (!json.ok) {
         toast.error(json.error?.message ?? "Error creando usuario.");
         return;
       }
-      toast.success("Usuario creado. Se le envió un correo con sus credenciales.");
+      toast.success("Usuario creado. Se le envió un correo con sus credenciales y deberá cambiar la contraseña al entrar.");
       onDone();
     } finally {
       setEnviando(false);
@@ -117,6 +132,22 @@ function CrearMiembroForm({ onDone }: { onDone: () => void }) {
       <div>
         <Label>Cargo</Label>
         <Input className="mt-1" value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="ej. Agente de Reservas" />
+      </div>
+      <div>
+        <Label>Contraseña temporal (opcional)</Label>
+        <div className="mt-1 flex gap-2">
+          <Input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Si la dejas vacía, se genera una aleatoria"
+          />
+          <Button type="button" size="sm" variant="outline" onClick={() => setPassword(generarPasswordAleatoria())}>
+            <Dices className="size-4" />
+          </Button>
+        </div>
+        <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+          El usuario deberá cambiarla al iniciar sesión por primera vez.
+        </p>
       </div>
       <div>
         <Label>Accesos</Label>
@@ -184,6 +215,18 @@ function FilaMiembro({ miembro, esUnoMismo }: { miembro: MiembroEquipo & { creat
       return;
     }
     toast.success(activo ? "Usuario reactivado." : "Usuario desactivado.");
+    router.refresh();
+  };
+
+  const eliminar = async () => {
+    if (!confirm(`¿Eliminar definitivamente a "${miembro.nombre}"? Esta acción no se puede deshacer.`)) return;
+    const res = await fetch(`/api/equipo/${miembro.id}`, { method: "DELETE" });
+    const json = await res.json();
+    if (!json.ok) {
+      toast.error(json.error?.message ?? "Error eliminando usuario.");
+      return;
+    }
+    toast.success("Usuario eliminado.");
     router.refresh();
   };
 
@@ -263,6 +306,9 @@ function FilaMiembro({ miembro, esUnoMismo }: { miembro: MiembroEquipo & { creat
               onClick={() => cambiarActivo(!miembro.activo)}
             >
               {miembro.activo ? "Desactivar" : "Reactivar"}
+            </Button>
+            <Button size="sm" variant="destructive" disabled={esUnoMismo} onClick={eliminar}>
+              <Trash2 className="size-4" />
             </Button>
           </>
         )}

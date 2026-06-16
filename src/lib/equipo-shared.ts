@@ -9,4 +9,5 @@ export interface MiembroEquipo {
   rol: "principal" | "miembro";
   accesos: Modulo[];
   activo: boolean;
+  debe_cambiar_password: boolean;
 }

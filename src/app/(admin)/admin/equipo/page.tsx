@@ -14,7 +14,7 @@ export default async function AdminEquipoPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("equipo")
-    .select("id, email, nombre, cargo, rol, accesos, activo, created_at")
+    .select("id, email, nombre, cargo, rol, accesos, activo, debe_cambiar_password, created_at")
     .order("created_at", { ascending: true })
     .returns<(MiembroEquipo & { created_at: string })[]>();
 

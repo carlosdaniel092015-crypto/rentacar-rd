@@ -58,6 +58,17 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     }
   }
 
+  // Si debe cambiar la contraseña (primer login), se le obliga a pasar por /admin/perfil
+  // antes de ver cualquier otra sección.
+  if (pathname.startsWith("/admin") && pathname !== "/admin/perfil" && user) {
+    const { data: debeCambiar } = await supabase.rpc("debe_cambiar_password");
+    if (debeCambiar) {
+      const perfilUrl = request.nextUrl.clone();
+      perfilUrl.pathname = "/admin/perfil";
+      return NextResponse.redirect(perfilUrl);
+    }
+  }
+
   // Log de visitas en background, no bloquea la respuesta.
   event.waitUntil(
     logEvent({

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Car, LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users } from "lucide-react";
+import { Car, LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users, UserCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ const navLinks = [
   { href: "/admin/reservas", icon: CalendarCheck, label: "Reservas", modulo: "reservas" as Modulo },
   { href: "/admin/logs", icon: ScrollText, label: "Logs", modulo: "logs" as Modulo },
   { href: "/admin/equipo", icon: Users, label: "Equipo", modulo: "equipo" as Modulo },
+  { href: "/admin/perfil", icon: UserCircle, label: "Mi perfil", modulo: null as Modulo | null },
 ];
 
 interface AdminSidebarProps {

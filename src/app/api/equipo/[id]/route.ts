@@ -121,3 +121,63 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/equipo/[id
 
   return NextResponse.json({ ok: true, data });
 }
+
+// Eliminar un miembro del equipo (cuenta de auth + fila en equipo vía cascade). Solo el principal.
+export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/equipo/[id]">) {
+  const member = await getCurrentMember();
+  if (!member || member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede eliminar usuarios." } },
+      { status: 403 }
+    );
+  }
+
+  const { id } = await ctx.params;
+
+  if (id === member.id) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "No puedes eliminar tu propia cuenta." } },
+      { status: 422 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  const { data: objetivo } = await supabase
+    .from("equipo")
+    .select("rol, email")
+    .eq("id", id)
+    .single<{ rol: "principal" | "miembro"; email: string }>();
+
+  if (!objetivo) {
+    return NextResponse.json(
+      { ok: false, error: { code: "NOT_FOUND", message: "Miembro no encontrado." } },
+      { status: 404 }
+    );
+  }
+
+  if (objetivo.rol === "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "No se puede eliminar a un usuario principal." } },
+      { status: 422 }
+    );
+  }
+
+  const { error } = await supabase.auth.admin.deleteUser(id);
+  if (error) {
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "No se pudo eliminar el usuario." } },
+      { status: 500 }
+    );
+  }
+
+  await logEvent({
+    type: "admin_action",
+    actorEmail: member.email,
+    path: `/api/equipo/${id}`,
+    method: "DELETE",
+    message: "Miembro de equipo eliminado",
+    details: { email: objetivo.email },
+  });
+
+  return NextResponse.json({ ok: true });
+}
