@@ -1,21 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users, UserCircle, Car, ExternalLink } from "lucide-react";
+import {
+  LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText,
+  Users, UserCircle, Car, ExternalLink, Menu, X,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { Modulo } from "@/lib/equipo-shared";
 
 const navLinks = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard", modulo: null as Modulo | null },
-  { href: "/admin/vehiculos", icon: Car, label: "Vehículos", modulo: "vehiculos" as Modulo },
-  { href: "/admin/categorias", icon: Tag, label: "Categorías", modulo: "categorias" as Modulo },
-  { href: "/admin/reservas", icon: CalendarCheck, label: "Reservas", modulo: "reservas" as Modulo },
-  { href: "/admin/logs", icon: ScrollText, label: "Logs", modulo: "logs" as Modulo },
-  { href: "/admin/equipo", icon: Users, label: "Equipo", modulo: "equipo" as Modulo },
-  { href: "/admin/perfil", icon: UserCircle, label: "Mi perfil", modulo: null as Modulo | null },
+  { href: "/admin",            icon: LayoutDashboard, label: "Dashboard",   modulo: null as Modulo | null },
+  { href: "/admin/vehiculos",  icon: Car,             label: "Vehículos",   modulo: "vehiculos" as Modulo },
+  { href: "/admin/categorias", icon: Tag,             label: "Categorías",  modulo: "categorias" as Modulo },
+  { href: "/admin/reservas",   icon: CalendarCheck,   label: "Reservas",    modulo: "reservas" as Modulo },
+  { href: "/admin/logs",       icon: ScrollText,      label: "Logs",        modulo: "logs" as Modulo },
+  { href: "/admin/equipo",     icon: Users,           label: "Equipo",      modulo: "equipo" as Modulo },
+  { href: "/admin/perfil",     icon: UserCircle,      label: "Mi perfil",   modulo: null as Modulo | null },
 ];
 
 interface AdminSidebarProps {
@@ -26,8 +30,10 @@ interface AdminSidebarProps {
 export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+
   const links = navLinks.filter(
-    (link) => link.modulo === null || rol === "principal" || accesos.includes(link.modulo)
+    (l) => l.modulo === null || rol === "principal" || accesos.includes(l.modulo)
   );
 
   const handleLogout = async () => {
@@ -37,18 +43,27 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
     router.refresh();
   };
 
-  return (
-    <aside className="w-64 shrink-0 bg-[var(--color-primary)] flex flex-col min-h-screen">
-      <div className="flex items-center gap-2 px-6 py-5 text-white font-bold text-lg border-b border-white/10">
-        <div className="size-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs tracking-tight">RC</div>
-        RentaCar RD
+  const SidebarContent = () => (
+    <aside className="w-64 bg-[var(--color-primary)] flex flex-col h-full">
+      <div className="flex items-center justify-between gap-2 px-6 py-5 text-white font-bold text-lg border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs tracking-tight">RC</div>
+          RentaCar RD
+        </div>
+        <button
+          onClick={() => setOpen(false)}
+          className="lg:hidden text-white/70 hover:text-white p-1"
+        >
+          <X className="size-5" />
+        </button>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
+            onClick={() => setOpen(false)}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius)] text-sm font-medium transition-colors",
               pathname === link.href
@@ -56,7 +71,7 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
                 : "text-white/70 hover:bg-white/10 hover:text-white"
             )}
           >
-            <link.icon className="size-5" />
+            <link.icon className="size-5 shrink-0" />
             {link.label}
           </Link>
         ))}
@@ -67,6 +82,7 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
           href="/"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => setOpen(false)}
           className="flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius)] text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
         >
           <ExternalLink className="size-4" />
@@ -82,5 +98,41 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
         </Button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* ── Botón hamburguesa — solo mobile ── */}
+      <button
+        onClick={() => setOpen(true)}
+        className="lg:hidden fixed top-3 left-3 z-50 size-10 rounded-lg bg-[var(--color-primary)] text-white flex items-center justify-center shadow-md"
+        aria-label="Abrir menú"
+      >
+        <Menu className="size-5" />
+      </button>
+
+      {/* ── Backdrop móvil ── */}
+      {open && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar móvil (drawer) ── */}
+      <div
+        className={cn(
+          "lg:hidden fixed inset-y-0 left-0 z-50 transition-transform duration-300",
+          open ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <SidebarContent />
+      </div>
+
+      {/* ── Sidebar desktop (estático en el flex) ── */}
+      <div className="hidden lg:flex shrink-0 min-h-screen">
+        <SidebarContent />
+      </div>
+    </>
   );
 }
