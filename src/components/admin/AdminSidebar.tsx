@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users, UserCircle, Car } from "lucide-react";
+import { LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users, UserCircle, Car, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,16 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/10 space-y-1">
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius)] text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+        >
+          <ExternalLink className="size-4" />
+          Ver sitio principal
+        </Link>
         <Button
           variant="ghost"
           className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10"
