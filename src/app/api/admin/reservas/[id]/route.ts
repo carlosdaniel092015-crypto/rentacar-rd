@@ -96,19 +96,20 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
       notas: reserva.notas ?? null,
     };
 
-    void sendMail({
-      to: reserva.email_cliente,
-      subject: `¡Reserva confirmada! #${numId} — ${vehiculoNombre}`,
-      html: confirmacionClienteHtml(emailParams),
-    }).catch((err: unknown) => console.error("Error email confirmación cliente:", err));
-
-    if (adminEmail) {
-      void sendMail({
-        to: adminEmail,
-        subject: `Reserva confirmada #${numId} — ${vehiculoNombre}`,
-        html: confirmacionAdminHtml(emailParams),
-      }).catch((err: unknown) => console.error("Error email confirmación admin:", err));
-    }
+    await Promise.allSettled([
+      sendMail({
+        to: reserva.email_cliente,
+        subject: `¡Reserva confirmada! #${numId} — ${vehiculoNombre}`,
+        html: confirmacionClienteHtml(emailParams),
+      }),
+      adminEmail
+        ? sendMail({
+            to: adminEmail,
+            subject: `Reserva confirmada #${numId} — ${vehiculoNombre}`,
+            html: confirmacionAdminHtml(emailParams),
+          })
+        : Promise.resolve(),
+    ]);
   }
 
   await logEvent({
@@ -118,6 +119,39 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
     method: "PATCH",
     message: `Estado de reserva actualizado a "${nuevoEstado}"`,
     details: { id, estado: nuevoEstado },
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/admin/reservas/[id]">) {
+  const member = await getCurrentMember();
+  if (!member) {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "No autorizado." } },
+      { status: 403 }
+    );
+  }
+
+  const { id } = await ctx.params;
+  const supabase = createAdminClient();
+
+  const { error } = await supabase.from("reservas").delete().eq("id", id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error eliminando reserva." } },
+      { status: 500 }
+    );
+  }
+
+  await logEvent({
+    type: "admin_action",
+    actorEmail: member.email,
+    path: `/api/admin/reservas/${id}`,
+    method: "DELETE",
+    message: "Reserva eliminada",
+    details: { id },
   });
 
   return NextResponse.json({ ok: true });

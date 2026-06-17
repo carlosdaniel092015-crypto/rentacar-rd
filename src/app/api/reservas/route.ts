@@ -215,19 +215,20 @@ export async function POST(req: NextRequest) {
     notas: data.notas ?? null,
   };
 
-  void sendMail({
-    to: data.emailCliente,
-    subject: `Cotización recibida #${numId} — ${vehiculo.nombre}`,
-    html: cotizacionClienteHtml(emailParams),
-  }).catch((err: unknown) => console.error("Error email cliente:", err));
-
-  if (adminEmail) {
-    void sendMail({
-      to: adminEmail,
-      subject: `Nueva cotización #${numId} — ${vehiculo.nombre}`,
-      html: cotizacionAdminHtml(emailParams),
-    }).catch((err: unknown) => console.error("Error email admin:", err));
-  }
+  await Promise.allSettled([
+    sendMail({
+      to: data.emailCliente,
+      subject: `Cotización recibida #${numId} — ${vehiculo.nombre}`,
+      html: cotizacionClienteHtml(emailParams),
+    }),
+    adminEmail
+      ? sendMail({
+          to: adminEmail,
+          subject: `Nueva cotización #${numId} — ${vehiculo.nombre}`,
+          html: cotizacionAdminHtml(emailParams),
+        })
+      : Promise.resolve(),
+  ]);
 
   return NextResponse.json(
     {
