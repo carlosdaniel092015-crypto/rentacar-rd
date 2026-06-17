@@ -59,7 +59,7 @@ export default async function VehiculoDetallePage({ params }: PageProps) {
               <h2 className="font-semibold mb-3">Características</h2>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: Users, label: "Pasajeros", value: String(vehiculo.pasajeros) },
+                  { icon: Users, label: "Filas de asientos", value: String(vehiculo.pasajeros) },
                   { icon: Zap, label: "Transmisión", value: transmisionLabel },
                   { icon: Fuel, label: "Combustible", value: combustibleLabel },
                   { icon: Calendar, label: "Año", value: String(vehiculo.anio) },
@@ -148,7 +148,7 @@ export default async function VehiculoDetallePage({ params }: PageProps) {
             <h2 className="font-semibold mb-3">Características</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { icon: Users, label: "Pasajeros", value: String(vehiculo.pasajeros) },
+                { icon: Users, label: "Filas de asientos", value: String(vehiculo.pasajeros) },
                 { icon: Zap, label: "Transmisión", value: transmisionLabel },
                 { icon: Fuel, label: "Combustible", value: combustibleLabel },
                 { icon: Calendar, label: "Año", value: String(vehiculo.anio) },

@@ -52,7 +52,7 @@ export function VehicleCard({ vehiculo, categorias }: VehicleCardProps) {
           <div className="flex items-center gap-4 text-xs text-[var(--color-muted-foreground)]">
             <span className="flex items-center gap-1">
               <Users className="size-3.5" />
-              {vehiculo.pasajeros} asientos
+              {vehiculo.pasajeros} Filas de asientos
             </span>
             <span className="flex items-center gap-1">
               <Zap className="size-3.5" />
