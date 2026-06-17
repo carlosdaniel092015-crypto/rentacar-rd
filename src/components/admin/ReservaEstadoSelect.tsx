@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { ESTADOS_RESERVA } from "@/lib/utils";
 import type { EstadoReserva } from "@/lib/utils";
 
@@ -16,34 +15,36 @@ interface ReservaEstadoSelectProps {
 export function ReservaEstadoSelect({ reservaId, vehiculoId, estadoActual }: ReservaEstadoSelectProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  // vehiculoId se mantiene como prop para compatibilidad con el componente padre
+  void vehiculoId;
 
   const handleChange = async (nuevoEstado: EstadoReserva) => {
     if (nuevoEstado === estadoActual) return;
     setLoading(true);
-    const supabase = createClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from("reservas") as any)
-      .update({ estado: nuevoEstado })
-      .eq("id", reservaId);
+    try {
+      const res = await fetch(`/api/admin/reservas/${reservaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
 
-    if (error) {
-      toast.error("Error actualizando estado.");
+      if (!res.ok) {
+        toast.error("Error actualizando estado.");
+        return;
+      }
+
+      toast.success(
+        nuevoEstado === "confirmada"
+          ? "Estado actualizado. Se envió correo de confirmación al cliente."
+          : "Estado actualizado."
+      );
+      router.refresh();
+    } catch {
+      toast.error("Error de conexión.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Sincronizar disponibilidad del vehículo según el nuevo estado:
-    // confirmada/en_curso/completada → no disponible (visible pero no reservable)
-    // cancelada → restaurar disponible para que el cliente pueda reservar de nuevo
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("vehiculos") as any)
-      .update({ disponible: nuevoEstado !== "confirmada" })
-      .eq("id", vehiculoId);
-
-    toast.success("Estado actualizado.");
-    router.refresh();
-    setLoading(false);
   };
 
   const estadoConfig = ESTADOS_RESERVA.find((e) => e.value === estadoActual);
