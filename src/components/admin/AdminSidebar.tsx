@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Car, LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users, UserCircle } from "lucide-react";
+import { LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText, Users, UserCircle, Car } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,13 +39,9 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
 
   return (
     <aside className="w-64 shrink-0 bg-[var(--color-primary)] flex flex-col min-h-screen">
-      <div className="flex items-center gap-2 px-6 py-5 border-b border-white/10">
-        <span className="flex items-center justify-center size-8 rounded-lg bg-[var(--color-accent)] text-white shrink-0">
-          <Car className="size-5" />
-        </span>
-        <span className="text-lg font-extrabold tracking-tight text-white">
-          Renta<span className="text-[var(--color-accent)]">Car</span> RD
-        </span>
+      <div className="flex items-center gap-2 px-6 py-5 text-white font-bold text-lg border-b border-white/10">
+        <div className="size-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs tracking-tight">RC</div>
+        RentaCar RD
       </div>
 
       <nav className="flex-1 p-4 space-y-1">

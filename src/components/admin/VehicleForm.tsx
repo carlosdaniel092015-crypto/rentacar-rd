@@ -122,8 +122,7 @@ export function VehicleForm({ vehiculo, mode }: VehicleFormProps) {
 
   const setPrincipal = (url: string) => {
     setValue("imagen_url", url);
-    const reordered = [url, ...imagenesUrls.filter((u) => u !== url)];
-    setValue("imagenes_urls", reordered);
+    setValue("imagenes_urls", [url, ...imagenesUrls.filter((u) => u !== url)]);
     toast.success("Imagen principal actualizada.");
   };
 

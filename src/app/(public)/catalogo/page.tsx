@@ -17,7 +17,7 @@ export default async function CatalogoPage() {
   const supabase = await createClient();
 
   const [{ data: vehiculos, error }, { data: categorias }] = await Promise.all([
-    supabase.from("vehiculos").select("*").order("precio_dia", { ascending: true }),
+    supabase.from("vehiculos").select("*").eq("disponible", true).order("precio_dia", { ascending: true }),
     supabase.from("categorias").select("*").order("nombre"),
   ]);
 

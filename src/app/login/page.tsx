@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Car, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,18 +44,17 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[var(--color-muted)] px-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8 gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center justify-center size-10 rounded-xl bg-[var(--color-accent)] text-white">
-              <Car className="size-6" />
-            </span>
-            <span className="text-2xl font-extrabold tracking-tight text-[var(--color-primary)]">
-              Renta<span className="text-[var(--color-accent)]">Car</span> RD
-            </span>
-          </div>
-          <Link href="/" className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors self-start"
+          >
             <ArrowLeft className="size-4" />
-            Ir a la página principal
+            Ir al sitio principal
           </Link>
+          <div className="flex items-center gap-2 text-[var(--color-primary)] font-bold text-2xl">
+            <div className="size-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-base tracking-tight shadow">RC</div>
+            RentaCar RD
+          </div>
         </div>
 
         <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-8 shadow-sm">

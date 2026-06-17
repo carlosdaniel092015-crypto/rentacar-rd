@@ -62,7 +62,7 @@ export default async function AdminReservasPage() {
                     {formatCurrency(r.total)}
                   </td>
                   <td className="px-4 py-3">
-                    <ReservaEstadoSelect reservaId={r.id} estadoActual={r.estado} />
+                    <ReservaEstadoSelect reservaId={r.id} vehiculoId={r.vehiculo_id} estadoActual={r.estado} />
                   </td>
                 </tr>
               ))}

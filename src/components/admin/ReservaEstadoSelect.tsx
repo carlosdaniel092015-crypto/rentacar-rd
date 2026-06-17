@@ -9,10 +9,11 @@ import type { EstadoReserva } from "@/lib/utils";
 
 interface ReservaEstadoSelectProps {
   reservaId: string;
+  vehiculoId: string;
   estadoActual: EstadoReserva;
 }
 
-export function ReservaEstadoSelect({ reservaId, estadoActual }: ReservaEstadoSelectProps) {
+export function ReservaEstadoSelect({ reservaId, vehiculoId, estadoActual }: ReservaEstadoSelectProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -20,16 +21,33 @@ export function ReservaEstadoSelect({ reservaId, estadoActual }: ReservaEstadoSe
     if (nuevoEstado === estadoActual) return;
     setLoading(true);
     const supabase = createClient();
-    const payload: Record<string, unknown> = { estado: nuevoEstado };
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from("reservas") as any).update(payload).eq("id", reservaId);
+    const { error } = await (supabase.from("reservas") as any)
+      .update({ estado: nuevoEstado })
+      .eq("id", reservaId);
 
     if (error) {
       toast.error("Error actualizando estado.");
-    } else {
-      toast.success("Estado actualizado.");
-      router.refresh();
+      setLoading(false);
+      return;
     }
+
+    // Sincronizar disponibilidad del vehículo según el nuevo estado
+    if (nuevoEstado === "confirmada" || nuevoEstado === "en_curso") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("vehiculos") as any)
+        .update({ disponible: false })
+        .eq("id", vehiculoId);
+    } else if (nuevoEstado === "completada" || nuevoEstado === "cancelada") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("vehiculos") as any)
+        .update({ disponible: true })
+        .eq("id", vehiculoId);
+    }
+
+    toast.success("Estado actualizado.");
+    router.refresh();
     setLoading(false);
   };
 
