@@ -68,9 +68,11 @@ export function ReservaForm({ vehiculo }: ReservaFormProps) {
       if (!res.ok || !json.ok) {
         const msg =
           json?.error?.code === "FECHAS_OCUPADAS"
-            ? "Esas fechas ya están ocupadas para este vehículo."
+            ? "Esas fechas ya están ocupadas. Por favor selecciona otras fechas."
+            : json?.error?.code === "NO_DISPONIBLE"
+            ? "Este vehículo no está disponible en este momento."
             : json?.error?.code === "RATE_LIMIT"
-            ? "Demasiadas solicitudes. Intenta más tarde."
+            ? "Demasiadas solicitudes. Espera unos minutos e intenta de nuevo."
             : json?.error?.message ?? "Error al crear la reserva.";
         toast.error(msg);
         return;

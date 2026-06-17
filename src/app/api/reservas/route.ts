@@ -54,7 +54,7 @@ const rateLimitMap = new Map<string, { count: number; reset: number }>();
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
   const windowMs = 10 * 60 * 1000; // 10 minutos
-  const maxRequests = 5;
+  const maxRequests = 20;
 
   const entry = rateLimitMap.get(ip);
   if (!entry || now > entry.reset) {
