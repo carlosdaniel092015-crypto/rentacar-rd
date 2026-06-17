@@ -196,27 +196,72 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Enviar email de confirmación (best-effort, no bloquea la respuesta)
+  // Emails de cotización (best-effort, no bloquean la respuesta)
   const resend = new Resend(process.env.RESEND_API_KEY);
+  const adminEmail = process.env.ADMIN_EMAIL ?? "";
+  const numId = reserva.id.slice(0, 8).toUpperCase();
+  const precioDia = vehiculo.precio_dia.toLocaleString("es-DO");
+  const totalFmt = reserva.total.toLocaleString("es-DO");
+  const desglose = `${reserva.dias} ${reserva.dias === 1 ? "día" : "días"} × RD$${precioDia} = RD$${totalFmt}`;
+  const notasHtml = data.notas ? `<li><strong>Notas adicionales:</strong> ${data.notas}</li>` : "";
+
+  const filasDatos = `
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <tr style="background:#f3f4f6"><td style="padding:8px 12px;font-weight:600;width:40%">Nombre completo</td><td style="padding:8px 12px">${data.nombreCliente}</td></tr>
+      <tr><td style="padding:8px 12px;font-weight:600">Correo electrónico</td><td style="padding:8px 12px">${data.emailCliente}</td></tr>
+      <tr style="background:#f3f4f6"><td style="padding:8px 12px;font-weight:600">Teléfono</td><td style="padding:8px 12px">${data.telefonoCliente}</td></tr>
+      <tr><td style="padding:8px 12px;font-weight:600">Cédula / Pasaporte</td><td style="padding:8px 12px">${data.cedulaCliente}</td></tr>
+      <tr style="background:#f3f4f6"><td style="padding:8px 12px;font-weight:600">Vehículo</td><td style="padding:8px 12px">${vehiculo.nombre}</td></tr>
+      <tr><td style="padding:8px 12px;font-weight:600">Fecha inicio</td><td style="padding:8px 12px">${data.fechaInicio}</td></tr>
+      <tr style="background:#f3f4f6"><td style="padding:8px 12px;font-weight:600">Fecha fin</td><td style="padding:8px 12px">${data.fechaFin}</td></tr>
+      <tr><td style="padding:8px 12px;font-weight:600">Monto</td><td style="padding:8px 12px;font-weight:700;color:#1a2440">${desglose}</td></tr>
+      ${data.notas ? `<tr style="background:#f3f4f6"><td style="padding:8px 12px;font-weight:600">Notas adicionales</td><td style="padding:8px 12px">${data.notas}</td></tr>` : ""}
+    </table>
+  `;
+
   void resend.emails.send({
     from: "RentaCar RD <noreply@rentacard.com>",
     to: data.emailCliente,
-    subject: `Reserva recibida — ${vehiculo.nombre}`,
+    subject: `Cotización recibida #${numId} — ${vehiculo.nombre}`,
     html: `
-      <h2>¡Hola ${data.nombreCliente}!</h2>
-      <p>Tu reserva fue registrada exitosamente.</p>
-      <ul>
-        <li><strong>Vehículo:</strong> ${vehiculo.nombre}</li>
-        <li><strong># Reserva:</strong> ${reserva.id.slice(0, 8).toUpperCase()}</li>
-        <li><strong>Fechas:</strong> ${data.fechaInicio} al ${data.fechaFin}</li>
-        <li><strong>Total:</strong> RD$${reserva.total}</li>
-      </ul>
-      <p>Te contactaremos en breve para confirmar tu reserva. El pago se realiza al recoger el vehículo.</p>
-      <p>RentaCar RD · 809-555-1234</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <div style="background:#1a2440;padding:24px 32px;border-radius:8px 8px 0 0">
+          <h1 style="color:#fff;margin:0;font-size:22px">RentaCar RD</h1>
+          <p style="color:#a0aec0;margin:4px 0 0">Cotización de vehículo recibida</p>
+        </div>
+        <div style="background:#fff;padding:32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px">
+          <h2 style="margin-top:0">¡Hola, ${data.nombreCliente}!</h2>
+          <p>Tu cotización fue registrada exitosamente. Uno de nuestros agentes se pondrá en contacto contigo pronto para confirmar la disponibilidad.</p>
+          <p style="font-size:13px;color:#718096"># Cotización: <strong>${numId}</strong></p>
+          ${filasDatos}
+          <p style="margin-top:24px;font-size:13px;color:#718096">El pago se realiza al momento de recoger el vehículo. No se realiza ningún cobro anticipado.</p>
+          <p style="margin-top:24px">¿Tienes preguntas? Contáctanos por WhatsApp o visita nuestro sitio.</p>
+          <p style="color:#718096;font-size:12px;margin-top:32px">RentaCar RD · República Dominicana</p>
+        </div>
+      </div>
     `,
-  }).catch((err: unknown) => {
-    console.error("Error enviando email de confirmación:", err);
-  });
+  }).catch((err: unknown) => console.error("Error email cliente:", err));
+
+  if (adminEmail) {
+    void resend.emails.send({
+      from: "RentaCar RD <noreply@rentacard.com>",
+      to: adminEmail,
+      subject: `Nueva cotización #${numId} — ${vehiculo.nombre}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+          <div style="background:#1a2440;padding:24px 32px;border-radius:8px 8px 0 0">
+            <h1 style="color:#fff;margin:0;font-size:22px">Nueva Cotización</h1>
+            <p style="color:#a0aec0;margin:4px 0 0"># ${numId}</p>
+          </div>
+          <div style="background:#fff;padding:32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px">
+            <p style="margin-top:0">Se recibió una nueva cotización en el sistema.</p>
+            ${filasDatos}
+            <p style="margin-top:24px;font-size:13px;color:#718096">Ingresa al panel para gestionar esta reserva.</p>
+          </div>
+        </div>
+      `,
+    }).catch((err: unknown) => console.error("Error email admin:", err));
+  }
 
   return NextResponse.json(
     {
