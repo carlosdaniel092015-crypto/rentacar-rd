@@ -81,6 +81,7 @@ function CrearMiembroForm({ onDone }: { onDone: () => void }) {
   const [nombre, setNombre] = useState("");
   const [cargo, setCargo] = useState("");
   const [password, setPassword] = useState("");
+  const [rolNuevo, setRolNuevo] = useState<"principal" | "miembro">("miembro");
   const [accesos, setAccesos] = useState<Modulo[]>([]);
   const [enviando, setEnviando] = useState(false);
 
@@ -102,6 +103,7 @@ function CrearMiembroForm({ onDone }: { onDone: () => void }) {
           email: email.trim(),
           nombre: nombre.trim(),
           cargo: cargo.trim(),
+          rol: rolNuevo,
           accesos,
           ...(password ? { password } : {}),
         }),
@@ -150,6 +152,17 @@ function CrearMiembroForm({ onDone }: { onDone: () => void }) {
         </p>
       </div>
       <div>
+        <Label>Rol</Label>
+        <select
+          value={rolNuevo}
+          onChange={(e) => setRolNuevo(e.target.value as "principal" | "miembro")}
+          className="mt-1 w-full text-sm rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2"
+        >
+          <option value="miembro">Miembro</option>
+          <option value="principal">Principal (acceso total)</option>
+        </select>
+      </div>
+      <div>
         <Label>Accesos</Label>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {MODULOS.map((modulo) => (
@@ -176,6 +189,7 @@ function FilaMiembro({ miembro, esUnoMismo }: { miembro: MiembroEquipo & { creat
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [cargo, setCargo] = useState(miembro.cargo);
+  const [rol, setRol] = useState<"principal" | "miembro">(miembro.rol);
   const [accesos, setAccesos] = useState<Modulo[]>(miembro.accesos);
   const [guardando, setGuardando] = useState(false);
 
@@ -188,7 +202,7 @@ function FilaMiembro({ miembro, esUnoMismo }: { miembro: MiembroEquipo & { creat
       const res = await fetch(`/api/equipo/${miembro.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cargo: cargo.trim(), accesos }),
+        body: JSON.stringify({ cargo: cargo.trim(), accesos, rol }),
       });
       const json = await res.json();
       if (!json.ok) {
@@ -237,7 +251,20 @@ function FilaMiembro({ miembro, esUnoMismo }: { miembro: MiembroEquipo & { creat
         <td className="px-4 py-3">
           <Input className="h-8 text-sm" value={cargo} onChange={(e) => setCargo(e.target.value)} />
         </td>
-        <td className="px-4 py-3 text-[var(--color-muted-foreground)]">{miembro.rol}</td>
+        <td className="px-4 py-3">
+          {esUnoMismo ? (
+            <span className="text-xs text-[var(--color-muted-foreground)]">Principal (tú)</span>
+          ) : (
+            <select
+              value={rol}
+              onChange={(e) => setRol(e.target.value as "principal" | "miembro")}
+              className="text-xs rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1"
+            >
+              <option value="principal">Principal</option>
+              <option value="miembro">Miembro</option>
+            </select>
+          )}
+        </td>
         <td className="px-4 py-3">
           <div className="grid grid-cols-2 gap-1">
             {MODULOS.map((modulo) => (

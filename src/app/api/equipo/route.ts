@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, nombre, cargo, accesos, password: passwordInput } = (body ?? {}) as Record<string, unknown>;
+  const { email, nombre, cargo, accesos, password: passwordInput, rol: rolInput } = (body ?? {}) as Record<string, unknown>;
+  const rolFinal: "principal" | "miembro" = rolInput === "principal" ? "principal" : "miembro";
 
   if (
     typeof email !== "string" || !email.includes("@") ||
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
       email: email.toLowerCase().trim(),
       nombre: nombre.trim(),
       cargo: cargo.trim(),
-      rol: "miembro",
+      rol: rolFinal,
       accesos,
       debe_cambiar_password: true,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

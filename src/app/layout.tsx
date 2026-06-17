@@ -1,9 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import RegisterSW from "./register-sw";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+
+export const viewport: Viewport = {
+  themeColor: "#1a2440",
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -13,10 +22,22 @@ export const metadata: Metadata = {
   description:
     "La mejor flota de vehículos en República Dominicana. Económicos, SUVs, pickups y más. Precios transparentes, sin cargos ocultos.",
   keywords: ["rent a car", "alquiler de carros", "República Dominicana", "Santo Domingo"],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "RentaCar RD",
+  },
   openGraph: {
     type: "website",
     locale: "es_DO",
     siteName: "RentaCar RD",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.svg", type: "image/svg+xml" }],
   },
 };
 
@@ -24,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={inter.variable}>
       <body className="min-h-screen flex flex-col antialiased">
+        <RegisterSW />
         {children}
         <Toaster richColors position="top-center" />
       </body>

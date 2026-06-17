@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
@@ -20,6 +20,7 @@
     "@radix-ui/react-slot": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.14",
     "@radix-ui/react-toast": "^1.2.16",
+    "@serwist/next": "^9.5.11",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.107.0",
     "@tanstack/react-table": "^8.21.3",
@@ -34,6 +35,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.77.0",
     "resend": "^6.12.4",
+    "serwist": "^9.5.11",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",

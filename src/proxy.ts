@@ -40,6 +40,13 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Si ya tiene sesión activa y visita /login, redirigir al panel admin sin cerrar sesión
+  if (pathname === "/login" && user) {
+    const adminUrl = request.nextUrl.clone();
+    adminUrl.pathname = "/admin";
+    return NextResponse.redirect(adminUrl);
+  }
+
   // Cada sección de /admin requiere su módulo en accesos (o ser principal).
   const PATH_MODULOS: Record<string, string> = {
     "/admin/vehiculos": "vehiculos",
