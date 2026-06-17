@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "RentaCar RD",
     description:
       "La mejor flota de vehículos en República Dominicana. Precios transparentes, sin cargos ocultos.",
-    start_url: "/",
+    start_url: "/login",
     display: "standalone",
     orientation: "portrait",
     background_color: "#1a2440",
