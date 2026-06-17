@@ -45,7 +45,10 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
 
   const SidebarContent = () => (
     <aside className="w-64 bg-[var(--color-primary)] flex flex-col h-full">
-      <div className="flex items-center justify-between gap-2 px-6 py-5 text-white font-bold text-lg border-b border-white/10">
+      <div
+        className="flex items-center justify-between gap-2 px-6 text-white font-bold text-lg border-b border-white/10"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)", paddingBottom: "20px" }}
+      >
         <div className="flex items-center gap-2">
           <div className="size-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs tracking-tight">RC</div>
           RentaCar RD
@@ -102,10 +105,11 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
 
   return (
     <>
-      {/* ── Botón hamburguesa — solo mobile ── */}
+      {/* ── Botón hamburguesa — solo mobile, respeta safe-area del iPhone ── */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-50 size-10 rounded-lg bg-[var(--color-primary)] text-white flex items-center justify-center shadow-md"
+        className="lg:hidden fixed z-50 size-10 rounded-lg bg-[var(--color-primary)] text-white flex items-center justify-center shadow-md"
+        style={{ top: "calc(env(safe-area-inset-top) + 10px)", left: "12px" }}
         aria-label="Abrir menú"
       >
         <Menu className="size-5" />
