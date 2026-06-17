@@ -36,17 +36,10 @@ export function ReservaEstadoSelect({ reservaId, vehiculoId, estadoActual }: Res
     // Sincronizar disponibilidad del vehículo según el nuevo estado:
     // confirmada/en_curso/completada → no disponible (visible pero no reservable)
     // cancelada → restaurar disponible para que el cliente pueda reservar de nuevo
-    if (nuevoEstado === "confirmada" || nuevoEstado === "en_curso" || nuevoEstado === "completada") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("vehiculos") as any)
-        .update({ disponible: false })
-        .eq("id", vehiculoId);
-    } else if (nuevoEstado === "cancelada") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("vehiculos") as any)
-        .update({ disponible: true })
-        .eq("id", vehiculoId);
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from("vehiculos") as any)
+      .update({ disponible: nuevoEstado !== "confirmada" })
+      .eq("id", vehiculoId);
 
     toast.success("Estado actualizado.");
     router.refresh();
