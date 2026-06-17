@@ -124,7 +124,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/admin/reservas/[id]">) {
+// Archivar (soft-delete) o restaurar: body { accion: "archivar" | "restaurar" | "eliminar_permanente" }
+export async function DELETE(req: NextRequest, ctx: RouteContext<"/api/admin/reservas/[id]">) {
   const member = await getCurrentMember();
   if (!member) {
     return NextResponse.json(
@@ -136,23 +137,35 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/admin/re
   const { id } = await ctx.params;
   const supabase = createAdminClient();
 
-  const { error } = await supabase.from("reservas").delete().eq("id", id);
+  let accion: string = "archivar";
+  try {
+    const body = await req.json().catch(() => ({}));
+    if (body?.accion) accion = body.accion;
+  } catch { /* sin body = archivar */ }
 
-  if (error) {
-    return NextResponse.json(
-      { ok: false, error: { code: "SERVER_ERROR", message: "Error eliminando reserva." } },
-      { status: 500 }
-    );
+  if (accion === "eliminar_permanente") {
+    const { error } = await supabase.from("reservas").delete().eq("id", id);
+    if (error) {
+      return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: "Error eliminando." } }, { status: 500 });
+    }
+    await logEvent({ type: "admin_action", actorEmail: member.email, path: `/api/admin/reservas/${id}`, method: "DELETE", message: "Reserva eliminada permanentemente", details: { id } });
+    return NextResponse.json({ ok: true });
   }
 
-  await logEvent({
-    type: "admin_action",
-    actorEmail: member.email,
-    path: `/api/admin/reservas/${id}`,
-    method: "DELETE",
-    message: "Reserva eliminada",
-    details: { id },
-  });
+  if (accion === "restaurar") {
+    const { error } = await supabase.from("reservas").update({ archivada: false } as never).eq("id", id);
+    if (error) {
+      return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: "Error restaurando." } }, { status: 500 });
+    }
+    await logEvent({ type: "admin_action", actorEmail: member.email, path: `/api/admin/reservas/${id}`, method: "DELETE", message: "Reserva restaurada", details: { id } });
+    return NextResponse.json({ ok: true });
+  }
 
+  // archivar (default)
+  const { error } = await supabase.from("reservas").update({ archivada: true } as never).eq("id", id);
+  if (error) {
+    return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: "Error archivando." } }, { status: 500 });
+  }
+  await logEvent({ type: "admin_action", actorEmail: member.email, path: `/api/admin/reservas/${id}`, method: "DELETE", message: "Reserva archivada", details: { id } });
   return NextResponse.json({ ok: true });
 }
