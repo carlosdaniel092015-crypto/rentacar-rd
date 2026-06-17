@@ -22,7 +22,7 @@ const DEFAULTS = {
   transmision: "todos" as const,
   pasajeros: "todos" as const,
   precioMax: 500000,
-  soloDisponibles: true,
+  soloDisponibles: false,
 };
 
 export const useFiltrosStore = create<FiltrosState>((set) => ({
