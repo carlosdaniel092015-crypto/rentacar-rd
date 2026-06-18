@@ -139,3 +139,111 @@ export function confirmacionAdminHtml(params: Parameters<typeof confirmacionClie
     ${tablaReserva(params)}
   `);
 }
+
+// ─── Tipos compartidos ────────────────────────────────────────────────────────
+
+type ParamsEstado = {
+  numId: string;
+  nombreCliente: string;
+  emailCliente: string;
+  telefonoCliente: string;
+  cedulaCliente: string;
+  vehiculoNombre: string;
+  fechaInicio: string;
+  fechaFin: string;
+  dias: number;
+  precioDia: number;
+  total: number;
+  notas?: string | null;
+};
+
+// ─── En curso ─────────────────────────────────────────────────────────────────
+
+export function enCursoClienteHtml(params: ParamsEstado) {
+  return base(`
+    <h2 style="margin-top:0">¡Tu alquiler ha comenzado, ${params.nombreCliente}!</h2>
+    <p>El vehículo <strong>${params.vehiculoNombre}</strong> está ahora bajo tu cuidado. Que tengas un excelente viaje.</p>
+    <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
+    ${tablaReserva(params)}
+    <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:12px 16px;border-radius:4px;margin-top:16px;font-size:13px">
+      <strong>Recuerda:</strong> Devuelve el vehículo con el mismo nivel de combustible y en el mismo estado en que lo recibiste.
+      Ante cualquier incidente, contáctanos de inmediato.
+    </div>
+  `);
+}
+
+export function enCursoAdminHtml(params: ParamsEstado) {
+  return base(`
+    <h2 style="margin-top:0">Reserva en curso</h2>
+    <p>El alquiler del vehículo <strong>${params.vehiculoNombre}</strong> ha sido marcado como <strong style="color:#2563eb">en curso</strong>.</p>
+    <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
+    ${tablaReserva(params)}
+  `);
+}
+
+// ─── Cancelada ────────────────────────────────────────────────────────────────
+
+export function canceladaClienteHtml(params: ParamsEstado) {
+  return base(`
+    <h2 style="margin-top:0">Reserva cancelada</h2>
+    <p>Hola ${params.nombreCliente}, te informamos que tu reserva ha sido <strong style="color:#dc2626">cancelada</strong>.</p>
+    <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
+    ${tablaReserva(params)}
+    <p style="margin-top:16px;font-size:13px;color:#718096">
+      Si deseas realizar una nueva reserva o tienes preguntas, no dudes en contactarnos.
+    </p>
+  `);
+}
+
+export function canceladaAdminHtml(params: ParamsEstado) {
+  return base(`
+    <h2 style="margin-top:0">Reserva cancelada</h2>
+    <p>La reserva <strong>#${params.numId}</strong> de <strong>${params.nombreCliente}</strong> ha sido <strong style="color:#dc2626">cancelada</strong>.</p>
+    ${tablaReserva(params)}
+  `);
+}
+
+// ─── Pendiente ────────────────────────────────────────────────────────────────
+
+export function pendienteClienteHtml(params: ParamsEstado) {
+  return base(`
+    <h2 style="margin-top:0">Reserva en revisión</h2>
+    <p>Hola ${params.nombreCliente}, tu reserva ha sido marcada como <strong style="color:#d97706">pendiente de revisión</strong>. Nuestro equipo la evaluará y te notificará pronto.</p>
+    <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
+    ${tablaReserva(params)}
+  `);
+}
+
+// ─── Completada + Encuesta ────────────────────────────────────────────────────
+
+export function completadaClienteHtml(params: ParamsEstado & { siteUrl: string }) {
+  const encuestaUrl = `${params.siteUrl}/encuesta/${params.numId}`;
+  const fmt = (n: number) => n.toLocaleString("es-DO");
+  return base(`
+    <h2 style="margin-top:0">¡Gracias por elegirnos, ${params.nombreCliente}!</h2>
+    <p>Tu alquiler del <strong>${params.vehiculoNombre}</strong> ha sido completado. Esperamos que hayas tenido una excelente experiencia.</p>
+    <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong> · ${params.dias} días · RD$${fmt(params.total)}</p>
+
+    <div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:24px;text-align:center;margin:24px 0">
+      <p style="font-size:16px;font-weight:600;margin:0 0 8px">¿Cómo fue tu experiencia?</p>
+      <p style="font-size:13px;color:#718096;margin:0 0 16px">Tus comentarios nos ayudan a mejorar. Solo toma 1 minuto.</p>
+      <a href="${encuestaUrl}"
+         style="background:#16a34a;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block">
+        Calificar mi experiencia →
+      </a>
+    </div>
+
+    <p style="font-size:12px;color:#718096;text-align:center">
+      O copia este enlace en tu navegador: ${encuestaUrl}
+    </p>
+  `);
+}
+
+export function completadaAdminHtml(params: ParamsEstado) {
+  return base(`
+    <h2 style="margin-top:0">Alquiler completado</h2>
+    <p>La reserva de <strong>${params.nombreCliente}</strong> ha sido marcada como <strong style="color:#16a34a">completada</strong>. Se envió encuesta de satisfacción al cliente.</p>
+    <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
+    ${tablaReserva(params)}
+  `);
+}

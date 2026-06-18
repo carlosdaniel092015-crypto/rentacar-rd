@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarCheck, LogOut, Tag, ScrollText,
   Users, UserCircle, Car, ExternalLink, Menu, X,
+  BarChart3, MapPin,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,8 @@ const navLinks = [
   { href: "/admin/vehiculos",  icon: Car,             label: "Vehículos",   modulo: "vehiculos" as Modulo },
   { href: "/admin/categorias", icon: Tag,             label: "Categorías",  modulo: "categorias" as Modulo },
   { href: "/admin/reservas",   icon: CalendarCheck,   label: "Reservas",    modulo: "reservas" as Modulo },
+  { href: "/admin/analitica",  icon: BarChart3,       label: "Analítica",   modulo: "analitica" as Modulo },
+  { href: "/admin/gps",        icon: MapPin,          label: "GPS / Flota", modulo: "gps" as Modulo },
   { href: "/admin/logs",       icon: ScrollText,      label: "Logs",        modulo: "logs" as Modulo },
   { href: "/admin/equipo",     icon: Users,           label: "Equipo",      modulo: "equipo" as Modulo },
   { href: "/admin/perfil",     icon: UserCircle,      label: "Mi perfil",   modulo: null as Modulo | null },

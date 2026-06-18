@@ -3,7 +3,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentMember } from "@/lib/server/equipo";
 import { logEvent } from "@/lib/server/audit";
 import { sendMail } from "@/lib/email/mailer";
-import { confirmacionClienteHtml, confirmacionAdminHtml } from "@/lib/email/templates";
+import {
+  confirmacionClienteHtml, confirmacionAdminHtml,
+  enCursoClienteHtml, enCursoAdminHtml,
+  canceladaClienteHtml, canceladaAdminHtml,
+  pendienteClienteHtml,
+  completadaClienteHtml, completadaAdminHtml,
+} from "@/lib/email/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -74,9 +80,10 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
     .update({ disponible: nuevoEstado !== "confirmada" })
     .eq("id", reserva.vehiculo_id);
 
-  // Enviar email de confirmación al cliente y admin cuando el estado es "confirmada"
-  if (nuevoEstado === "confirmada") {
+  // Enviar email según el nuevo estado
+  {
     const adminEmail = process.env.ADMIN_EMAIL ?? "";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://prueba.acentosdeco.lat";
     const numId = (reserva.id as string).slice(0, 8).toUpperCase();
     const vehiculoNombre = reserva.vehiculos?.nombre ?? "Vehículo";
     const precioDia = reserva.vehiculos?.precio_dia ?? reserva.precio_dia ?? 0;
@@ -96,20 +103,56 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
       notas: reserva.notas ?? null,
     };
 
-    await Promise.allSettled([
-      sendMail({
-        to: reserva.email_cliente,
-        subject: `¡Reserva confirmada! #${numId} — ${vehiculoNombre}`,
-        html: confirmacionClienteHtml(emailParams),
-      }),
-      adminEmail
-        ? sendMail({
-            to: adminEmail,
-            subject: `Reserva confirmada #${numId} — ${vehiculoNombre}`,
-            html: confirmacionAdminHtml(emailParams),
-          })
-        : Promise.resolve(),
-    ]);
+    type MailPair = { clienteHtml: string; adminHtml?: string; clienteSubject: string; adminSubject?: string };
+
+    const mails: MailPair | null = (() => {
+      switch (nuevoEstado) {
+        case "confirmada":
+          return {
+            clienteHtml: confirmacionClienteHtml(emailParams),
+            adminHtml: confirmacionAdminHtml(emailParams),
+            clienteSubject: `¡Reserva confirmada! #${numId} — ${vehiculoNombre}`,
+            adminSubject: `Reserva confirmada #${numId} — ${vehiculoNombre}`,
+          };
+        case "en_curso":
+          return {
+            clienteHtml: enCursoClienteHtml(emailParams),
+            adminHtml: enCursoAdminHtml(emailParams),
+            clienteSubject: `Tu alquiler ha comenzado — #${numId}`,
+            adminSubject: `Alquiler en curso #${numId} — ${vehiculoNombre}`,
+          };
+        case "cancelada":
+          return {
+            clienteHtml: canceladaClienteHtml(emailParams),
+            adminHtml: canceladaAdminHtml(emailParams),
+            clienteSubject: `Reserva cancelada #${numId}`,
+            adminSubject: `Reserva cancelada #${numId} — ${vehiculoNombre}`,
+          };
+        case "completada":
+          return {
+            clienteHtml: completadaClienteHtml({ ...emailParams, siteUrl }),
+            adminHtml: completadaAdminHtml(emailParams),
+            clienteSubject: `¡Gracias por tu alquiler! — Cuéntanos tu experiencia`,
+            adminSubject: `Alquiler completado #${numId} — ${vehiculoNombre}`,
+          };
+        case "pendiente":
+          return {
+            clienteHtml: pendienteClienteHtml(emailParams),
+            clienteSubject: `Reserva en revisión #${numId}`,
+          };
+        default:
+          return null;
+      }
+    })();
+
+    if (mails) {
+      await Promise.allSettled([
+        sendMail({ to: reserva.email_cliente, subject: mails.clienteSubject, html: mails.clienteHtml }),
+        adminEmail && mails.adminHtml && mails.adminSubject
+          ? sendMail({ to: adminEmail, subject: mails.adminSubject, html: mails.adminHtml })
+          : Promise.resolve(),
+      ]);
+    }
   }
 
   await logEvent({
