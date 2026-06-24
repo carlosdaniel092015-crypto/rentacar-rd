@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentMember, MODULOS, type Modulo } from "@/lib/server/equipo";
 import { logEvent } from "@/lib/server/audit";
-import { Resend } from "resend";
+import { sendMail } from "@/lib/server/mailer";
 
 export const dynamic = "force-dynamic";
 
@@ -121,9 +121,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  void resend.emails.send({
-    from: "RentaCar RD <noreply@rentacard.com>",
+  void sendMail({
     to: email,
     subject: "Acceso al panel administrativo — RentaCar RD",
     html: `

@@ -3,7 +3,7 @@ import { reservaSchema } from "@/lib/validations/reserva.schema";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/server/audit";
 import { requireApiKey } from "@/lib/server/api-auth";
-import { Resend } from "resend";
+import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
 
 export const dynamic = "force-dynamic";
 
@@ -196,27 +196,40 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Enviar email de confirmación (best-effort, no bloquea la respuesta)
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  void resend.emails.send({
-    from: "RentaCar RD <noreply@rentacard.com>",
+  // Enviar confirmación al cliente y notificación al admin (best-effort)
+  const reservaHtml = `
+    <h2>¡Hola ${data.nombreCliente}!</h2>
+    <p>Tu reserva fue registrada exitosamente.</p>
+    <ul>
+      <li><strong>Vehículo:</strong> ${vehiculo.nombre}</li>
+      <li><strong># Reserva:</strong> ${reserva.id.slice(0, 8).toUpperCase()}</li>
+      <li><strong>Fechas:</strong> ${data.fechaInicio} al ${data.fechaFin}</li>
+      <li><strong>Total:</strong> RD$${reserva.total}</li>
+    </ul>
+    <p>Te contactaremos en breve para confirmar tu reserva. El pago se realiza al recoger el vehículo.</p>
+    <p>RentaCar RD · 809-555-1234</p>
+  `;
+  void sendMail({
     to: data.emailCliente,
     subject: `Reserva recibida — ${vehiculo.nombre}`,
+    html: reservaHtml,
+  }).catch((err: unknown) => { console.error("Error enviando email cliente:", err); });
+
+  void sendMail({
+    to: ADMIN_EMAIL,
+    subject: `Nueva reserva — ${vehiculo.nombre} (${reserva.id.slice(0, 8).toUpperCase()})`,
     html: `
-      <h2>¡Hola ${data.nombreCliente}!</h2>
-      <p>Tu reserva fue registrada exitosamente.</p>
+      <h2>Nueva reserva recibida</h2>
       <ul>
+        <li><strong>Cliente:</strong> ${data.nombreCliente}</li>
+        <li><strong>Email:</strong> ${data.emailCliente}</li>
         <li><strong>Vehículo:</strong> ${vehiculo.nombre}</li>
         <li><strong># Reserva:</strong> ${reserva.id.slice(0, 8).toUpperCase()}</li>
         <li><strong>Fechas:</strong> ${data.fechaInicio} al ${data.fechaFin}</li>
         <li><strong>Total:</strong> RD$${reserva.total}</li>
       </ul>
-      <p>Te contactaremos en breve para confirmar tu reserva. El pago se realiza al recoger el vehículo.</p>
-      <p>RentaCar RD · 809-555-1234</p>
     `,
-  }).catch((err: unknown) => {
-    console.error("Error enviando email de confirmación:", err);
-  });
+  }).catch((err: unknown) => { console.error("Error enviando email admin:", err); });
 
   return NextResponse.json(
     {
