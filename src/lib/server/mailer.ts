@@ -1,1 +1,28 @@
-aW1wb3J0IG5vZGVtYWlsZXIgZnJvbSAibm9kZW1haWxlciI7CgpleHBvcnQgY29uc3QgQURNSU5fRU1BSUwgPSAiZGF2aWRlc3BpbmFsMzgwQGdtYWlsLmNvbSI7CmV4cG9ydCBjb25zdCBGUk9NX0VNQUlMID0gIlJlbnRhQ2FyIFJEIDxyZXNlcnZhcy5yZW50YWNhcnJkQGdtYWlsLmNvbT4iOwoKZXhwb3J0IGZ1bmN0aW9uIGNyZWF0ZVRyYW5zcG9ydGVyKCkgewogIHJldHVybiBub2RlbWFpbGVyLmNyZWF0ZVRyYW5zcG9ydCh7CiAgICBzZXJ2aWNlOiAiZ21haWwiLAogICAgYXV0aDogewogICAgICB1c2VyOiBwcm9jZXNzLmVudi5TTVRQX1VTRVIsCiAgICAgIHBhc3M6IHByb2Nlc3MuZW52LlNNVFBfUEFTUywKICAgIH0sCiAgfSk7Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBzZW5kTWFpbChvcHRzOiB7CiAgdG86IHN0cmluZyB8IHN0cmluZ1tdOwogIHN1YmplY3Q6IHN0cmluZzsKICBodG1sOiBzdHJpbmc7Cn0pIHsKICBjb25zdCB0cmFuc3BvcnRlciA9IGNyZWF0ZVRyYW5zcG9ydGVyKCk7CiAgYXdhaXQgdHJhbnNwb3J0ZXIuc2VuZE1haWwoewogICAgZnJvbTogRlJPTV9FTUFJTCwKICAgIHRvOiBvcHRzLnRvLAogICAgc3ViamVjdDogb3B0cy5zdWJqZWN0LAogICAgaHRtbDogb3B0cy5odG1sLAogIH0pOwp9Cg==
+import nodemailer from "nodemailer";
+
+export const ADMIN_EMAIL = "davidespinal380@gmail.com";
+export const FROM_EMAIL = "RentaCar RD <reservas.rentacard@gmail.com>";
+
+export function createTransporter() {
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
+export async function sendMail(opts: {
+  to: string | string[];
+  subject: string;
+  html: string;
+}) {
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: FROM_EMAIL,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+  });
+}
