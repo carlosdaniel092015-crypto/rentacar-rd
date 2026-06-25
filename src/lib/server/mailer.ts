@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "davidespinal380@gmail.com";
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "reservas.rentacarrd@gmail.com";
 
 function createTransporter() {
   return nodemailer.createTransport({
