@@ -1,11 +1,12 @@
 import nodemailer from "nodemailer";
 
-export const ADMIN_EMAIL = "davidespinal380@gmail.com";
-export const FROM_EMAIL = "RentaCar RD <reservas.rentacard@gmail.com>";
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "davidespinal380@gmail.com";
 
-export function createTransporter() {
+function createTransporter() {
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -18,9 +19,10 @@ export async function sendMail(opts: {
   subject: string;
   html: string;
 }) {
+  const from = `RentaCar RD <${process.env.SMTP_USER}>`;
   const transporter = createTransporter();
   await transporter.sendMail({
-    from: FROM_EMAIL,
+    from,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
