@@ -1,1 +1,84 @@
-aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgY29udGFjdG9TY2hlbWEgfSBmcm9tICJAL2xpYi92YWxpZGF0aW9ucy9jb250YWN0by5zY2hlbWEiOwppbXBvcnQgeyBzZW5kTWFpbCwgQURNSU5fRU1BSUwgfSBmcm9tICJAL2xpYi9zZXJ2ZXIvbWFpbGVyIjsKaW1wb3J0IHsgbG9nRXZlbnQgfSBmcm9tICJAL2xpYi9zZXJ2ZXIvYXVkaXQiOwoKLy8gUmF0ZSBsaW1pdCBzaW1wbGUKY29uc3QgcmF0ZUxpbWl0TWFwID0gbmV3IE1hcDxzdHJpbmcsIHsgY291bnQ6IG51bWJlcjsgcmVzZXQ6IG51bWJlciB9PigpOwoKZnVuY3Rpb24gY2hlY2tSYXRlTGltaXQoaXA6IHN0cmluZyk6IGJvb2xlYW4gewogIGNvbnN0IG5vdyA9IERhdGUubm93KCk7CiAgY29uc3Qgd2luZG93TXMgPSA2MCAqIDYwICogMTAwMDsgLy8gMSBob3JhCiAgY29uc3QgbWF4UmVxdWVzdHMgPSAzOwoKICBjb25zdCBlbnRyeSA9IHJhdGVMaW1pdE1hcC5nZXQoaXApOwogIGlmICghZW50cnkgfHwgbm93ID4gZW50cnkucmVzZXQpIHsKICAgIHJhdGVMaW1pdE1hcC5zZXQoaXAsIHsgY291bnQ6IDEsIHJlc2V0OiBub3cgKyB3aW5kb3dNcyB9KTsKICAgIHJldHVybiB0cnVlOwogIH0KICBpZiAoZW50cnkuY291bnQgPj0gbWF4UmVxdWVzdHMpIHJldHVybiBmYWxzZTsKICBlbnRyeS5jb3VudCsrOwogIHJldHVybiB0cnVlOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgY29uc3QgaXAgPQogICAgcmVxLmhlYWRlcnMuZ2V0KCJ4LWZvcndhcmRlZC1mb3IiKT8uc3BsaXQoIiwiKVswXS50cmltKCkgPz8KICAgIHJlcS5oZWFkZXJzLmdldCgieC1yZWFsLWlwIikgPz8KICAgICJ1bmtub3duIjsKCiAgaWYgKCFjaGVja1JhdGVMaW1pdChpcCkpIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IG9rOiBmYWxzZSwgZXJyb3I6ICJEZW1hc2lhZGFzIHNvbGljaXR1ZGVzLiIgfSwgeyBzdGF0dXM6IDQyOSB9KTsKICB9CgogIGxldCBib2R5OiB1bmtub3duOwogIHRyeSB7CiAgICBib2R5ID0gYXdhaXQgcmVxLmpzb24oKTsKICB9IGNhdGNoIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IG9rOiBmYWxzZSwgZXJyb3I6ICJTb2xpY2l0dWQgaW52w6FsaWRhLiIgfSwgeyBzdGF0dXM6IDQwMCB9KTsKICB9CgogIGNvbnN0IHBhcnNlZCA9IGNvbnRhY3RvU2NoZW1hLnNhZmVQYXJzZShib2R5KTsKICBpZiAoIXBhcnNlZC5zdWNjZXNzKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBvazogZmFsc2UsIGVycm9yOiAiRGF0b3MgaW52w6FsaWRvcy4iIH0sIHsgc3RhdHVzOiA0MjIgfSk7CiAgfQoKICBjb25zdCB7IF9ob25leXBvdCwgLi4uZGF0YSB9ID0gcGFyc2VkLmRhdGE7CgogIC8vIFNpIGVsIGhvbmV5cG90IHRpZW5lIGNvbnRlbmlkbywgZXMgdW4gYm90CiAgaWYgKF9ob25leXBvdCkgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgb2s6IHRydWUgfSwgeyBzdGF0dXM6IDIwMCB9KTsKICB9CgogIHRyeSB7CiAgICBhd2FpdCBzZW5kTWFpbCh7CiAgICAgIHRvOiBBRE1JTl9FTUFJTCwKICAgICAgc3ViamVjdDogYENvbnRhY3RvIHdlYjogJHtkYXRhLmFzdW50b31gLAogICAgICBodG1sOiBgCiAgICAgICAgPGgzPk51ZXZvIG1lbnNhamUgZGVzZGUgZWwgZm9ybXVsYXJpbyBkZSBjb250YWN0bzwvaDM+CiAgICAgICAgPHVsPgogICAgICAgICAgPGxpPjxzdHJvbmc+Tm9tYnJlOjwvc3Ryb25nPiAke2RhdGEubm9tYnJlfTwvbGk+CiAgICAgICAgICA8bGk+PHN0cm9uZz5FbWFpbDo8L3N0cm9uZz4gJHtkYXRhLmVtYWlsfTwvbGk+CiAgICAgICAgICAke2RhdGEudGVsZWZvbm8gPyBgPGxpPjxzdHJvbmc+VGVsw6lmb25vOjwvc3Ryb25nPiAke2RhdGEudGVsZWZvbm99PC9saT5gIDogIiJ9CiAgICAgICAgICA8bGk+PHN0cm9uZz5Bc3VudG86PC9zdHJvbmc+ICR7ZGF0YS5hc3VudG99PC9saT4KICAgICAgICA8L3VsPgogICAgICAgIDxoND5NZW5zYWplOjwvaDQ+CiAgICAgICAgPHA+JHtkYXRhLm1lbnNhamUucmVwbGFjZSgvXG4vZywgIjxicj4iKX08L3A+CiAgICAgIGAsCiAgICB9KTsKCiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBvazogdHJ1ZSB9LCB7IHN0YXR1czogMjAwIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcigiRXJyb3IgZW52aWFuZG8gZW1haWwgZGUgY29udGFjdG86IiwgZXJyKTsKICAgIGF3YWl0IGxvZ0V2ZW50KHsKICAgICAgdHlwZTogImVycm9yIiwKICAgICAgbGV2ZWw6ICJlcnJvciIsCiAgICAgIGlwLAogICAgICBwYXRoOiAiL2FwaS9jb250YWN0byIsCiAgICAgIG1ldGhvZDogIlBPU1QiLAogICAgICBtZXNzYWdlOiAiRXJyb3IgZW52aWFuZG8gZW1haWwgZGUgY29udGFjdG8iLAogICAgICBkZXRhaWxzOiB7IGVycm9yOiBlcnIgaW5zdGFuY2VvZiBFcnJvciA/IGVyci5tZXNzYWdlIDogU3RyaW5nKGVycikgfSwKICAgIH0pOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgb2s6IGZhbHNlLCBlcnJvcjogIkVycm9yIGVudmlhbmRvIG1lbnNhamUuIiB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo=
+import { NextRequest, NextResponse } from "next/server";
+import { contactoSchema } from "@/lib/validations/contacto.schema";
+import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
+import { logEvent } from "@/lib/server/audit";
+
+// Rate limit simple
+const rateLimitMap = new Map<string, { count: number; reset: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 60 * 60 * 1000; // 1 hora
+  const maxRequests = 3;
+
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.reset) {
+    rateLimitMap.set(ip, { count: 1, reset: now + windowMs });
+    return true;
+  }
+  if (entry.count >= maxRequests) return false;
+  entry.count++;
+  return true;
+}
+
+export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ ok: false, error: "Demasiadas solicitudes." }, { status: 429 });
+  }
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ ok: false, error: "Solicitud inválida." }, { status: 400 });
+  }
+
+  const parsed = contactoSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ ok: false, error: "Datos inválidos." }, { status: 422 });
+  }
+
+  const { _honeypot, ...data } = parsed.data;
+
+  // Si el honeypot tiene contenido, es un bot
+  if (_honeypot) {
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  try {
+    await sendMail({
+      to: ADMIN_EMAIL,
+      subject: `Contacto web: ${data.asunto}`,
+      html: `
+        <h3>Nuevo mensaje desde el formulario de contacto</h3>
+        <ul>
+          <li><strong>Nombre:</strong> ${data.nombre}</li>
+          <li><strong>Email:</strong> ${data.email}</li>
+          ${data.telefono ? `<li><strong>Teléfono:</strong> ${data.telefono}</li>` : ""}
+          <li><strong>Asunto:</strong> ${data.asunto}</li>
+        </ul>
+        <h4>Mensaje:</h4>
+        <p>${data.mensaje.replace(/\n/g, "<br>")}</p>
+      `,
+    });
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err) {
+    console.error("Error enviando email de contacto:", err);
+    await logEvent({
+      type: "error",
+      level: "error",
+      ip,
+      path: "/api/contacto",
+      method: "POST",
+      message: "Error enviando email de contacto",
+      details: { error: err instanceof Error ? err.message : String(err) },
+    });
+    return NextResponse.json({ ok: false, error: "Error enviando mensaje." }, { status: 500 });
+  }
+}
