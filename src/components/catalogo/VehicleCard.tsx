@@ -64,7 +64,7 @@ export function VehicleCard({ vehiculo, categorias }: VehicleCardProps) {
             </span>
           </div>
 
-          <div className="flex items-center justify-between pt-1">
+          <div className="pt-1 space-y-2">
             <div>
               <span className="text-xl font-extrabold text-[var(--color-accent)]">
                 {formatCurrency(vehiculo.precio_dia)}
@@ -72,11 +72,11 @@ export function VehicleCard({ vehiculo, categorias }: VehicleCardProps) {
               <span className="text-xs text-[var(--color-muted-foreground)]">/día</span>
             </div>
             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="flex-1">
                 <Link href={`/catalogo/${vehiculo.id}`}>Ver detalles</Link>
               </Button>
               {vehiculo.disponible && (
-                <Button asChild variant="accent" size="sm">
+                <Button asChild variant="accent" size="sm" className="flex-1">
                   <Link href={`/catalogo/${vehiculo.id}#reservar`}>Reservar</Link>
                 </Button>
               )}

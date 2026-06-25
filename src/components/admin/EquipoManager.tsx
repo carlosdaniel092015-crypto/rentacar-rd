@@ -14,10 +14,13 @@ import { MODULOS, type Modulo, type MiembroEquipo } from "@/lib/equipo-shared";
 const MODULO_LABELS: Record<Modulo, string> = {
   vehiculos: "Vehículos",
   reservas: "Reservas",
+  contactos: "Contactos",
   categorias: "Categorías",
   logs: "Logs",
   automatizacion: "Automatización",
   equipo: "Equipo",
+  analitica: "Analítica",
+  gps: "GPS / Flota",
 };
 
 interface EquipoManagerProps {

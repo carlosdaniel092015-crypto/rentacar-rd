@@ -65,10 +65,34 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["vehiculos"]["Insert"]>;
       };
+      contactos: {
+        Row: {
+          id: string;
+          nombre: string;
+          telefono: string;
+          cedula: string;
+          email: string;
+          notas: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nombre: string;
+          telefono: string;
+          cedula: string;
+          email?: string;
+          notas?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["contactos"]["Insert"]>;
+      };
       reservas: {
         Row: {
           id: string;
           vehiculo_id: string;
+          contacto_id: string | null;
           nombre_cliente: string;
           email_cliente: string;
           telefono_cliente: string;
@@ -86,6 +110,7 @@ export interface Database {
         Insert: {
           id?: string;
           vehiculo_id: string;
+          contacto_id?: string | null;
           nombre_cliente: string;
           email_cliente: string;
           telefono_cliente: string;
@@ -144,3 +169,5 @@ export type Vehiculo = Database["public"]["Tables"]["vehiculos"]["Row"];
 export type VehiculoInsert = Database["public"]["Tables"]["vehiculos"]["Insert"];
 export type Reserva = Database["public"]["Tables"]["reservas"]["Row"];
 export type ReservaInsert = Database["public"]["Tables"]["reservas"]["Insert"];
+export type Contacto = Database["public"]["Tables"]["contactos"]["Row"];
+export type ContactoInsert = Database["public"]["Tables"]["contactos"]["Insert"];

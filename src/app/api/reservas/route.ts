@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/server/audit";
 import { requireApiKey } from "@/lib/server/api-auth";
 import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
+import { cotizacionClienteHtml, cotizacionAdminHtml } from "@/lib/email/templates";
+import { upsertContacto } from "@/lib/server/contactos";
 
 export const dynamic = "force-dynamic";
 
@@ -153,9 +155,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Upsert contacto (deduplicación por teléfono o cédula)
+  const contactoId = await upsertContacto({
+    nombre: data.nombreCliente,
+    telefono: data.telefonoCliente,
+    cedula: data.cedulaCliente,
+    email: data.emailCliente,
+  });
+
   // Crear reserva — precio_dia viene de la DB, no del cliente
   const insertPayload = {
     vehiculo_id: data.vehiculoId,
+    contacto_id: contactoId,
     nombre_cliente: data.nombreCliente,
     email_cliente: data.emailCliente,
     telefono_cliente: data.telefonoCliente,
