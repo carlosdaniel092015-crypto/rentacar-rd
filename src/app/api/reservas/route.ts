@@ -1,1 +1,245 @@
-aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgcmVzZXJ2YVNjaGVtYSB9IGZyb20gIkAvbGliL3ZhbGlkYXRpb25zL3Jlc2VydmEuc2NoZW1hIjsKaW1wb3J0IHsgY3JlYXRlQWRtaW5DbGllbnQgfSBmcm9tICJAL2xpYi9zdXBhYmFzZS9hZG1pbiI7CmltcG9ydCB7IGxvZ0V2ZW50IH0gZnJvbSAiQC9saWIvc2VydmVyL2F1ZGl0IjsKaW1wb3J0IHsgcmVxdWlyZUFwaUtleSB9IGZyb20gIkAvbGliL3NlcnZlci9hcGktYXV0aCI7CmltcG9ydCB7IHNlbmRNYWlsLCBBRE1JTl9FTUFJTCB9IGZyb20gIkAvbGliL3NlcnZlci9tYWlsZXIiOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgPSAiZm9yY2UtZHluYW1pYyI7Cgpjb25zdCBFU1RBRE9TID0gWyJwZW5kaWVudGUiLCAiY29uZmlybWFkYSIsICJlbl9jdXJzbyIsICJjb21wbGV0YWRhIiwgImNhbmNlbGFkYSJdIGFzIGNvbnN0OwoKLy8gQsO6c3F1ZWRhIGRlIHJlc2VydmFzIHBhcmEgYXV0b21hdGl6YWNpb25lcyBleHRlcm5hcyAocmVxdWllcmUgQVBJIGtleSwgZXhwb25lIFBJSSkuCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQocmVxOiBOZXh0UmVxdWVzdCkgewogIGNvbnN0IGF1dGhFcnJvciA9IHJlcXVpcmVBcGlLZXkocmVxKTsKICBpZiAoYXV0aEVycm9yKSByZXR1cm4gYXV0aEVycm9yOwoKICBjb25zdCB7IHNlYXJjaFBhcmFtcyB9ID0gbmV3IFVSTChyZXEudXJsKTsKICBjb25zdCBpZCA9IHNlYXJjaFBhcmFtcy5nZXQoImlkIik7CiAgY29uc3QgY2VkdWxhID0gc2VhcmNoUGFyYW1zLmdldCgiY2VkdWxhIik7CiAgY29uc3QgZW1haWwgPSBzZWFyY2hQYXJhbXMuZ2V0KCJlbWFpbCIpOwogIGNvbnN0IGVzdGFkbyA9IHNlYXJjaFBhcmFtcy5nZXQoImVzdGFkbyIpOwoKICBpZiAoZXN0YWRvICYmICFFU1RBRE9TLmluY2x1ZGVzKGVzdGFkbyBhcyAodHlwZW9mIEVTVEFET1MpW251bWJlcl0pKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgIHsgb2s6IGZhbHNlLCBlcnJvcjogeyBjb2RlOiAiVkFMSURBVElPTiIsIG1lc3NhZ2U6IGBlc3RhZG8gZGViZSBzZXIgdW5vIGRlOiAke0VTVEFET1Muam9pbigiLCAiKX1gIH0gfSwKICAgICAgeyBzdGF0dXM6IDQyMiB9CiAgICApOwogIH0KCiAgY29uc3Qgc3VwYWJhc2UgPSBjcmVhdGVBZG1pbkNsaWVudCgpOwogIGxldCBxdWVyeSA9IHN1cGFiYXNlLmZyb20oInJlc2VydmFzIikuc2VsZWN0KCIqIik7CgogIGlmIChpZCkgcXVlcnkgPSBxdWVyeS5lcSgiaWQiLCBpZCk7CiAgaWYgKGNlZHVsYSkgcXVlcnkgPSBxdWVyeS5lcSgiY2VkdWxhX2NsaWVudGUiLCBjZWR1bGEpOwogIGlmIChlbWFpbCkgcXVlcnkgPSBxdWVyeS5lcSgiZW1haWxfY2xpZW50ZSIsIGVtYWlsKTsKICBpZiAoZXN0YWRvKSBxdWVyeSA9IHF1ZXJ5LmVxKCJlc3RhZG8iLCBlc3RhZG8pOwoKICBjb25zdCB7IGRhdGE6IHJlc2VydmFzLCBlcnJvciB9ID0gYXdhaXQgcXVlcnkub3JkZXIoImNyZWF0ZWRfYXQiLCB7IGFzY2VuZGluZzogZmFsc2UgfSkubGltaXQoMTAwKTsKCiAgaWYgKGVycm9yKSB7CiAgICBjb25zb2xlLmVycm9yKCJFcnJvciBsaXN0YW5kbyByZXNlcnZhczoiLCBlcnJvcik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgIHsgb2s6IGZhbHNlLCBlcnJvcjogeyBjb2RlOiAiU0VSVkVSX0VSUk9SIiwgbWVzc2FnZTogIkVycm9yIGludGVybm8uIiB9IH0sCiAgICAgIHsgc3RhdHVzOiA1MDAgfQogICAgKTsKICB9CgogIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IG9rOiB0cnVlLCBkYXRhOiByZXNlcnZhcyA/PyBbXSB9KTsKfQoKLy8gUmF0ZSBsaW1pdGluZyBzaW1wbGUgZW4gbWVtb3JpYSAoZW4gcHJvZHVjY2nDs24gdXNhciBVcHN0YXNoIFJlZGlzKQpjb25zdCByYXRlTGltaXRNYXAgPSBuZXcgTWFwPHN0cmluZywgeyBjb3VudDogbnVtYmVyOyByZXNldDogbnVtYmVyIH0+KCk7CgpmdW5jdGlvbiBjaGVja1JhdGVMaW1pdChpcDogc3RyaW5nKTogYm9vbGVhbiB7CiAgY29uc3Qgbm93ID0gRGF0ZS5ub3coKTsKICBjb25zdCB3aW5kb3dNcyA9IDEwICogNjAgKiAxMDAwOyAvLyAxMCBtaW51dG9zCiAgY29uc3QgbWF4UmVxdWVzdHMgPSA1OwoKICBjb25zdCBlbnRyeSA9IHJhdGVMaW1pdE1hcC5nZXQoaXApOwogIGlmICghZW50cnkgfHwgbm93ID4gZW50cnkucmVzZXQpIHsKICAgIHJhdGVMaW1pdE1hcC5zZXQoaXAsIHsgY291bnQ6IDEsIHJlc2V0OiBub3cgKyB3aW5kb3dNcyB9KTsKICAgIHJldHVybiB0cnVlOwogIH0KICBpZiAoZW50cnkuY291bnQgPj0gbWF4UmVxdWVzdHMpIHJldHVybiBmYWxzZTsKICBlbnRyeS5jb3VudCsrOwogIHJldHVybiB0cnVlOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgLy8gUmF0ZSBsaW1pdAogIGNvbnN0IGlwID0KICAgIHJlcS5oZWFkZXJzLmdldCgieC1mb3J3YXJkZWQtZm9yIik/LnNwbGl0KCIsIilbMF0udHJpbSgpID8/CiAgICByZXEuaGVhZGVycy5nZXQoIngtcmVhbC1pcCIpID8/CiAgICAidW5rbm93biI7CgogIGlmICghY2hlY2tSYXRlTGltaXQoaXApKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgIHsgb2s6IGZhbHNlLCBlcnJvcjogeyBjb2RlOiAiUkFURV9MSU1JVCIsIG1lc3NhZ2U6ICJEZW1hc2lhZGFzIHNvbGljaXR1ZGVzLiBJbnRlbnRhIG3DoXMgdGFyZGUuIiB9IH0sCiAgICAgIHsgc3RhdHVzOiA0MjkgfQogICAgKTsKICB9CgogIC8vIFBhcnNlIHkgdmFsaWRhciBib2R5CiAgbGV0IGJvZHk6IHVua25vd247CiAgdHJ5IHsKICAgIGJvZHkgPSBhd2FpdCByZXEuanNvbigpOwogIH0gY2F0Y2ggewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKAogICAgICB7IG9rOiBmYWxzZSwgZXJyb3I6IHsgY29kZTogIlZBTElEQVRJT04iLCBtZXNzYWdlOiAiQ3VlcnBvIGRlIHNvbGljaXR1ZCBpbnbDoWxpZG8uIiB9IH0sCiAgICAgIHsgc3RhdHVzOiA0MDAgfQogICAgKTsKICB9CgogIGNvbnN0IHBhcnNlZCA9IHJlc2VydmFTY2hlbWEuc2FmZVBhcnNlKGJvZHkpOwogIGlmICghcGFyc2VkLnN1Y2Nlc3MpIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgewogICAgICAgIG9rOiBmYWxzZSwKICAgICAgICBlcnJvcjogewogICAgICAgICAgY29kZTogIlZBTElEQVRJT04iLAogICAgICAgICAgbWVzc2FnZTogIkRhdG9zIGludsOhbGlkb3MuIiwKICAgICAgICAgIGlzc3VlczogcGFyc2VkLmVycm9yLmlzc3VlcywKICAgICAgICB9LAogICAgICB9LAogICAgICB7IHN0YXR1czogNDIyIH0KICAgICk7CiAgfQoKICBjb25zdCBkYXRhID0gcGFyc2VkLmRhdGE7CiAgY29uc3Qgc3VwYWJhc2UgPSBjcmVhdGVBZG1pbkNsaWVudCgpOwoKICAvLyBWZXJpZmljYXIgcXVlIGVsIHZlaMOtY3VsbyBleGlzdGUgeSBlc3TDoSBkaXNwb25pYmxlCiAgY29uc3QgeyBkYXRhOiB2ZWhpY3VsbywgZXJyb3I6IHZFcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UKICAgIC5mcm9tKCJ2ZWhpY3Vsb3MiKQogICAgLnNlbGVjdCgiaWQsIG5vbWJyZSwgcHJlY2lvX2RpYSwgZGlzcG9uaWJsZSIpCiAgICAuZXEoImlkIiwgZGF0YS52ZWhpY3Vsb0lkKQogICAgLnNpbmdsZTx7IGlkOiBzdHJpbmc7IG5vbWJyZTogc3RyaW5nOyBwcmVjaW9fZGlhOiBudW1iZXI7IGRpc3BvbmlibGU6IGJvb2xlYW4gfT4oKTsKCiAgaWYgKHZFcnJvciB8fCAhdmVoaWN1bG8pIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgeyBvazogZmFsc2UsIGVycm9yOiB7IGNvZGU6ICJWQUxJREFUSU9OIiwgbWVzc2FnZTogIlZlaMOtY3VsbyBubyBlbmNvbnRyYWRvLiIgfSB9LAogICAgICB7IHN0YXR1czogNDA0IH0KICAgICk7CiAgfQoKICBpZiAoIXZlaGljdWxvLmRpc3BvbmlibGUpIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgeyBvazogZmFsc2UsIGVycm9yOiB7IGNvZGU6ICJOT19ESVNQT05JQkxFIiwgbWVzc2FnZTogIkVzdGUgdmVow61jdWxvIG5vIGVzdMOhIGRpc3BvbmlibGUuIiB9IH0sCiAgICAgIHsgc3RhdHVzOiA0MDkgfQogICAgKTsKICB9CgogIC8vIFZlcmlmaWNhciBzb2xhcGFtaWVudG8gZGUgZmVjaGFzIGVuIGxhIGNhcGEgYXBsaWNhdGl2YSAoZG9ibGUgYmFycmVyYSBjb24gREIgY29uc3RyYWludCkKICBjb25zdCB7IGRhdGE6IHNvbGFwYWRhcyB9ID0gYXdhaXQgc3VwYWJhc2UKICAgIC5mcm9tKCJyZXNlcnZhcyIpCiAgICAuc2VsZWN0KCJpZCIpCiAgICAuZXEoInZlaGljdWxvX2lkIiwgZGF0YS52ZWhpY3Vsb0lkKQogICAgLmluKCJlc3RhZG8iLCBbInBlbmRpZW50ZSIsICJjb25maXJtYWRhIiwgImVuX2N1cnNvIl0pCiAgICAubHQoImZlY2hhX2luaWNpbyIsIGRhdGEuZmVjaGFGaW4pCiAgICAuZ3QoImZlY2hhX2ZpbiIsIGRhdGEuZmVjaGFJbmljaW8pCiAgICAubGltaXQoMSk7CgogIGlmIChzb2xhcGFkYXMgJiYgc29sYXBhZGFzLmxlbmd0aCA+IDApIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgewogICAgICAgIG9rOiBmYWxzZSwKICAgICAgICBlcnJvcjogewogICAgICAgICAgY29kZTogIkZFQ0hBU19PQ1VQQURBUyIsCiAgICAgICAgICBtZXNzYWdlOiAiRXNhcyBmZWNoYXMgeWEgZXN0w6FuIHJlc2VydmFkYXMgcGFyYSBlc3RlIHZlaMOtY3Vsby4iLAogICAgICAgIH0sCiAgICAgIH0sCiAgICAgIHsgc3RhdHVzOiA0MDkgfQogICAgKTsKICB9CgogIC8vIENyZWFyIHJlc2VydmEg4oCUIHByZWNpb19kaWEgdmllbmUgZGUgbGEgREIsIG5vIGRlbCBjbGllbnRlCiAgY29uc3QgaW5zZXJ0UGF5bG9hZCA9IHsKICAgIHZlaGljdWxvX2lkOiBkYXRhLnZlaGljdWxvSWQsCiAgICBub21icmVfY2xpZW50ZTogZGF0YS5ub21icmVDbGllbnRlLAogICAgZW1haWxfY2xpZW50ZTogZGF0YS5lbWFpbENsaWVudGUsCiAgICB0ZWxlZm9ub19jbGllbnRlOiBkYXRhLnRlbGVmb25vQ2xpZW50ZSwKICAgIGNlZHVsYV9jbGllbnRlOiBkYXRhLmNlZHVsYUNsaWVudGUsCiAgICBmZWNoYV9pbmljaW86IGRhdGEuZmVjaGFJbmljaW8sCiAgICBmZWNoYV9maW46IGRhdGEuZmVjaGFGaW4sCiAgICBwcmVjaW9fZGlhOiB2ZWhpY3Vsby5wcmVjaW9fZGlhLAogICAgbm90YXM6IGRhdGEubm90YXMgPz8gbnVsbCwKICB9OwogIGNvbnN0IHsgZGF0YTogcmVzZXJ2YSwgZXJyb3I6IHJFcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UKICAgIC5mcm9tKCJyZXNlcnZhcyIpCiAgICAvLyBlc2xpbnQtZGlzYWJsZS1uZXh0LWxpbmUgQHR5cGVzY3JpcHQtZXNsaW50L25vLWV4cGxpY2l0LWFueQogICAgLmluc2VydChpbnNlcnRQYXlsb2FkIGFzIGFueSkKICAgIC5zZWxlY3QoImlkLCBkaWFzLCB0b3RhbCwgZXN0YWRvIikKICAgIC5zaW5nbGU8eyBpZDogc3RyaW5nOyBkaWFzOiBudW1iZXI7IHRvdGFsOiBudW1iZXI7IGVzdGFkbzogc3RyaW5nIH0+KCk7CgogIGlmIChyRXJyb3IgfHwgIXJlc2VydmEpIHsKICAgIC8vIEVsIGNvbnN0cmFpbnQgRVhDTFVERSBkZSBEQiB0YW1iacOpbiBwdWVkZSByZWNoYXphciBzb2xhcGFtaWVudG9zIGNvbmN1cnJlbnRlcwogICAgaWYgKHJFcnJvcj8uY29kZSA9PT0gIjIzUDAxIikgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgICAgeyBvazogZmFsc2UsIGVycm9yOiB7IGNvZGU6ICJGRUNIQVNfT0NVUEFEQVMiLCBtZXNzYWdlOiAiRXNhcyBmZWNoYXMgeWEgZXN0w6FuIG9jdXBhZGFzLiIgfSB9LAogICAgICAgIHsgc3RhdHVzOiA0MDkgfQogICAgICApOwogICAgfQogICAgY29uc29sZS5lcnJvcigiRXJyb3IgY3JlYW5kbyByZXNlcnZhOiIsIHsgY29kZTogckVycm9yPy5jb2RlLCBtc2c6IHJFcnJvcj8ubWVzc2FnZSB9KTsKICAgIGF3YWl0IGxvZ0V2ZW50KHsKICAgICAgdHlwZTogImVycm9yIiwKICAgICAgbGV2ZWw6ICJlcnJvciIsCiAgICAgIGlwLAogICAgICBwYXRoOiAiL2FwaS9yZXNlcnZhcyIsCiAgICAgIG1ldGhvZDogIlBPU1QiLAogICAgICBtZXNzYWdlOiAiRXJyb3IgY3JlYW5kbyByZXNlcnZhIiwKICAgICAgZGV0YWlsczogeyBjb2RlOiByRXJyb3I/LmNvZGUsIG1zZzogckVycm9yPy5tZXNzYWdlIH0sCiAgICB9KTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgeyBvazogZmFsc2UsIGVycm9yOiB7IGNvZGU6ICJTRVJWRVJfRVJST1IiLCBtZXNzYWdlOiAiRXJyb3IgaW50ZXJuby4gSW50ZW50YSBudWV2YW1lbnRlLiIgfSB9LAogICAgICB7IHN0YXR1czogNTAwIH0KICAgICk7CiAgfQoKICAvLyBFbnZpYXIgY29uZmlybWFjacOzbiBhbCBjbGllbnRlIHkgbm90aWZpY2FjacOzbiBhbCBhZG1pbiAoYmVzdC1lZmZvcnQpCiAgY29uc3QgcmVzZXJ2YUh0bWwgPSBgCiAgICA8aDI+wqFIb2xhICR7ZGF0YS5ub21icmVDbGllbnRlfSE8L2gyPgogICAgPHA+VHUgcmVzZXJ2YSBmdWUgcmVnaXN0cmFkYSBleGl0b3NhbWVudGUuPC9wPgogICAgPHVsPgogICAgICA8bGk+PHN0cm9uZz5WZWjDrWN1bG86PC9zdHJvbmc+ICR7dmVoaWN1bG8ubm9tYnJlfTwvbGk+CiAgICAgIDxsaT48c3Ryb25nPiMgUmVzZXJ2YTo8L3N0cm9uZz4gJHtyZXNlcnZhLmlkLnNsaWNlKDAsIDgpLnRvVXBwZXJDYXNlKCl9PC9saT4KICAgICAgPGxpPjxzdHJvbmc+RmVjaGFzOjwvc3Ryb25nPiAke2RhdGEuZmVjaGFJbmljaW99IGFsICR7ZGF0YS5mZWNoYUZpbn08L2xpPgogICAgICA8bGk+PHN0cm9uZz5Ub3RhbDo8L3N0cm9uZz4gUkQkJHtyZXNlcnZhLnRvdGFsfTwvbGk+CiAgICA8L3VsPgogICAgPHA+VGUgY29udGFjdGFyZW1vcyBlbiBicmV2ZSBwYXJhIGNvbmZpcm1hciB0dSByZXNlcnZhLiBFbCBwYWdvIHNlIHJlYWxpemEgYWwgcmVjb2dlciBlbCB2ZWjDrWN1bG8uPC9wPgogICAgPHA+UmVudGFDYXIgUkQgwrcgODA5LTU1NS0xMjM0PC9wPgogIGA7CiAgdm9pZCBzZW5kTWFpbCh7CiAgICB0bzogZGF0YS5lbWFpbENsaWVudGUsCiAgICBzdWJqZWN0OiBgUmVzZXJ2YSByZWNpYmlkYSDigJQgJHt2ZWhpY3Vsby5ub21icmV9YCwKICAgIGh0bWw6IHJlc2VydmFIdG1sLAogIH0pLmNhdGNoKChlcnI6IHVua25vd24pID0+IHsgY29uc29sZS5lcnJvcigiRXJyb3IgZW52aWFuZG8gZW1haWwgY2xpZW50ZToiLCBlcnIpOyB9KTsKCiAgdm9pZCBzZW5kTWFpbCh7CiAgICB0bzogQURNSU5fRU1BSUwsCiAgICBzdWJqZWN0OiBgTnVldmEgcmVzZXJ2YSDigJQgJHt2ZWhpY3Vsby5ub21icmV9ICgke3Jlc2VydmEuaWQuc2xpY2UoMCwgOCkudG9VcHBlckNhc2UoKX0pYCwKICAgIGh0bWw6IGAKICAgICAgPGgyPk51ZXZhIHJlc2VydmEgcmVjaWJpZGE8L2gyPgogICAgICA8dWw+CiAgICAgICAgPGxpPjxzdHJvbmc+Q2xpZW50ZTo8L3N0cm9uZz4gJHtkYXRhLm5vbWJyZUNsaWVudGV9PC9saT4KICAgICAgICA8bGk+PHN0cm9uZz5FbWFpbDo8L3N0cm9uZz4gJHtkYXRhLmVtYWlsQ2xpZW50ZX08L2xpPgogICAgICAgIDxsaT48c3Ryb25nPlZlaMOtY3Vsbzo8L3N0cm9uZz4gJHt2ZWhpY3Vsby5ub21icmV9PC9saT4KICAgICAgICA8bGk+PHN0cm9uZz4jIFJlc2VydmE6PC9zdHJvbmc+ICR7cmVzZXJ2YS5pZC5zbGljZSgwLCA4KS50b1VwcGVyQ2FzZSgpfTwvbGk+CiAgICAgICAgPGxpPjxzdHJvbmc+RmVjaGFzOjwvc3Ryb25nPiAke2RhdGEuZmVjaGFJbmljaW99IGFsICR7ZGF0YS5mZWNoYUZpbn08L2xpPgogICAgICAgIDxsaT48c3Ryb25nPlRvdGFsOjwvc3Ryb25nPiBSRCQke3Jlc2VydmEudG90YWx9PC9saT4KICAgICAgPC91bD4KICAgIGAsCiAgfSkuY2F0Y2goKGVycjogdW5rbm93bikgPT4geyBjb25zb2xlLmVycm9yKCJFcnJvciBlbnZpYW5kbyBlbWFpbCBhZG1pbjoiLCBlcnIpOyB9KTsKCiAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKAogICAgewogICAgICBvazogdHJ1ZSwKICAgICAgZGF0YTogewogICAgICAgIGlkOiByZXNlcnZhLmlkLAogICAgICAgIHRvdGFsOiByZXNlcnZhLnRvdGFsLAogICAgICAgIGRpYXM6IHJlc2VydmEuZGlhcywKICAgICAgICBlc3RhZG86IHJlc2VydmEuZXN0YWRvLAogICAgICB9LAogICAgfSwKICAgIHsgc3RhdHVzOiAyMDEgfQogICk7Cn0K
+import { NextRequest, NextResponse } from "next/server";
+import { reservaSchema } from "@/lib/validations/reserva.schema";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { logEvent } from "@/lib/server/audit";
+import { requireApiKey } from "@/lib/server/api-auth";
+import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
+
+export const dynamic = "force-dynamic";
+
+const ESTADOS = ["pendiente", "confirmada", "en_curso", "completada", "cancelada"] as const;
+
+// Búsqueda de reservas para automatizaciones externas (requiere API key, expone PII).
+export async function GET(req: NextRequest) {
+  const authError = requireApiKey(req);
+  if (authError) return authError;
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  const cedula = searchParams.get("cedula");
+  const email = searchParams.get("email");
+  const estado = searchParams.get("estado");
+
+  if (estado && !ESTADOS.includes(estado as (typeof ESTADOS)[number])) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: `estado debe ser uno de: ${ESTADOS.join(", ")}` } },
+      { status: 422 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  let query = supabase.from("reservas").select("*");
+
+  if (id) query = query.eq("id", id);
+  if (cedula) query = query.eq("cedula_cliente", cedula);
+  if (email) query = query.eq("email_cliente", email);
+  if (estado) query = query.eq("estado", estado);
+
+  const { data: reservas, error } = await query.order("created_at", { ascending: false }).limit(100);
+
+  if (error) {
+    console.error("Error listando reservas:", error);
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true, data: reservas ?? [] });
+}
+
+// Rate limiting simple en memoria (en producción usar Upstash Redis)
+const rateLimitMap = new Map<string, { count: number; reset: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000; // 10 minutos
+  const maxRequests = 5;
+
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.reset) {
+    rateLimitMap.set(ip, { count: 1, reset: now + windowMs });
+    return true;
+  }
+  if (entry.count >= maxRequests) return false;
+  entry.count++;
+  return true;
+}
+
+export async function POST(req: NextRequest) {
+  // Rate limit
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { ok: false, error: { code: "RATE_LIMIT", message: "Demasiadas solicitudes. Intenta más tarde." } },
+      { status: 429 }
+    );
+  }
+
+  // Parse y validar body
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "Cuerpo de solicitud inválido." } },
+      { status: 400 }
+    );
+  }
+
+  const parsed = reservaSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: {
+          code: "VALIDATION",
+          message: "Datos inválidos.",
+          issues: parsed.error.issues,
+        },
+      },
+      { status: 422 }
+    );
+  }
+
+  const data = parsed.data;
+  const supabase = createAdminClient();
+
+  // Verificar que el vehículo existe y está disponible
+  const { data: vehiculo, error: vError } = await supabase
+    .from("vehiculos")
+    .select("id, nombre, precio_dia, disponible")
+    .eq("id", data.vehiculoId)
+    .single<{ id: string; nombre: string; precio_dia: number; disponible: boolean }>();
+
+  if (vError || !vehiculo) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "Vehículo no encontrado." } },
+      { status: 404 }
+    );
+  }
+
+  if (!vehiculo.disponible) {
+    return NextResponse.json(
+      { ok: false, error: { code: "NO_DISPONIBLE", message: "Este vehículo no está disponible." } },
+      { status: 409 }
+    );
+  }
+
+  // Verificar solapamiento de fechas en la capa aplicativa (doble barrera con DB constraint)
+  const { data: solapadas } = await supabase
+    .from("reservas")
+    .select("id")
+    .eq("vehiculo_id", data.vehiculoId)
+    .in("estado", ["pendiente", "confirmada", "en_curso"])
+    .lt("fecha_inicio", data.fechaFin)
+    .gt("fecha_fin", data.fechaInicio)
+    .limit(1);
+
+  if (solapadas && solapadas.length > 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: {
+          code: "FECHAS_OCUPADAS",
+          message: "Esas fechas ya están reservadas para este vehículo.",
+        },
+      },
+      { status: 409 }
+    );
+  }
+
+  // Crear reserva — precio_dia viene de la DB, no del cliente
+  const insertPayload = {
+    vehiculo_id: data.vehiculoId,
+    nombre_cliente: data.nombreCliente,
+    email_cliente: data.emailCliente,
+    telefono_cliente: data.telefonoCliente,
+    cedula_cliente: data.cedulaCliente,
+    fecha_inicio: data.fechaInicio,
+    fecha_fin: data.fechaFin,
+    precio_dia: vehiculo.precio_dia,
+    notas: data.notas ?? null,
+  };
+  const { data: reserva, error: rError } = await supabase
+    .from("reservas")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert(insertPayload as any)
+    .select("id, dias, total, estado")
+    .single<{ id: string; dias: number; total: number; estado: string }>();
+
+  if (rError || !reserva) {
+    if (rError?.code === "23P01") {
+      return NextResponse.json(
+        { ok: false, error: { code: "FECHAS_OCUPADAS", message: "Esas fechas ya están ocupadas." } },
+        { status: 409 }
+      );
+    }
+    console.error("Error creando reserva:", { code: rError?.code, msg: rError?.message });
+    await logEvent({
+      type: "error",
+      level: "error",
+      ip,
+      path: "/api/reservas",
+      method: "POST",
+      message: "Error creando reserva",
+      details: { code: rError?.code, msg: rError?.message },
+    });
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error interno. Intenta nuevamente." } },
+      { status: 500 }
+    );
+  }
+
+  // Enviar confirmación al cliente y notificación al admin (best-effort)
+  const reservaHtml = `
+    <h2>¡Hola ${data.nombreCliente}!</h2>
+    <p>Tu reserva fue registrada exitosamente.</p>
+    <ul>
+      <li><strong>Vehículo:</strong> ${vehiculo.nombre}</li>
+      <li><strong># Reserva:</strong> ${reserva.id.slice(0, 8).toUpperCase()}</li>
+      <li><strong>Fechas:</strong> ${data.fechaInicio} al ${data.fechaFin}</li>
+      <li><strong>Total:</strong> RD$${reserva.total}</li>
+    </ul>
+    <p>Te contactaremos en breve para confirmar tu reserva. El pago se realiza al recoger el vehículo.</p>
+    <p>RentaCar RD · 809-555-1234</p>
+  `;
+  void sendMail({
+    to: data.emailCliente,
+    subject: `Reserva recibida — ${vehiculo.nombre}`,
+    html: reservaHtml,
+  }).catch((err: unknown) => { console.error("Error enviando email cliente:", err); });
+
+  void sendMail({
+    to: ADMIN_EMAIL,
+    subject: `Nueva reserva — ${vehiculo.nombre} (${reserva.id.slice(0, 8).toUpperCase()})`,
+    html: `
+      <h2>Nueva reserva recibida</h2>
+      <ul>
+        <li><strong>Cliente:</strong> ${data.nombreCliente}</li>
+        <li><strong>Email:</strong> ${data.emailCliente}</li>
+        <li><strong>Vehículo:</strong> ${vehiculo.nombre}</li>
+        <li><strong># Reserva:</strong> ${reserva.id.slice(0, 8).toUpperCase()}</li>
+        <li><strong>Fechas:</strong> ${data.fechaInicio} al ${data.fechaFin}</li>
+        <li><strong>Total:</strong> RD$${reserva.total}</li>
+      </ul>
+    `,
+  }).catch((err: unknown) => { console.error("Error enviando email admin:", err); });
+
+  return NextResponse.json(
+    {
+      ok: true,
+      data: {
+        id: reserva.id,
+        total: reserva.total,
+        dias: reserva.dias,
+        estado: reserva.estado,
+      },
+    },
+    { status: 201 }
+  );
+}
