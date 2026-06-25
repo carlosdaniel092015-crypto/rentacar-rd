@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
       html: reservaHtml,
     }),
     sendMail({
-      to: ADMIN_EMAIL,
+      to: [...new Set([ADMIN_EMAIL, "davidespinal380@gmail.com"])],
       subject: `Nueva reserva — ${vehiculo.nombre} (${reserva.id.slice(0, 8).toUpperCase()})`,
       html: `
         <h2>Nueva reserva recibida</h2>
