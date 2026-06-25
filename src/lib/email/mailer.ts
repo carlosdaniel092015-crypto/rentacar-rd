@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "davidespinal380@gmail.com";
+export const SMTP_FROM = process.env.SMTP_USER ?? "reservas.rentacarrd@gmail.com";
+
 function createTransport() {
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -21,7 +24,7 @@ export async function sendMail({
   subject: string;
   html: string;
 }) {
-  const from = `RentaCar RD <${process.env.SMTP_USER}>`;
+  const from = `RentaCar RD <${SMTP_FROM}>`;
   const transporter = createTransport();
   await transporter.sendMail({ from, to, subject, html });
 }

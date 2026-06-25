@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Emails de cotización (best-effort, no bloquean la respuesta)
-  const adminEmail = process.env.ADMIN_EMAIL ?? "";
+  const adminEmail = process.env.ADMIN_EMAIL ?? "davidespinal380@gmail.com";
   const numId = reserva.id.slice(0, 8).toUpperCase();
   const emailParams = {
     numId,

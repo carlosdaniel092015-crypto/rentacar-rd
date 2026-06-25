@@ -82,7 +82,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
 
   // Enviar email según el nuevo estado
   {
-    const adminEmail = process.env.ADMIN_EMAIL ?? "";
+    const adminEmail = process.env.ADMIN_EMAIL ?? "davidespinal380@gmail.com";
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://prueba.acentosdeco.lat";
     const numId = (reserva.id as string).slice(0, 8).toUpperCase();
     const vehiculoNombre = reserva.vehiculos?.nombre ?? "Vehículo";

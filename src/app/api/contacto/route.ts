@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { contactoSchema } from "@/lib/validations/contacto.schema";
-import { Resend } from "resend";
+import { sendMail, ADMIN_EMAIL } from "@/lib/email/mailer";
 import { logEvent } from "@/lib/server/audit";
 
 // Rate limit simple
@@ -51,10 +51,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: "Formulario Web <noreply@rentacard.com>",
-      to: "info@rentacard.com",
+    await sendMail({
+      to: ADMIN_EMAIL,
       subject: `Contacto web: ${data.asunto}`,
       html: `
         <h3>Nuevo mensaje desde el formulario de contacto</h3>
