@@ -15,6 +15,7 @@ const MODULO_LABELS: Record<Modulo, string> = {
   vehiculos: "Vehículos",
   reservas: "Reservas",
   contactos: "Contactos",
+  encuestas: "Encuestas",
   categorias: "Categorías",
   logs: "Logs",
   automatizacion: "Automatización",

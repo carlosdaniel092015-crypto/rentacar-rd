@@ -146,10 +146,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
     })();
 
     if (mails) {
+      const adminRecipients = [...new Set([adminEmail, "davidespinal380@gmail.com"].filter(Boolean))];
       await Promise.allSettled([
         sendMail({ to: reserva.email_cliente, subject: mails.clienteSubject, html: mails.clienteHtml }),
-        adminEmail && mails.adminHtml && mails.adminSubject
-          ? sendMail({ to: adminEmail, subject: mails.adminSubject, html: mails.adminHtml })
+        mails.adminHtml && mails.adminSubject
+          ? sendMail({ to: adminRecipients, subject: mails.adminSubject, html: mails.adminHtml })
           : Promise.resolve(),
       ]);
     }

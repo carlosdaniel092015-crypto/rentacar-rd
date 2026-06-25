@@ -1,4 +1,4 @@
-export const MODULOS = ["vehiculos", "reservas", "contactos", "categorias", "logs", "automatizacion", "equipo", "analitica", "gps"] as const;
+export const MODULOS = ["vehiculos", "reservas", "contactos", "encuestas", "categorias", "logs", "automatizacion", "equipo", "analitica", "gps"] as const;
 export type Modulo = (typeof MODULOS)[number];
 
 export interface MiembroEquipo {
