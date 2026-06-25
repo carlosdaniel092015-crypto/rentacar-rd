@@ -130,7 +130,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
           };
         case "completada":
           return {
-            clienteHtml: completadaClienteHtml({ ...emailParams, siteUrl }),
+            clienteHtml: completadaClienteHtml({ ...emailParams, siteUrl, reservaId: reserva.id }),
             adminHtml: completadaAdminHtml(emailParams),
             clienteSubject: `¡Gracias por tu alquiler! — Cuéntanos tu experiencia`,
             adminSubject: `Alquiler completado #${numId} — ${vehiculoNombre}`,

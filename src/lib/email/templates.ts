@@ -216,8 +216,8 @@ export function pendienteClienteHtml(params: ParamsEstado) {
 
 // ─── Completada + Encuesta ────────────────────────────────────────────────────
 
-export function completadaClienteHtml(params: ParamsEstado & { siteUrl: string }) {
-  const encuestaUrl = `${params.siteUrl}/encuesta/${params.numId}`;
+export function completadaClienteHtml(params: ParamsEstado & { siteUrl: string; reservaId?: string }) {
+  const encuestaUrl = `${params.siteUrl}/encuesta/${params.reservaId ?? params.numId}`;
   const fmt = (n: number) => n.toLocaleString("es-DO");
   return base(`
     <h2 style="margin-top:0">¡Gracias por elegirnos, ${params.nombreCliente}!</h2>
