@@ -2,24 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { contactoSchema } from "@/lib/validations/contacto.schema";
 import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
 import { logEvent } from "@/lib/server/audit";
-
-// Rate limit simple
-const rateLimitMap = new Map<string, { count: number; reset: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 60 * 1000; // 1 hora
-  const maxRequests = 3;
-
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.reset) {
-    rateLimitMap.set(ip, { count: 1, reset: now + windowMs });
-    return true;
-  }
-  if (entry.count >= maxRequests) return false;
-  entry.count++;
-  return true;
-}
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { escapeHtml } from "@/lib/email/escape";
 
 export async function POST(req: NextRequest) {
   const ip =
@@ -27,7 +11,7 @@ export async function POST(req: NextRequest) {
     req.headers.get("x-real-ip") ??
     "unknown";
 
-  if (!checkRateLimit(ip)) {
+  if (!(await checkRateLimit("contacto", ip, 3, 60 * 60))) {
     return NextResponse.json({ ok: false, error: "Demasiadas solicitudes." }, { status: 429 });
   }
 
@@ -57,13 +41,13 @@ export async function POST(req: NextRequest) {
       html: `
         <h3>Nuevo mensaje desde el formulario de contacto</h3>
         <ul>
-          <li><strong>Nombre:</strong> ${data.nombre}</li>
-          <li><strong>Email:</strong> ${data.email}</li>
-          ${data.telefono ? `<li><strong>Teléfono:</strong> ${data.telefono}</li>` : ""}
-          <li><strong>Asunto:</strong> ${data.asunto}</li>
+          <li><strong>Nombre:</strong> ${escapeHtml(data.nombre)}</li>
+          <li><strong>Email:</strong> ${escapeHtml(data.email)}</li>
+          ${data.telefono ? `<li><strong>Teléfono:</strong> ${escapeHtml(data.telefono)}</li>` : ""}
+          <li><strong>Asunto:</strong> ${escapeHtml(data.asunto)}</li>
         </ul>
         <h4>Mensaje:</h4>
-        <p>${data.mensaje.replace(/\n/g, "<br>")}</p>
+        <p>${escapeHtml(data.mensaje).replace(/\n/g, "<br>")}</p>
       `,
     });
 

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentMember, MODULOS, type Modulo } from "@/lib/server/equipo";
 import { logEvent } from "@/lib/server/audit";
 import { sendMail } from "@/lib/server/mailer";
+import { escapeHtml } from "@/lib/email/escape";
 
 export const dynamic = "force-dynamic";
 
@@ -125,11 +126,11 @@ export async function POST(req: NextRequest) {
     to: email,
     subject: "Acceso al panel administrativo — RentaCar RD",
     html: `
-      <h2>¡Bienvenido/a al equipo, ${nombre}!</h2>
-      <p>Se creó tu cuenta para el panel administrativo con el cargo <strong>${cargo}</strong>.</p>
+      <h2>¡Bienvenido/a al equipo, ${escapeHtml(nombre)}!</h2>
+      <p>Se creó tu cuenta para el panel administrativo con el cargo <strong>${escapeHtml(cargo)}</strong>.</p>
       <ul>
-        <li><strong>Correo:</strong> ${email}</li>
-        <li><strong>Contraseña temporal:</strong> ${password}</li>
+        <li><strong>Correo:</strong> ${escapeHtml(email)}</li>
+        <li><strong>Contraseña temporal:</strong> ${escapeHtml(password)}</li>
         <li><strong>Acceso al panel:</strong> ${process.env.NEXT_PUBLIC_SITE_URL}/login</li>
       </ul>
       <p>Por seguridad, cambia tu contraseña después de iniciar sesión.</p>

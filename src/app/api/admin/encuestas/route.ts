@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember } from "@/lib/server/equipo";
+import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+  if (!member || !tieneAcceso(member, "encuestas")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
   const estrellas = searchParams.get("estrellas");

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember } from "@/lib/server/equipo";
+import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
 import { logEvent } from "@/lib/server/audit";
-import { sendMail } from "@/lib/email/mailer";
+import { sendMail } from "@/lib/server/mailer";
 import {
   confirmacionClienteHtml, confirmacionAdminHtml,
   enCursoClienteHtml, enCursoAdminHtml,
@@ -18,7 +18,7 @@ type Estado = (typeof ESTADOS)[number];
 
 export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/reservas/[id]">) {
   const member = await getCurrentMember();
-  if (!member) {
+  if (!member || !tieneAcceso(member, "reservas")) {
     return NextResponse.json(
       { ok: false, error: { code: "FORBIDDEN", message: "No autorizado." } },
       { status: 403 }
@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
   // Enviar email según el nuevo estado
   {
     const adminEmail = process.env.ADMIN_EMAIL ?? "";
-    const siteUrl = "https://prueba.acentosdeco.lat";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     const numId = (reserva.id as string).slice(0, 8).toUpperCase();
     const vehiculoNombre = reserva.vehiculos?.nombre ?? "Vehículo";
     const precioDia = reserva.vehiculos?.precio_dia ?? reserva.precio_dia ?? 0;
@@ -170,7 +170,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/admin/rese
 // Archivar (soft-delete) o restaurar: body { accion: "archivar" | "restaurar" | "eliminar_permanente" }
 export async function DELETE(req: NextRequest, ctx: RouteContext<"/api/admin/reservas/[id]">) {
   const member = await getCurrentMember();
-  if (!member) {
+  if (!member || !tieneAcceso(member, "reservas")) {
     return NextResponse.json(
       { ok: false, error: { code: "FORBIDDEN", message: "No autorizado." } },
       { status: 403 }
@@ -185,6 +185,13 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<"/api/admin/res
     const body = await req.json().catch(() => ({}));
     if (body?.accion) accion = body.accion;
   } catch { /* sin body = archivar */ }
+
+  if (accion === "eliminar_permanente" && member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede eliminar reservas permanentemente." } },
+      { status: 403 }
+    );
+  }
 
   if (accion === "eliminar_permanente") {
     const { error } = await supabase.from("reservas").delete().eq("id", id);

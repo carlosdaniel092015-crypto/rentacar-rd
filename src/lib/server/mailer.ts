@@ -1,6 +1,9 @@
+import "server-only";
 import nodemailer from "nodemailer";
 
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "reservas.rentacarrd@gmail.com";
+// Destinatario adicional opcional para notificaciones (ej. dueño/soporte externo al equipo).
+export const SECONDARY_ADMIN_EMAIL = process.env.SECONDARY_ADMIN_EMAIL || null;
 
 function createTransporter() {
   return nodemailer.createTransport({

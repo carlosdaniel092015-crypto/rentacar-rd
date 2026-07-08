@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember } from "@/lib/server/equipo";
+import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
+import { decryptSecret } from "@/lib/server/crypto";
+
+// Formato de un secreto cifrado por encryptSecret(): iv:authTag:ciphertext (hex).
+const ENCRYPTED_FORMAT = /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
+
+// Credenciales guardadas antes de introducir el cifrado quedan en texto plano;
+// se descifran solo si tienen el formato esperado, para no romper configuraciones existentes.
+function resolveClave(clave: string): string {
+  return ENCRYPTED_FORMAT.test(clave) ? decryptSecret(clave) : clave;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +87,7 @@ async function getDevices(servidorUrl: string, token: string): Promise<WhatsGPSD
 
 export async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+  if (!member || !tieneAcceso(member, "gps")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
   const supabase = createAdminClient() as any;
   const { data: config } = await supabase
@@ -91,7 +101,7 @@ export async function GET() {
   }
 
   try {
-    const token = await getWhatsGPSToken(config.servidor_url, config.usuario, config.clave);
+    const token = await getWhatsGPSToken(config.servidor_url, config.usuario, resolveClave(config.clave));
     const devices = await getDevices(config.servidor_url, token);
 
     // Actualizar último sync

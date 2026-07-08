@@ -14,7 +14,15 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/reservas/[id
 
   const { id } = await ctx.params;
   const supabase = createAdminClient();
-  const { data: reserva, error } = await supabase.from("reservas").select("*").eq("id", id).single();
+  const { data: reserva, error } = await supabase
+    .from("reservas")
+    .select(
+      "id, vehiculo_id, contacto_id, nombre_cliente, email_cliente, telefono_cliente, cedula_cliente, " +
+        "fecha_inicio, fecha_fin, dias, precio_dia, total, estado, notas, archivada, " +
+        "encuesta_estrellas, encuesta_comentario, encuesta_fecha, created_at, updated_at"
+    )
+    .eq("id", id)
+    .single();
 
   if (error || !reserva) {
     return NextResponse.json(

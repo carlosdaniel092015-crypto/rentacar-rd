@@ -54,6 +54,10 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     "/admin/reservas": "reservas",
     "/admin/logs": "logs",
     "/admin/equipo": "equipo",
+    "/admin/contactos": "contactos",
+    "/admin/encuestas": "encuestas",
+    "/admin/gps": "gps",
+    "/admin/analitica": "analitica",
   };
   const modulo = Object.entries(PATH_MODULOS).find(([prefix]) => pathname.startsWith(prefix))?.[1];
   if (modulo && user) {

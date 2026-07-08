@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember } from "@/lib/server/equipo";
+import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/admin/contactos — lista con conteo de reservas y total gastado
 export async function GET(req: NextRequest) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+  if (!member || !tieneAcceso(member, "contactos")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() ?? "";
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 // POST /api/admin/contactos — crear contacto manualmente
 export async function POST(req: NextRequest) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+  if (!member || !tieneAcceso(member, "contactos")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
   const body = await req.json();
   const { nombre, telefono, cedula, email, notas } = body;

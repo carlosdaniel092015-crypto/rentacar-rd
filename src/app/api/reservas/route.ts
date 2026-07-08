@@ -3,7 +3,8 @@ import { reservaSchema } from "@/lib/validations/reserva.schema";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logEvent } from "@/lib/server/audit";
 import { requireApiKey } from "@/lib/server/api-auth";
-import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { sendMail, ADMIN_EMAIL, SECONDARY_ADMIN_EMAIL } from "@/lib/server/mailer";
 import { cotizacionClienteHtml, cotizacionAdminHtml } from "@/lib/email/templates";
 import { upsertContacto } from "@/lib/server/contactos";
 
@@ -30,7 +31,11 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  let query = supabase.from("reservas").select("*");
+  let query = supabase.from("reservas").select(
+    "id, vehiculo_id, contacto_id, nombre_cliente, email_cliente, telefono_cliente, cedula_cliente, " +
+      "fecha_inicio, fecha_fin, dias, precio_dia, total, estado, notas, archivada, " +
+      "encuesta_estrellas, encuesta_comentario, encuesta_fecha, created_at, updated_at"
+  );
 
   if (id) query = query.eq("id", id);
   if (cedula) query = query.eq("cedula_cliente", cedula);
@@ -50,24 +55,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ ok: true, data: reservas ?? [] });
 }
 
-// Rate limiting simple en memoria (en producción usar Upstash Redis)
-const rateLimitMap = new Map<string, { count: number; reset: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 10 * 60 * 1000; // 10 minutos
-  const maxRequests = 5;
-
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.reset) {
-    rateLimitMap.set(ip, { count: 1, reset: now + windowMs });
-    return true;
-  }
-  if (entry.count >= maxRequests) return false;
-  entry.count++;
-  return true;
-}
-
 export async function POST(req: NextRequest) {
   // Rate limit
   const ip =
@@ -75,7 +62,7 @@ export async function POST(req: NextRequest) {
     req.headers.get("x-real-ip") ??
     "unknown";
 
-  if (!checkRateLimit(ip)) {
+  if (!(await checkRateLimit("reservas", ip, 5, 10 * 60))) {
     return NextResponse.json(
       { ok: false, error: { code: "RATE_LIMIT", message: "Demasiadas solicitudes. Intenta más tarde." } },
       { status: 429 }
@@ -206,40 +193,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Enviar confirmación al cliente y notificación al admin
-  const reservaHtml = `
-    <h2>¡Hola ${data.nombreCliente}!</h2>
-    <p>Tu reserva fue registrada exitosamente.</p>
-    <ul>
-      <li><strong>Vehículo:</strong> ${vehiculo.nombre}</li>
-      <li><strong># Reserva:</strong> ${reserva.id.slice(0, 8).toUpperCase()}</li>
-      <li><strong>Fechas:</strong> ${data.fechaInicio} al ${data.fechaFin}</li>
-      <li><strong>Total:</strong> RD$${reserva.total}</li>
-    </ul>
-    <p>Te contactaremos en breve para confirmar tu reserva. El pago se realiza al recoger el vehículo.</p>
-    <p>RentaCar RD · 809-555-1234</p>
-  `;
+  // Enviar confirmación al cliente y notificación al admin (plantillas que ya escapan HTML)
+  const numId = reserva.id.slice(0, 8).toUpperCase();
+  const emailParams = {
+    numId,
+    nombreCliente: data.nombreCliente,
+    emailCliente: data.emailCliente,
+    telefonoCliente: data.telefonoCliente,
+    cedulaCliente: data.cedulaCliente,
+    vehiculoNombre: vehiculo.nombre,
+    fechaInicio: data.fechaInicio,
+    fechaFin: data.fechaFin,
+    dias: reserva.dias,
+    precioDia: vehiculo.precio_dia,
+    total: reserva.total,
+    notas: data.notas ?? null,
+  };
 
   const emailResults = await Promise.allSettled([
     sendMail({
       to: data.emailCliente,
       subject: `Reserva recibida — ${vehiculo.nombre}`,
-      html: reservaHtml,
+      html: cotizacionClienteHtml(emailParams),
     }),
     sendMail({
-      to: [...new Set([ADMIN_EMAIL, "davidespinal380@gmail.com"])],
-      subject: `Nueva reserva — ${vehiculo.nombre} (${reserva.id.slice(0, 8).toUpperCase()})`,
-      html: `
-        <h2>Nueva reserva recibida</h2>
-        <ul>
-          <li><strong>Cliente:</strong> ${data.nombreCliente}</li>
-          <li><strong>Email:</strong> ${data.emailCliente}</li>
-          <li><strong>Vehículo:</strong> ${vehiculo.nombre}</li>
-          <li><strong># Reserva:</strong> ${reserva.id.slice(0, 8).toUpperCase()}</li>
-          <li><strong>Fechas:</strong> ${data.fechaInicio} al ${data.fechaFin}</li>
-          <li><strong>Total:</strong> RD$${reserva.total}</li>
-        </ul>
-      `,
+      to: [...new Set([ADMIN_EMAIL, ...(SECONDARY_ADMIN_EMAIL ? [SECONDARY_ADMIN_EMAIL] : [])])],
+      subject: `Nueva reserva — ${vehiculo.nombre} (${numId})`,
+      html: cotizacionAdminHtml(emailParams),
     }),
   ]);
 

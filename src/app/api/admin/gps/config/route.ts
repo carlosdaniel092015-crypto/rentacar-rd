@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember } from "@/lib/server/equipo";
+import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
+import { encryptSecret } from "@/lib/server/crypto";
 
 export const dynamic = "force-dynamic";
 
 // GET — leer configuración actual (sin devolver la clave en texto plano)
 export async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+  if (!member || !tieneAcceso(member, "gps")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
   const supabase = createAdminClient() as any;
   const { data } = await supabase
@@ -22,7 +23,7 @@ export async function GET() {
 // POST — guardar / actualizar credenciales
 export async function POST(req: NextRequest) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+  if (!member || !tieneAcceso(member, "gps")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
   const body = await req.json();
   const { servidor_url, usuario, clave } = body;
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
       .update({
         servidor_url: servidor_url?.trim() || "https://www.whatsgps.com",
         usuario: usuario.trim(),
-        clave: clave.trim(),
+        clave: encryptSecret(clave.trim()),
         activo: true,
         updated_at: new Date().toISOString(),
       })
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
       .insert({
         servidor_url: servidor_url?.trim() || "https://www.whatsgps.com",
         usuario: usuario.trim(),
-        clave: clave.trim(),
+        clave: encryptSecret(clave.trim()),
         activo: true,
       })
       .select("id, servidor_url, usuario, activo")

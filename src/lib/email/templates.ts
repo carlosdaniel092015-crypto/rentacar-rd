@@ -1,3 +1,5 @@
+import { escapeHtml } from "./escape";
+
 function base(contenido: string) {
   return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
@@ -45,15 +47,15 @@ function tablaReserva({
   const desglose = `${dias} ${dias === 1 ? "día" : "días"} × RD$${fmt(precioDia)} = RD$${fmt(total)}`;
 
   const filas = [
-    ["Nombre completo", nombreCliente],
-    ["Correo electrónico", emailCliente],
-    ["Teléfono", telefonoCliente],
-    ["Cédula / Pasaporte", cedulaCliente],
-    ["Vehículo", vehiculoNombre],
-    ["Fecha inicio", fechaInicio],
-    ["Fecha fin", fechaFin],
+    ["Nombre completo", escapeHtml(nombreCliente)],
+    ["Correo electrónico", escapeHtml(emailCliente)],
+    ["Teléfono", escapeHtml(telefonoCliente)],
+    ["Cédula / Pasaporte", escapeHtml(cedulaCliente)],
+    ["Vehículo", escapeHtml(vehiculoNombre)],
+    ["Fecha inicio", escapeHtml(fechaInicio)],
+    ["Fecha fin", escapeHtml(fechaFin)],
     ["Monto", `<strong>${desglose}</strong>`],
-    ...(notas ? [["Notas adicionales", notas] as [string, string]] : []),
+    ...(notas ? [["Notas adicionales", escapeHtml(notas)] as [string, string]] : []),
   ];
 
   const rows = filas
@@ -85,7 +87,7 @@ export function cotizacionClienteHtml(params: {
   notas?: string | null;
 }) {
   return base(`
-    <h2 style="margin-top:0">¡Hola, ${params.nombreCliente}!</h2>
+    <h2 style="margin-top:0">¡Hola, ${escapeHtml(params.nombreCliente)}!</h2>
     <p>Tu cotización fue registrada exitosamente. Un agente se pondrá en contacto contigo pronto para confirmar la disponibilidad.</p>
     <p style="font-size:13px;color:#718096"># Cotización: <strong>${params.numId}</strong></p>
     ${tablaReserva(params)}
@@ -121,7 +123,7 @@ export function confirmacionClienteHtml(params: {
   notas?: string | null;
 }) {
   return base(`
-    <h2 style="margin-top:0">¡Reserva confirmada, ${params.nombreCliente}!</h2>
+    <h2 style="margin-top:0">¡Reserva confirmada, ${escapeHtml(params.nombreCliente)}!</h2>
     <p>Nos complace informarte que tu reserva ha sido <strong style="color:#16a34a">confirmada</strong>. Te esperamos en la fecha acordada.</p>
     <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
     ${tablaReserva(params)}
@@ -161,8 +163,8 @@ type ParamsEstado = {
 
 export function enCursoClienteHtml(params: ParamsEstado) {
   return base(`
-    <h2 style="margin-top:0">¡Tu alquiler ha comenzado, ${params.nombreCliente}!</h2>
-    <p>El vehículo <strong>${params.vehiculoNombre}</strong> está ahora bajo tu cuidado. Que tengas un excelente viaje.</p>
+    <h2 style="margin-top:0">¡Tu alquiler ha comenzado, ${escapeHtml(params.nombreCliente)}!</h2>
+    <p>El vehículo <strong>${escapeHtml(params.vehiculoNombre)}</strong> está ahora bajo tu cuidado. Que tengas un excelente viaje.</p>
     <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
     ${tablaReserva(params)}
     <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:12px 16px;border-radius:4px;margin-top:16px;font-size:13px">
@@ -175,7 +177,7 @@ export function enCursoClienteHtml(params: ParamsEstado) {
 export function enCursoAdminHtml(params: ParamsEstado) {
   return base(`
     <h2 style="margin-top:0">Reserva en curso</h2>
-    <p>El alquiler del vehículo <strong>${params.vehiculoNombre}</strong> ha sido marcado como <strong style="color:#2563eb">en curso</strong>.</p>
+    <p>El alquiler del vehículo <strong>${escapeHtml(params.vehiculoNombre)}</strong> ha sido marcado como <strong style="color:#2563eb">en curso</strong>.</p>
     <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
     ${tablaReserva(params)}
   `);
@@ -186,7 +188,7 @@ export function enCursoAdminHtml(params: ParamsEstado) {
 export function canceladaClienteHtml(params: ParamsEstado) {
   return base(`
     <h2 style="margin-top:0">Reserva cancelada</h2>
-    <p>Hola ${params.nombreCliente}, te informamos que tu reserva ha sido <strong style="color:#dc2626">cancelada</strong>.</p>
+    <p>Hola ${escapeHtml(params.nombreCliente)}, te informamos que tu reserva ha sido <strong style="color:#dc2626">cancelada</strong>.</p>
     <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
     ${tablaReserva(params)}
     <p style="margin-top:16px;font-size:13px;color:#718096">
@@ -198,7 +200,7 @@ export function canceladaClienteHtml(params: ParamsEstado) {
 export function canceladaAdminHtml(params: ParamsEstado) {
   return base(`
     <h2 style="margin-top:0">Reserva cancelada</h2>
-    <p>La reserva <strong>#${params.numId}</strong> de <strong>${params.nombreCliente}</strong> ha sido <strong style="color:#dc2626">cancelada</strong>.</p>
+    <p>La reserva <strong>#${params.numId}</strong> de <strong>${escapeHtml(params.nombreCliente)}</strong> ha sido <strong style="color:#dc2626">cancelada</strong>.</p>
     ${tablaReserva(params)}
   `);
 }
@@ -208,7 +210,7 @@ export function canceladaAdminHtml(params: ParamsEstado) {
 export function pendienteClienteHtml(params: ParamsEstado) {
   return base(`
     <h2 style="margin-top:0">Reserva en revisión</h2>
-    <p>Hola ${params.nombreCliente}, tu reserva ha sido marcada como <strong style="color:#d97706">pendiente de revisión</strong>. Nuestro equipo la evaluará y te notificará pronto.</p>
+    <p>Hola ${escapeHtml(params.nombreCliente)}, tu reserva ha sido marcada como <strong style="color:#d97706">pendiente de revisión</strong>. Nuestro equipo la evaluará y te notificará pronto.</p>
     <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
     ${tablaReserva(params)}
   `);
@@ -220,8 +222,8 @@ export function completadaClienteHtml(params: ParamsEstado & { siteUrl: string; 
   const encuestaUrl = `${params.siteUrl}/encuesta/${params.reservaId ?? params.numId}`;
   const fmt = (n: number) => n.toLocaleString("es-DO");
   return base(`
-    <h2 style="margin-top:0">¡Gracias por elegirnos, ${params.nombreCliente}!</h2>
-    <p>Tu alquiler del <strong>${params.vehiculoNombre}</strong> ha sido completado. Esperamos que hayas tenido una excelente experiencia.</p>
+    <h2 style="margin-top:0">¡Gracias por elegirnos, ${escapeHtml(params.nombreCliente)}!</h2>
+    <p>Tu alquiler del <strong>${escapeHtml(params.vehiculoNombre)}</strong> ha sido completado. Esperamos que hayas tenido una excelente experiencia.</p>
     <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong> · ${params.dias} días · RD$${fmt(params.total)}</p>
 
     <div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:24px;text-align:center;margin:24px 0">
@@ -242,7 +244,7 @@ export function completadaClienteHtml(params: ParamsEstado & { siteUrl: string; 
 export function completadaAdminHtml(params: ParamsEstado) {
   return base(`
     <h2 style="margin-top:0">Alquiler completado</h2>
-    <p>La reserva de <strong>${params.nombreCliente}</strong> ha sido marcada como <strong style="color:#16a34a">completada</strong>. Se envió encuesta de satisfacción al cliente.</p>
+    <p>La reserva de <strong>${escapeHtml(params.nombreCliente)}</strong> ha sido marcada como <strong style="color:#16a34a">completada</strong>. Se envió encuesta de satisfacción al cliente.</p>
     <p style="font-size:13px;color:#718096"># Reserva: <strong>${params.numId}</strong></p>
     ${tablaReserva(params)}
   `);

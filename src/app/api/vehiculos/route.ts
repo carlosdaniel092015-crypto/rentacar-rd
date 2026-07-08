@@ -21,7 +21,13 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  let query = supabase.from("vehiculos").select("*").eq("disponible", true);
+  let query = supabase
+    .from("vehiculos")
+    .select(
+      "id, nombre, marca, modelo, anio, categoria, transmision, combustible, pasajeros, " +
+        "precio_dia, disponible, imagen_url, imagenes_urls, descripcion, caracteristicas"
+    )
+    .eq("disponible", true);
 
   if (categoria) query = query.eq("categoria", categoria);
   if (precioMin) query = query.gte("precio_dia", Number(precioMin));
