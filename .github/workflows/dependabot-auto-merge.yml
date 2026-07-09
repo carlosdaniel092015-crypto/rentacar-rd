@@ -18,10 +18,12 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      # Auto-aprueba y habilita auto-merge para parches y versiones menores.
-      # Los "major" quedan para revisión manual (pueden traer breaking changes).
-      - name: Habilitar auto-merge (patch / minor)
-        if: ${{ steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor' }}
+      # Auto-aprueba y habilita auto-merge SOLO para parches (semver-patch).
+      # Los "minor" y "major" quedan para revisión manual: un minor de un paquete
+      # comprometido (cadena de suministro) podría pasar CI y entrar solo, así que
+      # se limita el automatismo a la superficie más pequeña posible (patches).
+      - name: Habilitar auto-merge (solo patch)
+        if: ${{ steps.meta.outputs.update-type == 'version-update:semver-patch' }}
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --squash "$PR_URL"
