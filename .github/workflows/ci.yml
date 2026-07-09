@@ -28,10 +28,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck
-        run: npx tsc --noEmit
-
-      - name: Build
+      # `next build` genera los tipos de rutas (RouteContext, etc.) en .next/types
+      # y luego corre el chequeo de TypeScript. Por eso NO usamos un `tsc --noEmit`
+      # aislado: fallaría porque esos tipos globales aún no existen antes del build.
+      - name: Build (incluye typecheck)
         run: npm run build
         env:
           # Valores dummy: el build no contacta servicios externos, solo necesita
