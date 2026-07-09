@@ -21,6 +21,13 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # TypeScript 7.x es el nuevo compilador nativo (preview) y aún NO es
+      # compatible con el typecheck de Next.js 16 (el build falla). Se ignora
+      # el salto major hasta que Next lo soporte; los minor/patch de 5.x/6.x
+      # siguen entrando normal. Quitar esta regla cuando TS 7 sea estable.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # Actualiza las propias GitHub Actions usadas en los workflows
   - package-ecosystem: "github-actions"
