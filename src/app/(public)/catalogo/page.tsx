@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SlidersHorizontal } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { VehicleGrid } from "@/components/catalogo/VehicleGrid";
 import { VehicleFilters } from "@/components/catalogo/VehicleFilters";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -11,10 +11,13 @@ export const metadata: Metadata = {
   description: "Explora nuestra flota completa. SUVs, pickup, económicos y más.",
 };
 
-export const dynamic = "force-dynamic";
+// Catálogo público cacheable: se regenera como máximo cada 60s (ISR) y se sirve
+// desde la CDN. Reduce drásticamente la carga de lectura sobre la base de datos
+// ante picos de tráfico. La disponibilidad real se revalida al crear la reserva.
+export const revalidate = 60;
 
 export default async function CatalogoPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const [{ data: vehiculos, error }, { data: categorias }] = await Promise.all([
     supabase.from("vehiculos").select("*").order("disponible", { ascending: false }).order("precio_dia", { ascending: true }),
