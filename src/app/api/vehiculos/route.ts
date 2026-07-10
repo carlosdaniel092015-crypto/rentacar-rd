@@ -46,7 +46,13 @@ export async function GET(req: NextRequest) {
   }
 
   if (!fechaInicio || !fechaFin) {
-    return NextResponse.json({ ok: true, data: vehiculos ?? [] });
+    // Listado base (sin filtro de fechas): dato público poco cambiante → se
+    // cachea en la CDN de Vercel 60s y se sirve en background hasta 5 min más
+    // mientras se revalida. Absorbe picos de lectura sin tocar la BD.
+    return NextResponse.json(
+      { ok: true, data: vehiculos ?? [] },
+      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+    );
   }
 
   // Excluir vehículos con reservas activas que se solapen con el rango pedido
