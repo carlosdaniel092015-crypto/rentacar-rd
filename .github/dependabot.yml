@@ -28,6 +28,11 @@ updates:
       # siguen entrando normal. Quitar esta regla cuando TS 7 sea estable.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # eslint 10.x aún no es compatible con eslint-config-next@16 (sus plugins
+      # exigen eslint ^9). Provoca conflictos de peer dependency. Se ignora el
+      # major hasta que Next actualice su config. Quitar cuando sea compatible.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
 
   # Actualiza las propias GitHub Actions usadas en los workflows
   - package-ecosystem: "github-actions"
