@@ -162,6 +162,7 @@ export async function POST(req: NextRequest) {
     fecha_fin: data.fechaFin,
     precio_dia: vehiculo.precio_dia,
     notas: data.notas ?? null,
+    idempotency_key: data.idempotencyKey ?? null,
   };
   const { data: reserva, error: rError } = await supabase
     .from("reservas")
@@ -171,6 +172,22 @@ export async function POST(req: NextRequest) {
     .single<{ id: string; dias: number; total: number; estado: string }>();
 
   if (rError || !reserva) {
+    // Idempotencia: si este mismo envío ya creó una reserva (misma clave), el
+    // índice único dispara 23505. Devolvemos la reserva original SIN duplicar ni
+    // reenviar correos → un doble-click/reintento "solo toma 1".
+    if (rError?.code === "23505" && data.idempotencyKey) {
+      const { data: existente } = await supabase
+        .from("reservas")
+        .select("id, dias, total, estado")
+        .eq("idempotency_key", data.idempotencyKey)
+        .single<{ id: string; dias: number; total: number; estado: string }>();
+      if (existente) {
+        return NextResponse.json(
+          { ok: true, data: { id: existente.id, total: existente.total, dias: existente.dias, estado: existente.estado } },
+          { status: 200 }
+        );
+      }
+    }
     if (rError?.code === "23P01") {
       return NextResponse.json(
         { ok: false, error: { code: "FECHAS_OCUPADAS", message: "Esas fechas ya están ocupadas." } },

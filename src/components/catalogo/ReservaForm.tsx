@@ -31,6 +31,10 @@ interface ReservaSuccess {
 
 export function ReservaForm({ vehiculo }: ReservaFormProps) {
   const [success, setSuccess] = useState<ReservaSuccess | null>(null);
+  // Clave de idempotencia estable por montaje del formulario: si el envío se
+  // repite (doble-click, reintento de red), el servidor devuelve la misma
+  // reserva en vez de crear un duplicado.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
@@ -61,7 +65,7 @@ export function ReservaForm({ vehiculo }: ReservaFormProps) {
       const res = await fetch("/api/reservas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, idempotencyKey }),
       });
       const json = await res.json();
 
