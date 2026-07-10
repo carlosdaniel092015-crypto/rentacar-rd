@@ -28,6 +28,10 @@ export const reservaSchema = z
     }, "La fecha de inicio no puede ser en el pasado"),
     fechaFin: z.string(),
     notas: z.string().max(500, "Las notas no pueden exceder 500 caracteres").optional(),
+    // Clave de idempotencia: el cliente la genera una vez por formulario. Si el
+    // mismo envío llega dos veces, el servidor devuelve la reserva original en
+    // vez de crear un duplicado. Opcional para no romper clientes antiguos.
+    idempotencyKey: z.string().uuid().optional(),
   })
   .refine(
     (data) => {
