@@ -37,6 +37,16 @@
     box-sizing: border-box;
   }
 
+  /* Red de seguridad móvil: evita que cualquier elemento que se salga del ancho
+     de la pantalla haga que el navegador encoja toda la página (el efecto
+     "modo escritorio diminuto"). `clip` no crea contenedor de scroll, así que
+     NO rompe el `position: sticky` del navbar. No afecta el diseño de escritorio. */
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
