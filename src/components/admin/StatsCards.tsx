@@ -38,16 +38,16 @@ export function StatsCards({ totalVehiculos, reservasPendientes, ingresoesMes, v
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.label}>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className={`flex size-12 items-center justify-center rounded-full ${stat.color}`}>
-              <stat.icon className="size-6" />
+          <CardContent className="flex items-center gap-4 p-5 sm:p-6">
+            <div className={`flex size-14 items-center justify-center rounded-full ${stat.color}`}>
+              <stat.icon className="size-7" />
             </div>
             <div>
-              <p className="text-sm text-[var(--color-muted-foreground)]">{stat.label}</p>
-              <p className="text-2xl font-bold">{stat.value}</p>
+              <p className="text-base sm:text-sm text-[var(--color-muted-foreground)]">{stat.label}</p>
+              <p className="text-3xl sm:text-2xl font-bold">{stat.value}</p>
             </div>
           </CardContent>
         </Card>

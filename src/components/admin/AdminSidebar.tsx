@@ -49,9 +49,9 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
   };
 
   const SidebarContent = () => (
-    <aside className="w-64 bg-[var(--color-primary)] flex flex-col h-full">
+    <aside className="w-[min(20rem,86vw)] lg:w-64 bg-[var(--color-primary)] flex flex-col h-full">
       <div
-        className="flex items-center justify-between gap-2 px-6 text-white font-bold text-lg border-b border-white/10"
+        className="flex items-center justify-between gap-2 px-5 lg:px-6 text-white font-bold text-xl lg:text-lg border-b border-white/10"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)", paddingBottom: "20px" }}
       >
         <div className="flex items-center gap-2">
@@ -66,20 +66,20 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
         </button>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
             onClick={() => setOpen(false)}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius)] text-sm font-medium transition-colors",
+              "flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-[var(--radius)] text-base lg:text-sm font-medium transition-colors",
               pathname === link.href
                 ? "bg-white/20 text-white"
                 : "text-white/70 hover:bg-white/10 hover:text-white"
             )}
           >
-            <link.icon className="size-5 shrink-0" />
+            <link.icon className="size-5.5 lg:size-5 shrink-0" />
             {link.label}
           </Link>
         ))}
@@ -113,7 +113,7 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
       {/* ── Botón hamburguesa — solo mobile, respeta safe-area del iPhone ── */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed z-50 size-10 rounded-lg bg-[var(--color-primary)] text-white flex items-center justify-center shadow-md"
+        className="lg:hidden fixed z-50 size-12 rounded-xl bg-[var(--color-primary)] text-white flex items-center justify-center shadow-md"
         style={{ top: "calc(env(safe-area-inset-top) + 10px)", left: "12px" }}
         aria-label="Abrir menú"
       >

@@ -31,10 +31,10 @@ export default async function AdminDashboardPage() {
   const ingresoesMes = (ingresosData as Array<{ total: number }> | null)?.reduce((sum, r) => sum + (r.total ?? 0), 0) ?? 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-[var(--color-muted-foreground)] text-sm mt-1">Resumen general del negocio</p>
+        <h1 className="text-3xl lg:text-2xl font-bold">Dashboard</h1>
+        <p className="text-[var(--color-muted-foreground)] text-base lg:text-sm mt-1">Resumen general del negocio</p>
       </div>
 
       <StatsCards
@@ -48,7 +48,7 @@ export default async function AdminDashboardPage() {
         <div className="px-6 py-4 border-b border-[var(--color-border)]">
           <h2 className="font-semibold">Últimas reservas</h2>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[var(--color-muted)]">
               <tr>
@@ -80,6 +80,27 @@ export default async function AdminDashboardPage() {
               })}
             </tbody>
           </table>
+        </div>
+        <div className="divide-y divide-[var(--color-border)] md:hidden">
+          {(reservasRecientes ?? []).map((r) => {
+            const estadoConfig = ESTADOS_RESERVA.find((e) => e.value === r.estado);
+            return (
+              <article key={r.id} className="p-5 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-lg font-semibold leading-tight">{r.nombre_cliente}</p>
+                  <span className={`shrink-0 inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${estadoConfig?.color ?? ""}`}>
+                    {estadoConfig?.label ?? r.estado}
+                  </span>
+                </div>
+                <div className="flex items-end justify-between gap-3">
+                  <p className="text-sm leading-6 text-[var(--color-muted-foreground)]">
+                    {formatDate(r.fecha_inicio)}<br />{formatDate(r.fecha_fin)}
+                  </p>
+                  <p className="text-xl font-bold text-[var(--color-accent)]">{formatCurrency(r.total)}</p>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </div>

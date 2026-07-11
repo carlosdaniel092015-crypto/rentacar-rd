@@ -22,8 +22,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           ajustada al ancho del teléfono. */}
       <main className="flex-1 w-full min-w-0 overflow-auto">
         <div
-          className="p-4 lg:p-8 lg:pt-6 min-w-0"
-          style={{ paddingTop: "calc(env(safe-area-inset-top) + 4rem)" } as React.CSSProperties}
+          className="p-5 lg:p-8 lg:pt-6 min-w-0"
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 4.75rem)" } as React.CSSProperties}
         >
           {children}
         </div>
