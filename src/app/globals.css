@@ -45,6 +45,22 @@
   body {
     max-width: 100%;
     overflow-x: clip;
+    /* Evita que iOS/Android reescalen el texto y rompan el layout. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    /* Sensación de app nativa: sin rebote/pull-to-refresh del navegador y sin
+       el destello gris al tocar botones. */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Las imágenes no muestran el menú "guardar imagen" al mantener presionado
+     (comportamiento de web, no de app nativa). */
+  img {
+    -webkit-touch-callout: none;
   }
 
   body {
