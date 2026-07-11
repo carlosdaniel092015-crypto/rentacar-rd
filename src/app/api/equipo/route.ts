@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
 
   void sendMail({
     to: email,
-    subject: "Acceso al panel administrativo — RentaCar RD",
+    subject: "Acceso al panel administrativo — Alma 3D Rent Card",
     html: `
       <h2>¡Bienvenido/a al equipo, ${escapeHtml(nombre)}!</h2>
       <p>Se creó tu cuenta para el panel administrativo con el cargo <strong>${escapeHtml(cargo)}</strong>.</p>

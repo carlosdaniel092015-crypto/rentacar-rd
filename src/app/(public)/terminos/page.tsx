@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Términos y Condiciones",
-  description: "Términos y condiciones del servicio de RentaCar RD.",
+  description: "Términos y condiciones del servicio de Alma 3D Rent Card.",
 };
 
 export default function TerminosPage() {
@@ -15,7 +15,7 @@ export default function TerminosPage() {
         <section>
           <h2 className="text-xl font-semibold mb-3">1. Aceptación de los términos</h2>
           <p className="text-[var(--color-muted-foreground)] leading-relaxed">
-            Al utilizar el sitio web y los servicios de <strong>RentaCar RD</strong>, aceptas estos
+            Al utilizar el sitio web y los servicios de <strong>Alma 3D Rent Card</strong>, aceptas estos
             Términos y Condiciones en su totalidad. Si no estás de acuerdo, te pedimos que no uses nuestros servicios.
           </p>
         </section>
@@ -23,7 +23,7 @@ export default function TerminosPage() {
         <section>
           <h2 className="text-xl font-semibold mb-3">2. Descripción del servicio</h2>
           <p className="text-[var(--color-muted-foreground)] leading-relaxed">
-            RentaCar RD ofrece servicios de alquiler de vehículos en República Dominicana.
+            Alma 3D Rent Card ofrece servicios de alquiler de vehículos en República Dominicana.
             Las cotizaciones realizadas en línea constituyen una solicitud de reserva y están sujetas
             a confirmación por parte de nuestro equipo.
           </p>
@@ -81,7 +81,7 @@ export default function TerminosPage() {
         <section>
           <h2 className="text-xl font-semibold mb-3">8. Limitación de responsabilidad</h2>
           <p className="text-[var(--color-muted-foreground)] leading-relaxed">
-            RentaCar RD no será responsable por daños indirectos, pérdida de ingresos o daños
+            Alma 3D Rent Card no será responsable por daños indirectos, pérdida de ingresos o daños
             consecuentes derivados del uso o imposibilidad de uso del vehículo arrendado.
             Nuestra responsabilidad máxima se limita al monto pagado por el servicio.
           </p>

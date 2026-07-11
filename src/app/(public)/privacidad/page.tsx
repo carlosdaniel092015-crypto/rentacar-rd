@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Política de Privacidad",
-  description: "Política de privacidad de RentaCar RD.",
+  description: "Política de privacidad de Alma 3D Rent Card.",
 };
 
 export default function PrivacidadPage() {
@@ -15,7 +15,7 @@ export default function PrivacidadPage() {
         <section>
           <h2 className="text-xl font-semibold mb-3">1. Responsable del tratamiento</h2>
           <p className="text-[var(--color-muted-foreground)] leading-relaxed">
-            <strong>RentaCar RD</strong>, con domicilio en Av. Winston Churchill, Santo Domingo, República Dominicana.
+            <strong>Alma 3D Rent Card</strong>, con domicilio en Av. Winston Churchill, Santo Domingo, República Dominicana.
             Correo de contacto: <a href="mailto:info@rentacarrd.com" className="text-[var(--color-accent)] underline">info@rentacarrd.com</a>.
           </p>
         </section>

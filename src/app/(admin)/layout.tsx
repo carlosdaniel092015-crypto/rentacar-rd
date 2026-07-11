@@ -16,9 +16,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-[var(--color-muted)]">
       <AdminSidebar rol={member.rol} accesos={member.accesos} />
-      <main className="flex-1 overflow-auto">
+      {/* min-w-0 + w-full: sin esto, una tabla ancha estira el <main> más que la
+          pantalla en móvil (bug de flexbox `min-width: auto`) y encoge toda la
+          página. Con min-w-0, la tabla hace scroll interno y la página queda
+          ajustada al ancho del teléfono. */}
+      <main className="flex-1 w-full min-w-0 overflow-auto">
         <div
-          className="p-4 lg:p-8 lg:pt-6"
+          className="p-4 lg:p-8 lg:pt-6 min-w-0"
           style={{ paddingTop: "calc(env(safe-area-inset-top) + 4rem)" } as React.CSSProperties}
         >
           {children}

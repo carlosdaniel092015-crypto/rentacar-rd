@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!data) return { title: "Vehículo no encontrado" };
   return {
     title: data.nombre,
-    description: data.descripcion ?? `Reserva el ${data.nombre} en RentaCar RD.`,
+    description: data.descripcion ?? `Reserva el ${data.nombre} en Alma 3D Rent Card.`,
   };
 }
 

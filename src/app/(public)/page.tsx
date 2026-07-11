@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "RentaCar RD — Alquiler de Vehículos en República Dominicana",
+  title: "Alma 3D Rent Card — Alquiler de Vehículos en República Dominicana",
 };
 
 export const revalidate = 3600;

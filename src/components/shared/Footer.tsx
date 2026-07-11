@@ -69,7 +69,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 border-t border-white/20 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm opacity-60">
-          <p>© {new Date().getFullYear()} RentaCar RD. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} Alma 3D Rent Card. Todos los derechos reservados.</p>
           <div className="flex gap-4">
             <Link href="/privacidad" className="hover:opacity-100 transition-opacity">Privacidad</Link>
             <Link href="/terminos" className="hover:opacity-100 transition-opacity">Términos</Link>
