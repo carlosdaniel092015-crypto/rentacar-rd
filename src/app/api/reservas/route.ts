@@ -246,6 +246,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Notificación interna para el panel (campana). Best-effort.
+  try {
+    await supabase.from("notificaciones").insert({
+      tipo: "reserva",
+      titulo: "Nueva reserva",
+      mensaje: `${data.nombreCliente} reservó ${vehiculo.nombre} (${data.fechaInicio} → ${data.fechaFin})`,
+      url: "/admin/reservas",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+  } catch (err) {
+    console.error("Error creando notificación:", err);
+  }
+
   return NextResponse.json(
     {
       ok: true,
