@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import Script from "next/script";
 import RegisterSW from "./register-sw";
+import NativeAppShell from "./native-app-shell";
 import "./globals.css";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
         <RegisterSW />
+        <NativeAppShell />
         {children}
         <Toaster richColors position="top-center" />
       </body>

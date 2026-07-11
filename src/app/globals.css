@@ -43,10 +43,12 @@
      NO rompe el `position: sticky` del navbar. No afecta el diseño de escritorio. */
   html,
   body {
+    min-height: 100%;
     max-width: 100%;
     overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    overscroll-behavior: none;
     touch-action: pan-x pan-y;
   }
 
@@ -57,5 +59,6 @@
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
     padding-bottom: env(safe-area-inset-bottom);
+    min-height: 100dvh;
   }
 }
