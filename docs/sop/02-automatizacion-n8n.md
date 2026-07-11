@@ -1,7 +1,7 @@
 # SOP — Automatización con n8n
 
 **Proceso:** Consultas de disponibilidad y creación/seguimiento de reservas vía automatización externa
-**Sistema:** n8n (HTTP Request) ↔ API REST de RentaCar RD (`/api/vehiculos`, `/api/reservas`)
+**Sistema:** n8n (HTTP Request) ↔ API REST de Alma 3D Rent Card (`/api/vehiculos`, `/api/reservas`)
 **Responsable del proceso:** Principal (CEO/líder) — acceso exclusivo al módulo `automatizacion`
 
 ## 1. Objetivo

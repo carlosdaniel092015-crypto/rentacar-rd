@@ -15,7 +15,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export const metadata: Metadata = {
@@ -49,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={inter.variable}>
       <head>
+        <meta name="mobile-web-app-capable" content="yes" />
         {GSC_VERIFICATION && (
           <meta name="google-site-verification" content={GSC_VERIFICATION} />
         )}

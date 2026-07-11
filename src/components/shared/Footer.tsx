@@ -12,7 +12,7 @@ export function Footer() {
                 <Car className="size-5" />
               </span>
               <span className="text-xl font-extrabold tracking-tight text-white">
-                Renta<span className="text-[var(--color-accent)]">Car</span> RD
+                Alma 3D Rent Card
               </span>
             </Link>
             <p className="text-sm opacity-80">
