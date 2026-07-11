@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -37,6 +37,12 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    const openMenu = () => setOpen(true);
+    window.addEventListener("admin-menu-open", openMenu);
+    return () => window.removeEventListener("admin-menu-open", openMenu);
+  }, []);
+
   const links = navLinks.filter(
     (l) => l.modulo === null || rol === "principal" || accesos.includes(l.modulo)
   );
@@ -49,14 +55,14 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
   };
 
   const SidebarContent = () => (
-    <aside className="w-[min(20rem,86vw)] lg:w-64 bg-[var(--color-primary)] flex flex-col h-full">
+    <aside className="w-[min(20rem,86vw)] lg:w-64 bg-[#17304E] lg:bg-[var(--color-primary)] flex flex-col h-full">
       <div
         className="flex items-center justify-between gap-2 px-5 lg:px-6 text-white font-bold text-xl lg:text-lg border-b border-white/10"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)", paddingBottom: "20px" }}
       >
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs tracking-tight">A3</div>
-          Alma 3D Rent Card
+          <div className="size-8 rounded-lg bg-[#F2A83B] lg:bg-white/20 flex items-center justify-center text-[#14263F] lg:text-white font-black text-xs tracking-tight">A3</div>
+          <span className="leading-tight">Alma 3D Rent Card</span>
         </div>
         <button
           onClick={() => setOpen(false)}
@@ -75,7 +81,7 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
             className={cn(
               "flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-[var(--radius)] text-base lg:text-sm font-medium transition-colors",
               pathname === link.href
-                ? "bg-white/20 text-white"
+                ? "bg-[#F2A83B]/15 text-white lg:bg-white/20"
                 : "text-white/70 hover:bg-white/10 hover:text-white"
             )}
           >
@@ -113,8 +119,8 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
       {/* ── Botón hamburguesa — solo mobile, respeta safe-area del iPhone ── */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed z-50 size-12 rounded-xl bg-[var(--color-primary)] text-white flex items-center justify-center shadow-md"
-        style={{ top: "calc(env(safe-area-inset-top) + 10px)", left: "12px" }}
+        className="lg:hidden fixed z-50 size-10 rounded-[14px] border border-white/15 bg-white/10 text-white flex items-center justify-center"
+        style={{ top: "calc(env(safe-area-inset-top) + 14px)", left: "20px" }}
         aria-label="Abrir menú"
       >
         <Menu className="size-5" />
