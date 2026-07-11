@@ -63,3 +63,44 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// ── Web Push: notificación nativa (bandeja del teléfono) ──
+// `self` se castea a any porque los tipos de service worker (PushEvent, etc.)
+// no están en el lib de TS del proyecto; en runtime esto es válido.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const swScope = self as any;
+
+swScope.addEventListener("push", (event: any) => {
+  let payload: { title?: string; body?: string; url?: string } = {};
+  try {
+    payload = event.data?.json() ?? {};
+  } catch {
+    payload = { body: event.data?.text?.() };
+  }
+  event.waitUntil(
+    swScope.registration.showNotification(payload.title ?? "Alma 3D Rent Card", {
+      body: payload.body ?? "",
+      icon: "/apple-touch-icon.png",
+      badge: "/apple-touch-icon.png",
+      data: { url: payload.url ?? "/admin/reservas" },
+    })
+  );
+});
+
+swScope.addEventListener("notificationclick", (event: any) => {
+  event.notification.close();
+  const url = event.notification.data?.url ?? "/admin/reservas";
+  event.waitUntil(
+    swScope.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList: any[]) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.focus();
+          client.navigate?.(url);
+          return;
+        }
+      }
+      return swScope.clients.openWindow(url);
+    })
+  );
+});
+/* eslint-enable @typescript-eslint/no-explicit-any */
