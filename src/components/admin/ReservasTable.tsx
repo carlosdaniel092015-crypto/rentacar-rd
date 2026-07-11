@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2, ArchiveRestore, Archive } from "lucide-react";
+import { Trash2, ArchiveRestore, Archive, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, formatDate, ESTADOS_RESERVA } from "@/lib/utils";
 import { ReservaEstadoSelect } from "./ReservaEstadoSelect";
@@ -82,6 +83,14 @@ export function ReservasTable({
 
   return (
     <div className="space-y-4">
+      {/* Crear reserva manual (web y móvil) */}
+      <Link
+        href="/admin/reservas/nueva"
+        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity w-full sm:w-auto"
+      >
+        <Plus className="size-4" /> Nueva reserva
+      </Link>
+
       {/* Pestañas Activas / Archivadas */}
       <div className="flex gap-1 p-1 rounded-lg bg-[var(--color-muted)] w-fit">
         {(["activas", "archivadas"] as Vista[]).map((v) => (
@@ -144,13 +153,48 @@ export function ReservasTable({
                         <p className="mt-0.5 text-xs text-[#7B8794]">{formatDate(r.fecha_inicio)} - {formatDate(r.fecha_fin)}</p>
                       </div>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${pending ? "bg-[#FBEFCF] text-[#8A6400]" : "bg-[#DDF1E3] text-[#217A46]"}`}>{status?.label ?? r.estado}</span>
+                    {vista === "activas" ? (
+                      <div className="shrink-0">
+                        <ReservaEstadoSelect reservaId={r.id} vehiculoId={r.vehiculo_id} estadoActual={r.estado} />
+                      </div>
+                    ) : (
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${pending ? "bg-[#FBEFCF] text-[#8A6400]" : "bg-[#DDF1E3] text-[#217A46]"}`}>{status?.label ?? r.estado}</span>
+                    )}
                   </div>
                   <p className="mt-2 text-xs text-[#7B8794]">{r.vehiculos?.nombre ?? "Vehículo"} · {r.dias} día{r.dias !== 1 ? "s" : ""}</p>
                   <div className="my-3 h-px bg-[#F1ECE3]" />
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-xs text-[#7B8794]">Total</span>
                     <span className="text-base font-extrabold text-[#C2562B]">{formatCurrency(r.total)}</span>
+                  </div>
+                  {/* Acciones accesibles en móvil (antes solo estaban en la tabla de escritorio) */}
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-[#F1ECE3] pt-3">
+                    {vista === "activas" ? (
+                      <button
+                        onClick={() => archivar(r)}
+                        disabled={procesando === r.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#FBF3E3] px-3 py-2 text-xs font-semibold text-[#8A6400] disabled:opacity-40"
+                      >
+                        <Archive className="size-4" /> Archivar
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => restaurar(r)}
+                          disabled={procesando === r.id}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDF1E3] px-3 py-2 text-xs font-semibold text-[#217A46] disabled:opacity-40"
+                        >
+                          <ArchiveRestore className="size-4" /> Restaurar
+                        </button>
+                        <button
+                          onClick={() => eliminarPermanente(r)}
+                          disabled={procesando === r.id}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#FBE4E0] px-3 py-2 text-xs font-semibold text-[var(--color-destructive)] disabled:opacity-40"
+                        >
+                          <Trash2 className="size-4" /> Eliminar
+                        </button>
+                      </>
+                    )}
                   </div>
                 </article>
               );
