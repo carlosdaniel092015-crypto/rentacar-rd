@@ -30,11 +30,6 @@ export const metadata: Metadata = {
   description:
     "La mejor flota de vehículos en República Dominicana. Económicos, SUVs, pickups y más. Precios transparentes, sin cargos ocultos.",
   keywords: ["rent a car", "alquiler de carros", "República Dominicana", "Santo Domingo"],
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Alma 3D Rent Card",
-  },
   openGraph: {
     type: "website",
     locale: "es_DO",
@@ -53,7 +48,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={inter.variable}>
       <head>
-        <meta name="mobile-web-app-capable" content="yes" />
         {GSC_VERIFICATION && (
           <meta name="google-site-verification" content={GSC_VERIFICATION} />
         )}
