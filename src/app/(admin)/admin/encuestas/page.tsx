@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Star } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata: Metadata = { title: "Encuestas | RentaCar RD Admin" };
+export const metadata: Metadata = { title: "Encuestas | Alma 3D Rent Card Admin" };
 export const dynamic = "force-dynamic";
 
 function Estrellas({ n, size = "sm" }: { n: number; size?: "sm" | "lg" }) {

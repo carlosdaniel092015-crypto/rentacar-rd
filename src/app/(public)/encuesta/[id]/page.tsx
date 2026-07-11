@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { EncuestaForm } from "@/components/catalogo/EncuestaForm";
 
-export const metadata: Metadata = { title: "Encuesta de satisfacción | RentaCar RD" };
+export const metadata: Metadata = { title: "Encuesta de satisfacción | Alma 3D Rent Card" };
 
 interface Props { params: Promise<{ id: string }> }
 

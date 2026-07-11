@@ -128,7 +128,7 @@ export default function ContactoPage() {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Ubicación RentaCar RD"
+                title="Ubicación Alma 3D Rent Card"
                 className="block"
               />
             </div>

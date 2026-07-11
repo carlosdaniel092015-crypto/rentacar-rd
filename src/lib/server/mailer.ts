@@ -26,7 +26,7 @@ export async function sendMail(opts: {
   subject: string;
   html: string;
 }) {
-  const from = `RentaCar RD <${process.env.SMTP_USER}>`;
+  const from = `Alma 3D Rent Card <${process.env.SMTP_USER}>`;
   const transporter = createTransporter();
   await transporter.sendMail({
     from,

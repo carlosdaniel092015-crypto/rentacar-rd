@@ -20,8 +20,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "RentaCar RD — Alquiler de Vehículos en República Dominicana",
-    template: "%s | RentaCar RD",
+    default: "Alma 3D Rent Card — Alquiler de Vehículos en República Dominicana",
+    template: "%s | Alma 3D Rent Card",
   },
   description:
     "La mejor flota de vehículos en República Dominicana. Económicos, SUVs, pickups y más. Precios transparentes, sin cargos ocultos.",
@@ -29,12 +29,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "RentaCar RD",
+    title: "Alma 3D Rent Card",
   },
   openGraph: {
     type: "website",
     locale: "es_DO",
-    siteName: "RentaCar RD",
+    siteName: "Alma 3D Rent Card",
   },
   icons: {
     icon: [

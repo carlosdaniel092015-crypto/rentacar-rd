@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "RentaCar RD — Alquiler de Vehículos",
-    short_name: "RentaCar RD",
+    name: "Alma 3D Rent Card — Alquiler de Vehículos",
+    short_name: "Alma 3D",
     description:
       "La mejor flota de vehículos en República Dominicana. Precios transparentes, sin cargos ocultos.",
     start_url: "/login",

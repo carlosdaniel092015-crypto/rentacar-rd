@@ -55,8 +55,8 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)", paddingBottom: "20px" }}
       >
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs tracking-tight">RC</div>
-          RentaCar RD
+          <div className="size-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs tracking-tight">A3</div>
+          Alma 3D Rent Card
         </div>
         <button
           onClick={() => setOpen(false)}

@@ -48,8 +48,8 @@ export default function LoginPage() {
             Ir al sitio principal
           </Link>
           <div className="flex items-center gap-2 text-[var(--color-primary)] font-bold text-2xl">
-            <div className="size-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-base tracking-tight shadow">RC</div>
-            RentaCar RD
+            <div className="size-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-base tracking-tight shadow">A3</div>
+            Alma 3D Rent Card
           </div>
         </div>
 

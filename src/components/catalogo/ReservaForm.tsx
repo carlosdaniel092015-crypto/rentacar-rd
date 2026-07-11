@@ -98,7 +98,7 @@ export function ReservaForm({ vehiculo }: ReservaFormProps) {
   if (success) {
     const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
     const waMsg = encodeURIComponent(
-      `🚗 *Nueva Reserva - RentaCar RD*\n\n` +
+      `🚗 *Nueva Reserva - Alma 3D Rent Card*\n\n` +
       `*# Reserva:* ${success.id.slice(0, 8).toUpperCase()}\n` +
       `*Vehículo:* ${vehiculo.nombre} (${vehiculo.marca} ${vehiculo.anio})\n` +
       `*Cliente:* ${success.nombreCliente}\n` +
