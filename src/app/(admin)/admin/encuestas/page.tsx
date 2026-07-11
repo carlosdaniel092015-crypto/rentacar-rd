@@ -48,7 +48,7 @@ export default async function EncuestasPage() {
   return (
     <div className="p-6 space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-bold">Encuestas de satisfacción</h1>
+        <h1 className="hidden text-2xl font-bold md:block">Encuestas de satisfacción</h1>
         <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
           Opiniones enviadas por clientes al completar su alquiler
         </p>

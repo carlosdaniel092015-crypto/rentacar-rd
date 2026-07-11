@@ -25,7 +25,7 @@ export default async function AdminVehiculosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Vehículos</h1>
+          <h1 className="hidden text-2xl font-bold md:block">Vehículos</h1>
           <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
             {vehiculos?.length ?? 0} vehículos en la flota
           </p>
@@ -38,7 +38,29 @@ export default async function AdminVehiculosPage() {
         </Button>
       </div>
 
-      <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+      <div className="space-y-3 md:hidden">
+        {(vehiculos ?? []).map((v) => {
+          const categoriaLabel = categorias.find((c) => c.slug === v.categoria)?.nombre ?? v.categoria;
+          return (
+            <Link key={v.id} href={`/admin/vehiculos/${v.id}/editar`} className="block overflow-hidden rounded-[20px] border border-[#ECE6DD] bg-white">
+              <div className="relative aspect-[2.15/1] bg-[#EEF1F6]">
+                {v.imagen_url ? <Image src={v.imagen_url} alt={v.nombre} fill className="object-cover" sizes="100vw" /> : <span className="flex h-full items-center justify-center text-xs text-[#98A2B0]">Sin imagen</span>}
+              </div>
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-[15px] font-extrabold text-[#14263F]">{v.nombre}</p>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${v.disponible ? "bg-[#DDF1E3] text-[#217A46]" : "bg-red-100 text-red-700"}`}>{v.disponible ? "Disponible" : "No disponible"}</span>
+                </div>
+                <p className="mt-1 text-[12.5px] text-[#7B8794]">{categoriaLabel} · {v.marca} · {v.anio}</p>
+                <div className="my-3 h-px bg-[#F1ECE3]" />
+                <div className="flex items-center justify-between"><span className="text-xs text-[#7B8794]">Tarifa por día</span><span className="text-base font-extrabold text-[#C2562B]">{formatCurrency(v.precio_dia)}</span></div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[var(--color-muted)]">

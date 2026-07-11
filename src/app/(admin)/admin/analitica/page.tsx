@@ -65,7 +65,7 @@ export default async function AnaliticaPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Analítica</h1>
+        <h1 className="hidden text-2xl font-bold md:block">Analítica</h1>
         <p className="text-[var(--color-muted-foreground)] text-sm mt-1">Rendimiento general del negocio</p>
       </div>
 

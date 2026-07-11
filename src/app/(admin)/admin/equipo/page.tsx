@@ -21,7 +21,7 @@ export default async function AdminEquipoPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Equipo</h1>
+        <h1 className="hidden text-2xl font-bold md:block">Equipo</h1>
         <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
           Jerarquía y accesos del panel administrativo. Solo el principal (CEO/líder) puede crear
           y gestionar usuarios.

@@ -74,7 +74,7 @@ export default function CategoriasPage() {
     <div className="p-6 max-w-2xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Categorías</h1>
+          <h1 className="hidden text-2xl font-bold md:block">Categorías</h1>
           <p className="text-sm text-[var(--color-muted-foreground)] mt-0.5">Gestiona las categorías de vehículos</p>
         </div>
         <Button variant="accent" onClick={() => { setCreando(true); setNombre(""); setSlug(""); }}>
@@ -109,7 +109,17 @@ export default function CategoriasPage() {
       {loading ? (
         <p className="text-sm text-[var(--color-muted-foreground)]">Cargando...</p>
       ) : (
-        <div className="border border-[var(--color-border)] rounded-[var(--radius-xl)] overflow-hidden">
+        <>
+        <div className="space-y-3 md:hidden">
+          {categorias.map((cat) => (
+            <button key={cat.id} onClick={() => { setEditando(cat.id); setEditNombre(cat.nombre); }} className="flex w-full items-center gap-3 rounded-[18px] border border-[#ECE6DD] bg-white p-3.5 text-left">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-[#E7EEFB] text-lg font-bold text-[#2F63C7]">{cat.nombre.slice(0, 1).toUpperCase()}</span>
+              <span className="min-w-0 flex-1"><span className="block text-[14.5px] font-bold text-[#14263F]">{cat.nombre}</span><span className="block text-xs text-[#7B8794]">{cat.slug}</span></span>
+              <span className="text-xl text-[#C4CEDB]">›</span>
+            </button>
+          ))}
+        </div>
+        <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] md:block">
           {categorias.length === 0 ? (
             <div className="p-8 text-center text-[var(--color-muted-foreground)] text-sm">No hay categorías todavía.</div>
           ) : (
@@ -173,6 +183,7 @@ export default function CategoriasPage() {
             </table>
           )}
         </div>
+        </>
       )}
     </div>
   );

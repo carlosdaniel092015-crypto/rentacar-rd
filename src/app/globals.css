@@ -61,4 +61,14 @@
     padding-bottom: env(safe-area-inset-bottom);
     min-height: 100dvh;
   }
+
+  @media (max-width: 767px) {
+    .admin-mobile-shell {
+      font-family: var(--font-admin-mobile), system-ui, sans-serif;
+    }
+
+    .admin-mobile-shell main > div {
+      padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+    }
+  }
 }

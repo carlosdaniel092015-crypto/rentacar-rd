@@ -4,7 +4,7 @@ import { formatCurrency, formatDate, ESTADOS_RESERVA } from "@/lib/utils";
 import type { Metadata } from "next";
 import { startOfMonth } from "date-fns";
 import Link from "next/link";
-import { Bell, CalendarCheck, Car, CheckCircle2, ChevronRight, DollarSign, Plus } from "lucide-react";
+import { CalendarCheck, Car, CheckCircle2, ChevronRight, DollarSign, Plus } from "lucide-react";
 
 export const metadata: Metadata = { title: "Dashboard | Admin" };
 export const dynamic = "force-dynamic";
@@ -41,15 +41,9 @@ export default async function AdminDashboardPage() {
 
   return (
     <>
-      <section className="-mx-5 -mt-3 bg-[#F5F1EB] pb-28 md:hidden">
+      <section className="-mx-5 -mt-4 bg-[#F5F1EB] pb-28 md:hidden">
         <div className="rounded-b-[28px] bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] px-5 pb-7 pt-4 text-white">
-          <div className="flex items-center justify-end">
-            <button type="button" className="relative flex size-10 items-center justify-center rounded-[14px] border border-white/15 bg-white/10" aria-label="Notificaciones">
-              <Bell className="size-5 text-[#EAF0F8]" />
-              {(reservasPendientes ?? 0) > 0 && <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-[#17304E] bg-[#F2A83B]" />}
-            </button>
-          </div>
-          <div className="mt-4">
+          <div>
             <p className="text-[13px] font-medium text-[#EAF0F8]/60">Buenos días,</p>
             <h1 className="mt-1 text-[26px] font-extrabold leading-none tracking-normal">{greetingName}</h1>
             <p className="mt-2 text-[13px] text-[#EAF0F8]/55">Resumen general del negocio</p>

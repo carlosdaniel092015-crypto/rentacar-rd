@@ -61,7 +61,7 @@ export default async function AdminLogsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Logs</h1>
+        <h1 className="hidden text-2xl font-bold md:block">Logs</h1>
         <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
           Visible solo para roles con acceso a logs. Últimas {logs.length} entradas.
         </p>

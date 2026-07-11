@@ -13,7 +13,7 @@ export default async function AdminPerfilPage() {
   return (
     <div className="space-y-6 max-w-md">
       <div>
-        <h1 className="text-2xl font-bold">Mi perfil</h1>
+        <h1 className="hidden text-2xl font-bold md:block">Mi perfil</h1>
         <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
           {member.nombre} · {member.cargo}
         </p>

@@ -51,7 +51,7 @@ export default async function ContactosPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold">Contactos</h1>
+          <h1 className="hidden text-2xl font-bold md:block">Contactos</h1>
           <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
             {cs.length} cliente{cs.length !== 1 ? "s" : ""} registrado{cs.length !== 1 ? "s" : ""}
           </p>
@@ -85,8 +85,21 @@ export default async function ContactosPage({
           </p>
         </div>
       ) : (
-        <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-          <div className="overflow-x-auto">
+        <>
+          <div className="space-y-3 md:hidden">
+            {cs.map((c: any) => {
+              const initials = c.nombre.split(" ").filter(Boolean).slice(0, 2).map((part: string) => part[0]).join("").toUpperCase();
+              return (
+                <Link key={c.id} href={`/admin/contactos/${c.id}`} className="flex items-center gap-3 rounded-[18px] border border-[#ECE6DD] bg-white p-3.5">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF1F6] text-sm font-extrabold text-[#14263F]">{initials || "CL"}</span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-bold text-[#14263F]">{c.nombre}</span><span className="block truncate text-xs text-[#7B8794]">{c.telefono || c.email || "Sin contacto"}</span></span>
+                  <span className="text-xl text-[#C4CEDB]">›</span>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]/40">
@@ -130,8 +143,9 @@ export default async function ContactosPage({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

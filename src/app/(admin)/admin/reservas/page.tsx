@@ -19,7 +19,7 @@ export default async function AdminReservasPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Reservas</h1>
+        <h1 className="hidden text-2xl font-bold md:block">Reservas</h1>
         <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
           {activas.length} activas · {archivadas.length} archivadas
         </p>

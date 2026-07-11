@@ -128,8 +128,35 @@ export function ReservasTable({
           {vista === "archivadas" ? "No hay reservas archivadas." : "No hay reservas con este estado."}
         </div>
       ) : (
-        <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-          <div className="overflow-x-auto">
+        <>
+          <div className="space-y-3 md:hidden">
+            {filtradas.map((r) => {
+              const status = ESTADOS_RESERVA.find((e) => e.value === r.estado);
+              const initials = r.nombre_cliente.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+              const pending = r.estado === "pendiente";
+              return (
+                <article key={r.id} className={`rounded-[18px] border border-[#ECE6DD] bg-white p-[15px] ${vista === "archivadas" ? "opacity-70" : ""}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF1F6] text-sm font-extrabold text-[#14263F]">{initials || "CL"}</span>
+                      <div className="min-w-0">
+                        <p className="truncate text-[14.5px] font-bold text-[#14263F]">{r.nombre_cliente}</p>
+                        <p className="mt-0.5 text-xs text-[#7B8794]">{formatDate(r.fecha_inicio)} - {formatDate(r.fecha_fin)}</p>
+                      </div>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${pending ? "bg-[#FBEFCF] text-[#8A6400]" : "bg-[#DDF1E3] text-[#217A46]"}`}>{status?.label ?? r.estado}</span>
+                  </div>
+                  <p className="mt-2 text-xs text-[#7B8794]">{r.vehiculos?.nombre ?? "Vehículo"} · {r.dias} día{r.dias !== 1 ? "s" : ""}</p>
+                  <div className="my-3 h-px bg-[#F1ECE3]" />
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-[#7B8794]">Total</span>
+                    <span className="text-base font-extrabold text-[#C2562B]">{formatCurrency(r.total)}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
             <table className="w-full text-sm">
               <thead className="bg-[var(--color-muted)]">
                 <tr>
@@ -219,7 +246,7 @@ export function ReservasTable({
               </tbody>
             </table>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

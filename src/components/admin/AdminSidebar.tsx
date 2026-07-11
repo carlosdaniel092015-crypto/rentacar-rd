@@ -119,7 +119,7 @@ export function AdminSidebar({ rol, accesos }: AdminSidebarProps) {
       {/* ── Botón hamburguesa — solo mobile, respeta safe-area del iPhone ── */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed z-50 size-10 rounded-[14px] border border-white/15 bg-white/10 text-white flex items-center justify-center"
+        className="hidden"
         style={{ top: "calc(env(safe-area-inset-top) + 14px)", left: "20px" }}
         aria-label="Abrir menú"
       >
