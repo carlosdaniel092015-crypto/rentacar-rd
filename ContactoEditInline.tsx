@@ -1,64 +1,57 @@
-"use client";
+import { Car, CalendarCheck, DollarSign, CheckCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { ESTADOS_RESERVA } from "@/lib/utils";
-import type { EstadoReserva } from "@/lib/utils";
-
-interface ReservaEstadoSelectProps {
-  reservaId: string;
-  vehiculoId: string;
-  estadoActual: EstadoReserva;
+interface StatsCardsProps {
+  totalVehiculos: number;
+  reservasPendientes: number;
+  ingresoesMes: number;
+  vehiculosDisponibles: number;
 }
 
-export function ReservaEstadoSelect({ reservaId, vehiculoId, estadoActual }: ReservaEstadoSelectProps) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  // vehiculoId se mantiene como prop para compatibilidad con el componente padre
-  void vehiculoId;
-
-  const handleChange = async (nuevoEstado: EstadoReserva) => {
-    if (nuevoEstado === estadoActual) return;
-    setLoading(true);
-
-    try {
-      const res = await fetch(`/api/admin/reservas/${reservaId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
-
-      if (!res.ok) {
-        toast.error("Error actualizando estado.");
-        return;
-      }
-
-      toast.success(
-        nuevoEstado === "confirmada"
-          ? "Estado actualizado. Se envió correo de confirmación al cliente."
-          : "Estado actualizado."
-      );
-      router.refresh();
-    } catch {
-      toast.error("Error de conexión.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const estadoConfig = ESTADOS_RESERVA.find((e) => e.value === estadoActual);
+export function StatsCards({ totalVehiculos, reservasPendientes, ingresoesMes, vehiculosDisponibles }: StatsCardsProps) {
+  const stats = [
+    {
+      label: "Total vehículos",
+      value: totalVehiculos,
+      icon: Car,
+      color: "text-blue-600 bg-blue-100",
+    },
+    {
+      label: "Reservas pendientes",
+      value: reservasPendientes,
+      icon: CalendarCheck,
+      color: "text-yellow-600 bg-yellow-100",
+    },
+    {
+      label: "Ingresos del mes",
+      value: formatCurrency(ingresoesMes),
+      icon: DollarSign,
+      color: "text-green-600 bg-green-100",
+    },
+    {
+      label: "Disponibles",
+      value: vehiculosDisponibles,
+      icon: CheckCircle,
+      color: "text-emerald-600 bg-emerald-100",
+    },
+  ];
 
   return (
-    <select
-      value={estadoActual}
-      onChange={(e) => handleChange(e.target.value as EstadoReserva)}
-      disabled={loading}
-      className={`rounded-full px-3 py-1 text-xs font-semibold border-0 cursor-pointer ${estadoConfig?.color ?? ""}`}
-    >
-      {ESTADOS_RESERVA.map((e) => (
-        <option key={e.value} value={e.value}>{e.label}</option>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {stats.map((stat) => (
+        <Card key={stat.label}>
+          <CardContent className="flex items-center gap-4 p-5 sm:p-6">
+            <div className={`flex size-14 items-center justify-center rounded-full ${stat.color}`}>
+              <stat.icon className="size-7" />
+            </div>
+            <div>
+              <p className="text-base sm:text-sm text-[var(--color-muted-foreground)]">{stat.label}</p>
+              <p className="text-3xl sm:text-2xl font-bold">{stat.value}</p>
+            </div>
+          </CardContent>
+        </Card>
       ))}
-    </select>
+    </div>
   );
 }

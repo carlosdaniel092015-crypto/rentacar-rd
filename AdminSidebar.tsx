@@ -1,152 +1,108 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 import { toast } from "sonner";
-import { Settings, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-interface GpsConfigFormProps {
-  configuracionActual?: {
-    servidor_url: string;
-    usuario: string;
-    ultimo_sync: string | null;
-  } | null;
+interface VehiculoActionsProps {
+  vehiculoId: string;
+  disponible: boolean;
 }
 
-export function GpsConfigForm({ configuracionActual }: GpsConfigFormProps) {
+export function VehiculoActions({ vehiculoId, disponible }: VehiculoActionsProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(!configuracionActual);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showPass, setShowPass] = useState(false);
-  const [form, setForm] = useState({
-    servidor_url: configuracionActual?.servidor_url ?? "https://www.whatsgps.com",
-    usuario: configuracionActual?.usuario ?? "",
-    clave: "",
-  });
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.clave.trim() && !configuracionActual) {
-      toast.error("La clave es obligatoria");
-      return;
-    }
+  const toggleDisponibilidad = async () => {
     setLoading(true);
-    try {
-      const body: any = { servidor_url: form.servidor_url, usuario: form.usuario };
-      if (form.clave.trim()) body.clave = form.clave;
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from("vehiculos") as any)
+      .update({ disponible: !disponible })
+      .eq("id", vehiculoId);
 
-      const res = await fetch("/api/admin/gps/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const json = await res.json();
-      if (!json.ok) { toast.error(json.error ?? "Error al guardar"); return; }
-      toast.success("Credenciales guardadas. Conectando con WhatsGPS...");
-      setOpen(false);
+    if (error) {
+      toast.error("Error al actualizar disponibilidad.");
+    } else {
+      toast.success(`Vehículo marcado como ${!disponible ? "disponible" : "no disponible"}.`);
       router.refresh();
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
-  if (!open) {
-    return (
-      <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <CheckCircle2 className="size-5 text-green-500 shrink-0" />
-          <div>
-            <p className="text-sm font-medium">WhatsGPS conectado</p>
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              Cuenta: {configuracionActual?.usuario}
-              {configuracionActual?.ultimo_sync && (
-                <> · Último sync: {new Date(configuracionActual.ultimo_sync).toLocaleString("es-DO")}</>
-              )}
-            </p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-          <Settings className="size-3.5 mr-1.5" /> Cambiar credenciales
-        </Button>
-      </div>
-    );
-  }
+  const handleDelete = async () => {
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.from("vehiculos").delete().eq("id", vehiculoId);
+
+    if (error) {
+      if (error.code === "23503") {
+        toast.error("No se puede eliminar: tiene reservas asociadas.");
+      } else {
+        toast.error("Error al eliminar vehículo.");
+      }
+    } else {
+      toast.success("Vehículo eliminado.");
+      router.refresh();
+    }
+    setLoading(false);
+    setConfirmDelete(false);
+  };
 
   return (
-    <div className="rounded-[var(--radius-xl)] border-2 border-[var(--color-accent)]/30 bg-[var(--color-surface)] p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <Settings className="size-5 text-[var(--color-accent)]" />
-        <div>
-          <h2 className="font-semibold">Credenciales WhatsGPS</h2>
-          <p className="text-xs text-[var(--color-muted-foreground)]">
-            Ingresa los datos de tu cuenta en la plataforma WhatsGPS
-          </p>
-        </div>
+    <>
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleDisponibilidad}
+          disabled={loading}
+          title={disponible ? "Marcar no disponible" : "Marcar disponible"}
+        >
+          {disponible ? (
+            <ToggleRight className="size-4 text-[var(--color-success)]" />
+          ) : (
+            <ToggleLeft className="size-4 text-[var(--color-muted-foreground)]" />
+          )}
+        </Button>
+        <Button variant="ghost" size="icon" asChild title="Editar">
+          <Link href={`/admin/vehiculos/${vehiculoId}/editar`}>
+            <Pencil className="size-4" />
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setConfirmDelete(true)}
+          className="text-[var(--color-destructive)] hover:text-[var(--color-destructive)]"
+          title="Eliminar"
+        >
+          <Trash2 className="size-4" />
+        </Button>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-4 max-w-md">
-        <div className="space-y-1.5">
-          <Label htmlFor="gps-server">URL del servidor</Label>
-          <Input
-            id="gps-server"
-            value={form.servidor_url}
-            onChange={set("servidor_url")}
-            placeholder="https://www.whatsgps.com"
-          />
-          <p className="text-xs text-[var(--color-muted-foreground)]">
-            Normalmente es https://www.whatsgps.com — no cambiar salvo indicación
-          </p>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="gps-user">Usuario / Correo de WhatsGPS *</Label>
-          <Input
-            id="gps-user"
-            value={form.usuario}
-            onChange={set("usuario")}
-            required
-            placeholder="usuario@ejemplo.com"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="gps-pass">
-            Contraseña de WhatsGPS {configuracionActual && "(dejar vacío para no cambiar)"}
-          </Label>
-          <div className="relative">
-            <Input
-              id="gps-pass"
-              type={showPass ? "text" : "password"}
-              value={form.clave}
-              onChange={set("clave")}
-              placeholder={configuracionActual ? "••••••••" : "Contraseña"}
-              required={!configuracionActual}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPass(!showPass)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-            >
-              {showPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <Button type="submit" variant="accent" disabled={loading}>
-            {loading ? "Guardando..." : "Guardar y conectar"}
-          </Button>
-          {configuracionActual && (
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar vehículo?</DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Si el vehículo tiene reservas asociadas, no podrá eliminarse.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+              {loading ? "Eliminando..." : "Sí, eliminar"}
             </Button>
-          )}
-        </div>
-      </form>
-    </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

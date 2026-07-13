@@ -1,50 +1,116 @@
-# SOP — Gestión de Flota
+import Link from "next/link";
+import Image from "next/image";
+import { Plus } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
+import type { Metadata } from "next";
+import type { Vehiculo, Categoria } from "@/types/database.types";
+import { VehiculoActions } from "@/components/admin/VehiculoActions";
 
-**Proceso:** Alta, mantenimiento y disponibilidad de vehículos
-**Sistema:** Panel admin (`/admin/vehiculos`, `/admin/categorias`)
-**Responsable del proceso:** Principal (CEO/líder) — puede delegar a un miembro con acceso al módulo `vehiculos`
+export const metadata: Metadata = { title: "Vehículos | Admin" };
+export const dynamic = "force-dynamic";
 
-## 1. Objetivo
-Mantener el catálogo de vehículos preciso (precio, estado, disponibilidad) para evitar reservas sobre vehículos no aptos y maximizar el uso de la flota.
+export default async function AdminVehiculosPage() {
+  const supabase = await createClient();
+  const [{ data: vehiculosRaw }, { data: categoriasList }] = await Promise.all([
+    supabase.from("vehiculos").select("*").order("created_at", { ascending: false }),
+    supabase.from("categorias").select("*"),
+  ]);
+  const vehiculos = vehiculosRaw as Vehiculo[] | null;
+  const categorias = (categoriasList ?? []) as Categoria[];
 
-## 2. Alcance
-Desde la incorporación de un vehículo nuevo a la flota hasta su baja, incluyendo mantenimiento preventivo y correctivo.
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="hidden text-2xl font-bold md:block">Vehículos</h1>
+          <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
+            {vehiculos?.length ?? 0} vehículos en la flota
+          </p>
+        </div>
+        <Button asChild variant="accent">
+          <Link href="/admin/vehiculos/nuevo" className="flex items-center gap-2">
+            <Plus className="size-4" />
+            Nuevo vehículo
+          </Link>
+        </Button>
+      </div>
 
-## 3. Roles y accesos
-| Rol | Cargo sugerido | Acceso (módulo) | Responsabilidad |
-|---|---|---|---|
-| Principal | CEO / Fundador | Total | Decisiones de compra/baja de vehículos |
-| Miembro | Gerente de Flota | `vehiculos`, `categorias` | Alta, edición, marcar disponible/no disponible |
-| Miembro | Agente de Reservas | `reservas` (lectura cruzada) | Reporta incidencias detectadas al entregar/recibir vehículos |
+      <div className="space-y-3 md:hidden">
+        {(vehiculos ?? []).map((v) => {
+          const categoriaLabel = categorias.find((c) => c.slug === v.categoria)?.nombre ?? v.categoria;
+          return (
+            <Link key={v.id} href={`/admin/vehiculos/${v.id}/editar`} className="block overflow-hidden rounded-[20px] border border-[#ECE6DD] bg-white">
+              <div className="relative aspect-[2.15/1] bg-[#EEF1F6]">
+                {v.imagen_url ? <Image src={v.imagen_url} alt={v.nombre} fill className="object-cover" sizes="100vw" /> : <span className="flex h-full items-center justify-center text-xs text-[#98A2B0]">Sin imagen</span>}
+              </div>
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-[15px] font-extrabold text-[#14263F]">{v.nombre}</p>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${v.disponible ? "bg-[#DDF1E3] text-[#217A46]" : "bg-red-100 text-red-700"}`}>{v.disponible ? "Disponible" : "No disponible"}</span>
+                </div>
+                <p className="mt-1 text-[12.5px] text-[#7B8794]">{categoriaLabel} · {v.marca} · {v.anio}</p>
+                <div className="my-3 h-px bg-[#F1ECE3]" />
+                <div className="flex items-center justify-between"><span className="text-xs text-[#7B8794]">Tarifa por día</span><span className="text-base font-extrabold text-[#C2562B]">{formatCurrency(v.precio_dia)}</span></div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
 
-## 4. Procedimiento
-
-### 4.1 Alta de un vehículo nuevo
-1. Crear la categoría en `/admin/categorias` si no existe.
-2. En `/admin/vehiculos` → "Nuevo vehículo": completar marca, modelo, año, transmisión, combustible, pasajeros, precio/día, fotos y características.
-3. Dejar `disponible = true` solo cuando el vehículo esté físicamente listo (papeles, limpieza, inspección).
-
-### 4.2 Mantenimiento preventivo/correctivo
-1. Al programar mantenimiento, marcar el vehículo como **no disponible** de inmediato (evita que se reserve mientras está en taller).
-   - Si ya tiene reservas activas que se solapan con el mantenimiento, coordinar con el agente de reservas para reasignar al cliente a otro vehículo antes de continuar.
-2. Registrar el mantenimiento (fecha, motivo, costo) — hasta tanto no exista un módulo dedicado, usar el campo `descripcion` o una hoja de cálculo externa enlazada desde aquí.
-3. Al finalizar, marcar `disponible = true` nuevamente.
-
-### 4.3 Baja de un vehículo
-1. Verificar que no tenga reservas en estado `pendiente`, `confirmada` o `en_curso` (la base de datos bloquea el borrado si tiene reservas asociadas — `on delete restrict`).
-2. Marcar `disponible = false` de forma permanente o eliminarlo del catálogo si ya no es parte de la flota.
-
-## 5. Métricas (KPIs)
-
-| Métrica | Fórmula | Meta | Frecuencia |
-|---|---|---|---|
-| Disponibilidad de flota | vehículos `disponible = true` / total vehículos activos | ≥ 85% | Semanal |
-| Utilización por vehículo | días en `en_curso`/`completada` por vehículo / días del período | ≥ 60% (revisar vehículos por debajo para reubicar precio o promocionar) | Mensual |
-| Tiempo fuera de servicio | días con `disponible = false` por mantenimiento / días del período | ≤ 10% | Mensual |
-| Vehículos sin reservas en 30 días | conteo de vehículos `disponible = true` sin ninguna reserva en los últimos 30 días | Investigar si > 20% de la flota | Mensual |
-| Antigüedad promedio de la flota | promedio de (año actual − `anio`) | Seguimiento, sin meta fija | Trimestral |
-
-**Fuente de datos:** tabla `vehiculos` y `reservas` en Supabase; el dashboard `/admin` ya muestra el conteo de vehículos totales y disponibles.
-
-## 6. Revisión del SOP
-Revisar trimestralmente, o al incorporar 5+ vehículos nuevos a la flota en un solo trimestre (puede requerir ajustar el proceso de alta).
+      <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[var(--color-muted)]">
+              <tr>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Vehículo</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Categoría</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Precio/día</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Estado</th>
+                <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {(vehiculos ?? []).map((v) => {
+                const categoriaLabel = categorias.find((c) => c.slug === v.categoria)?.nombre ?? v.categoria;
+                return (
+                  <tr key={v.id} className="hover:bg-[var(--color-muted)]/30 cursor-pointer">
+                    <td className="px-4 py-3">
+                      <Link href={`/admin/vehiculos/${v.id}/editar`} className="flex items-center gap-3 group">
+                        <div className="relative size-12 rounded-[var(--radius)] overflow-hidden bg-[var(--color-muted)] shrink-0">
+                          {v.imagen_url && (
+                            <Image src={v.imagen_url} alt={v.nombre} fill className="object-cover" sizes="48px" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium group-hover:text-[var(--color-primary)] transition-colors">{v.nombre}</p>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">{v.marca} · {v.anio}</p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="secondary">{categoriaLabel}</Badge>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-[var(--color-accent)]">
+                      {formatCurrency(v.precio_dia)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant={v.disponible ? "success" : "destructive"}>
+                        {v.disponible ? "Disponible" : "No disponible"}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <VehiculoActions vehiculoId={v.id} disponible={v.disponible} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

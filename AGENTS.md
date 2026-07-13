@@ -1,60 +1,77 @@
-"use client";
+import type { Metadata } from "next";
+import { SlidersHorizontal } from "lucide-react";
+import { createPublicClient } from "@/lib/supabase/public";
+import { VehicleGrid } from "@/components/catalogo/VehicleGrid";
+import { VehicleFilters } from "@/components/catalogo/VehicleFilters";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { useFiltrosStore } from "@/store/filtros.store";
-import { VehicleCard } from "./VehicleCard";
-import type { Vehiculo, Categoria } from "@/types/database.types";
+export const metadata: Metadata = {
+  title: "Catálogo de Vehículos",
+  description: "Explora nuestra flota completa. SUVs, pickup, económicos y más.",
+};
 
-interface VehicleGridProps {
-  vehiculos: Vehiculo[];
-  categorias: Categoria[];
-}
+// Catálogo público cacheable: se regenera como máximo cada 60s (ISR) y se sirve
+// desde la CDN. Reduce drásticamente la carga de lectura sobre la base de datos
+// ante picos de tráfico. La disponibilidad real se revalida al crear la reserva.
+export const revalidate = 60;
 
-export function VehicleGrid({ vehiculos, categorias }: VehicleGridProps) {
-  const { categorias: categoriasFiltro, transmision, pasajeros, precioMax, soloDisponibles } = useFiltrosStore();
+export default async function CatalogoPage() {
+  const supabase = createPublicClient();
 
-  const filtrados = useMemo(() => {
-    return vehiculos.filter((v) => {
-      if (soloDisponibles && !v.disponible) return false;
-      if (categoriasFiltro.length > 0 && !categoriasFiltro.includes(v.categoria)) return false;
-      if (transmision !== "todos" && v.transmision !== transmision) return false;
-      if (v.precio_dia > precioMax) return false;
-      if (pasajeros === "2-4" && (v.pasajeros < 2 || v.pasajeros > 4)) return false;
-      if (pasajeros === "5-7" && (v.pasajeros < 5 || v.pasajeros > 7)) return false;
-      if (pasajeros === "8+" && v.pasajeros < 8) return false;
-      return true;
-    });
-  }, [vehiculos, categoriasFiltro, transmision, pasajeros, precioMax, soloDisponibles]);
+  const [{ data: vehiculos, error }, { data: categorias }] = await Promise.all([
+    supabase.from("vehiculos").select("*").order("disponible", { ascending: false }).order("precio_dia", { ascending: true }),
+    supabase.from("categorias").select("*").order("nombre"),
+  ]);
 
-  if (filtrados.length === 0) {
+  if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="text-6xl mb-4">🚗</div>
-        <h3 className="text-lg font-semibold mb-2">No encontramos vehículos</h3>
-        <p className="text-[var(--color-muted-foreground)] text-sm max-w-xs">
-          Prueba ajustando los filtros o ampliando el rango de precios.
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-[var(--color-muted-foreground)]">
+          Error cargando los vehículos. Intenta más tarde.
         </p>
       </div>
     );
   }
 
+  const cats = categorias ?? [];
+
   return (
-    <div>
-      <p className="text-sm text-[var(--color-muted-foreground)] mb-4">
-        {filtrados.length} {filtrados.length === 1 ? "vehículo" : "vehículos"} disponible{filtrados.length !== 1 ? "s" : ""}
-      </p>
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {filtrados.map((vehiculo, i) => (
-          <motion.div
-            key={vehiculo.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.4 }}
-          >
-            <VehicleCard vehiculo={vehiculo} categorias={categorias} />
-          </motion.div>
-        ))}
+    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Catálogo de vehículos</h1>
+        <p className="text-[var(--color-muted-foreground)] mt-1">
+          Toda nuestra flota disponible para ti
+        </p>
+      </div>
+
+      <div className="flex gap-8">
+        {/* Sidebar filtros — desktop */}
+        <aside className="hidden lg:block w-64 shrink-0">
+          <div className="sticky top-24 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+            <VehicleFilters categorias={cats} />
+          </div>
+        </aside>
+
+        {/* Grid */}
+        <div className="flex-1 min-w-0">
+          {/* Botón filtros mobile */}
+          <div className="flex items-center justify-between mb-4 lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <SlidersHorizontal className="size-4" />
+                  Filtros
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 pt-10">
+                <VehicleFilters categorias={cats} />
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          <VehicleGrid vehiculos={vehiculos ?? []} categorias={cats} />
+        </div>
       </div>
     </div>
   );

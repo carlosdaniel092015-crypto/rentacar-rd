@@ -1,14 +1,173 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#1a2440"/>
-  <g transform="translate(56, 160)">
-    <rect x="40" y="80" width="320" height="100" rx="12" fill="#d4842a"/>
-    <path d="M100 80 L140 20 L260 20 L300 80 Z" fill="#d4842a"/>
-    <path d="M150 75 L165 30 L235 30 L250 75 Z" fill="#1a2440" opacity="0.8"/>
-    <circle cx="110" cy="185" r="40" fill="#111827"/>
-    <circle cx="110" cy="185" r="20" fill="#9ca3af"/>
-    <circle cx="290" cy="185" r="40" fill="#111827"/>
-    <circle cx="290" cy="185" r="20" fill="#9ca3af"/>
-    <rect x="340" y="100" width="30" height="16" rx="4" fill="#fef08a"/>
-    <rect x="30" y="100" width="24" height="16" rx="4" fill="#ef4444"/>
-  </g>
-</svg>
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export interface Database {
+  public: {
+    Tables: {
+      categorias: {
+        Row: {
+          id: string;
+          slug: string;
+          nombre: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          nombre: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["categorias"]["Insert"]>;
+      };
+      vehiculos: {
+        Row: {
+          id: string;
+          nombre: string;
+          marca: string;
+          modelo: string;
+          anio: number;
+          categoria: string;
+          transmision: "manual" | "automatica";
+          combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
+          pasajeros: number;
+          precio_dia: number;
+          disponible: boolean;
+          imagen_url: string | null;
+          imagenes_urls: string[];
+          descripcion: string | null;
+          caracteristicas: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nombre: string;
+          marca: string;
+          modelo: string;
+          anio: number;
+          categoria: string;
+          transmision: "manual" | "automatica";
+          combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
+          pasajeros: number;
+          precio_dia: number;
+          disponible?: boolean;
+          imagen_url?: string | null;
+          imagenes_urls?: string[];
+          descripcion?: string | null;
+          caracteristicas?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["vehiculos"]["Insert"]>;
+      };
+      contactos: {
+        Row: {
+          id: string;
+          nombre: string;
+          telefono: string;
+          cedula: string;
+          email: string;
+          notas: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nombre: string;
+          telefono: string;
+          cedula: string;
+          email?: string;
+          notas?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["contactos"]["Insert"]>;
+      };
+      reservas: {
+        Row: {
+          id: string;
+          vehiculo_id: string;
+          contacto_id: string | null;
+          nombre_cliente: string;
+          email_cliente: string;
+          telefono_cliente: string;
+          cedula_cliente: string;
+          fecha_inicio: string;
+          fecha_fin: string;
+          dias: number;
+          precio_dia: number;
+          total: number;
+          estado: "pendiente" | "confirmada" | "en_curso" | "completada" | "cancelada";
+          notas: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vehiculo_id: string;
+          contacto_id?: string | null;
+          nombre_cliente: string;
+          email_cliente: string;
+          telefono_cliente: string;
+          cedula_cliente: string;
+          fecha_inicio: string;
+          fecha_fin: string;
+          precio_dia: number;
+          estado?: "pendiente" | "confirmada" | "en_curso" | "completada" | "cancelada";
+          notas?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["reservas"]["Insert"]>;
+      };
+      equipo: {
+        Row: {
+          id: string;
+          email: string;
+          nombre: string;
+          cargo: string;
+          rol: "principal" | "miembro";
+          accesos: string[];
+          activo: boolean;
+          debe_cambiar_password: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          nombre: string;
+          cargo: string;
+          rol?: "principal" | "miembro";
+          accesos?: string[];
+          activo?: boolean;
+          debe_cambiar_password?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["equipo"]["Insert"]>;
+      };
+    };
+    Views: Record<string, never>;
+    Functions: {
+      is_principal: { Args: { uid?: string }; Returns: boolean };
+      has_acceso: { Args: { modulo: string; uid?: string }; Returns: boolean };
+      debe_cambiar_password: { Args: { uid?: string }; Returns: boolean };
+      mark_password_changed: { Args: Record<string, never>; Returns: undefined };
+    };
+    Enums: Record<string, never>;
+  };
+}
+
+export type Categoria = Database["public"]["Tables"]["categorias"]["Row"];
+export type Vehiculo = Database["public"]["Tables"]["vehiculos"]["Row"];
+export type VehiculoInsert = Database["public"]["Tables"]["vehiculos"]["Insert"];
+export type Reserva = Database["public"]["Tables"]["reservas"]["Row"];
+export type ReservaInsert = Database["public"]["Tables"]["reservas"]["Insert"];
+export type Contacto = Database["public"]["Tables"]["contactos"]["Row"];
+export type ContactoInsert = Database["public"]["Tables"]["contactos"]["Insert"];

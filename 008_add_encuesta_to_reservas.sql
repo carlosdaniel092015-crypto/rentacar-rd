@@ -1,114 +1,148 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Plus } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
 import type { Metadata } from "next";
-import type { Vehiculo, Categoria } from "@/types/database.types";
-import { VehiculoActions } from "@/components/admin/VehiculoActions";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { formatCurrency } from "@/lib/utils";
+import { ChevronLeft, Phone, Mail, CreditCard, FileText, CalendarCheck } from "lucide-react";
+import { ContactoEditInline } from "@/components/admin/ContactoEditInline";
 
-export const metadata: Metadata = { title: "Vehículos | Admin" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminVehiculosPage() {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
   const supabase = await createClient();
-  const [{ data: vehiculosRaw }, { data: categoriasList }] = await Promise.all([
-    supabase.from("vehiculos").select("*").order("created_at", { ascending: false }),
-    supabase.from("categorias").select("*"),
+  const { data } = await supabase.from("contactos").select("nombre").eq("id", id).single() as any;
+  return { title: data ? `${data.nombre} | Contactos` : "Contacto | Admin" };
+}
+
+const ESTADO_LABELS: Record<string, { label: string; color: string }> = {
+  pendiente:  { label: "Pendiente",  color: "bg-amber-100 text-amber-700" },
+  confirmada: { label: "Confirmada", color: "bg-blue-100 text-blue-700" },
+  en_curso:   { label: "En curso",   color: "bg-indigo-100 text-indigo-700" },
+  completada: { label: "Completada", color: "bg-green-100 text-green-700" },
+  cancelada:  { label: "Cancelada",  color: "bg-red-100 text-red-700" },
+};
+
+export default async function ContactoDetallePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const [{ data: contacto }, { data: reservas }] = await Promise.all([
+    supabase.from("contactos").select("*").eq("id", id).single() as any,
+    supabase
+      .from("reservas")
+      .select("id, fecha_inicio, fecha_fin, dias, precio_dia, total, estado, created_at, vehiculos(nombre, imagen_url)")
+      .eq("contacto_id", id)
+      .order("created_at", { ascending: false }) as any,
   ]);
-  const vehiculos = vehiculosRaw as Vehiculo[] | null;
-  const categorias = (categoriasList ?? []) as Categoria[];
+
+  if (!contacto) notFound();
+
+  const rs: any[] = reservas ?? [];
+  const totalGastado = rs.filter((r: any) => r.estado === "completada").reduce((s: number, r: any) => s + (r.total ?? 0), 0);
+  const totalReservas = rs.length;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="hidden text-2xl font-bold md:block">Vehículos</h1>
-          <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
-            {vehiculos?.length ?? 0} vehículos en la flota
-          </p>
-        </div>
-        <Button asChild variant="accent">
-          <Link href="/admin/vehiculos/nuevo" className="flex items-center gap-2">
-            <Plus className="size-4" />
-            Nuevo vehículo
-          </Link>
-        </Button>
+      <div>
+        <Link
+          href="/admin/contactos"
+          className="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] mb-3"
+        >
+          <ChevronLeft className="size-4" /> Contactos
+        </Link>
+        <h1 className="text-2xl font-bold">{contacto.nombre}</h1>
       </div>
 
-      <div className="space-y-3 md:hidden">
-        {(vehiculos ?? []).map((v) => {
-          const categoriaLabel = categorias.find((c) => c.slug === v.categoria)?.nombre ?? v.categoria;
-          return (
-            <Link key={v.id} href={`/admin/vehiculos/${v.id}/editar`} className="block overflow-hidden rounded-[20px] border border-[#ECE6DD] bg-white">
-              <div className="relative aspect-[2.15/1] bg-[#EEF1F6]">
-                {v.imagen_url ? <Image src={v.imagen_url} alt={v.nombre} fill className="object-cover" sizes="100vw" /> : <span className="flex h-full items-center justify-center text-xs text-[#98A2B0]">Sin imagen</span>}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Panel izquierdo: info + edición */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-center">
+              <p className="text-2xl font-bold text-[var(--color-accent)]">{totalReservas}</p>
+              <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Reservas</p>
+            </div>
+            <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-center">
+              <p className="text-lg font-bold text-green-600">{totalGastado > 0 ? formatCurrency(totalGastado) : "—"}</p>
+              <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Total gastado</p>
+            </div>
+          </div>
+
+          {/* Datos del contacto */}
+          <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
+            <h2 className="font-semibold text-sm">Información de contacto</h2>
+            <div className="space-y-2.5 text-sm">
+              <div className="flex items-start gap-2.5">
+                <Phone className="size-4 text-[var(--color-muted-foreground)] shrink-0 mt-0.5" />
+                <span>{contacto.telefono}</span>
               </div>
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-[15px] font-extrabold text-[#14263F]">{v.nombre}</p>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${v.disponible ? "bg-[#DDF1E3] text-[#217A46]" : "bg-red-100 text-red-700"}`}>{v.disponible ? "Disponible" : "No disponible"}</span>
+              <div className="flex items-start gap-2.5">
+                <Mail className="size-4 text-[var(--color-muted-foreground)] shrink-0 mt-0.5" />
+                <span>{contacto.email || <span className="text-[var(--color-muted-foreground)]">Sin correo</span>}</span>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <CreditCard className="size-4 text-[var(--color-muted-foreground)] shrink-0 mt-0.5" />
+                <span className="font-mono text-xs">{contacto.cedula}</span>
+              </div>
+              {contacto.notas && (
+                <div className="flex items-start gap-2.5">
+                  <FileText className="size-4 text-[var(--color-muted-foreground)] shrink-0 mt-0.5" />
+                  <span className="text-[var(--color-muted-foreground)]">{contacto.notas}</span>
                 </div>
-                <p className="mt-1 text-[12.5px] text-[#7B8794]">{categoriaLabel} · {v.marca} · {v.anio}</p>
-                <div className="my-3 h-px bg-[#F1ECE3]" />
-                <div className="flex items-center justify-between"><span className="text-xs text-[#7B8794]">Tarifa por día</span><span className="text-base font-extrabold text-[#C2562B]">{formatCurrency(v.precio_dia)}</span></div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+              )}
+            </div>
+          </div>
 
-      <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--color-muted)]">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Vehículo</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Categoría</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Precio/día</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Estado</th>
-                <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
-              {(vehiculos ?? []).map((v) => {
-                const categoriaLabel = categorias.find((c) => c.slug === v.categoria)?.nombre ?? v.categoria;
-                return (
-                  <tr key={v.id} className="hover:bg-[var(--color-muted)]/30 cursor-pointer">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/vehiculos/${v.id}/editar`} className="flex items-center gap-3 group">
-                        <div className="relative size-12 rounded-[var(--radius)] overflow-hidden bg-[var(--color-muted)] shrink-0">
-                          {v.imagen_url && (
-                            <Image src={v.imagen_url} alt={v.nombre} fill className="object-cover" sizes="48px" />
-                          )}
+          {/* Edición inline */}
+          <ContactoEditInline contacto={contacto} />
+        </div>
+
+        {/* Panel derecho: historial de reservas */}
+        <div className="lg:col-span-2">
+          <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[var(--color-border)] flex items-center gap-2">
+              <CalendarCheck className="size-4 text-[var(--color-muted-foreground)]" />
+              <h2 className="font-semibold">Historial de reservas</h2>
+            </div>
+            {rs.length === 0 ? (
+              <div className="p-10 text-center text-sm text-[var(--color-muted-foreground)]">
+                Este cliente aún no tiene reservas.
+              </div>
+            ) : (
+              <div className="divide-y divide-[var(--color-border)]">
+                {rs.map((r: any) => {
+                  const est = ESTADO_LABELS[r.estado] ?? { label: r.estado, color: "bg-gray-100 text-gray-600" };
+                  const vehiculoNombre = r.vehiculos?.nombre ?? "Vehículo desconocido";
+                  return (
+                    <div key={r.id} className="px-5 py-4 flex items-start gap-4">
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-sm truncate">{vehiculoNombre}</p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${est.color}`}>
+                            {est.label}
+                          </span>
                         </div>
-                        <div>
-                          <p className="font-medium group-hover:text-[var(--color-primary)] transition-colors">{v.nombre}</p>
-                          <p className="text-xs text-[var(--color-muted-foreground)]">{v.marca} · {v.anio}</p>
-                        </div>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant="secondary">{categoriaLabel}</Badge>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-[var(--color-accent)]">
-                      {formatCurrency(v.precio_dia)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={v.disponible ? "success" : "destructive"}>
-                        {v.disponible ? "Disponible" : "No disponible"}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <VehiculoActions vehiculoId={v.id} disponible={v.disponible} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          {new Date(r.fecha_inicio).toLocaleDateString("es-DO")} →{" "}
+                          {new Date(r.fecha_fin).toLocaleDateString("es-DO")} · {r.dias} día{r.dias !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-bold text-sm">{formatCurrency(r.total)}</p>
+                        <Link
+                          href={`/admin/reservas`}
+                          className="text-xs text-[var(--color-accent)] hover:underline"
+                        >
+                          #{r.id.slice(0, 8).toUpperCase()}
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

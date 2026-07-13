@@ -1,103 +1,34 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, LogIn } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { Menu } from "lucide-react";
+import { NotificacionesBell } from "./NotificacionesBell";
 
-const links = [
-  { href: "/", label: "Inicio" },
-  { href: "/catalogo", label: "Catálogo" },
-  { href: "/contacto", label: "Contacto" },
-];
-
-export function Navbar() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-
+export function DashboardMobileHeader({ greetingName }: { greetingName: string }) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-surface)]/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 font-bold text-[var(--color-primary)]">
-          <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm" aria-hidden>A3</div>
-          <span className="text-xl">Alma 3D Rent Card</span>
-        </Link>
+    <div className="rounded-b-[28px] bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] px-5 pb-8 pt-[calc(env(safe-area-inset-top)+0.875rem)] text-white shadow-[0_10px_30px_-12px_rgba(20,38,63,0.55)]">
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("admin-menu-open"))}
+          className="flex size-[42px] shrink-0 items-center justify-center rounded-[14px] border border-white/15 bg-white/10 text-[#EAF0F8] transition-transform active:scale-95"
+          aria-label="Abrir menú"
+        >
+          <Menu className="size-5" />
+        </button>
 
-        <nav className="hidden md:flex items-center gap-6">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-[var(--color-primary)]",
-                pathname === link.href
-                  ? "text-[var(--color-primary)]"
-                  : "text-[var(--color-muted-foreground)]"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Button asChild variant="outline" size="sm">
-            <Link href="/login" className="flex items-center gap-1.5">
-              <LogIn className="size-4" />
-              Login
-            </Link>
-          </Button>
-          <Button asChild variant="accent" size="sm">
-            <Link href="/catalogo">Reservar ahora</Link>
-          </Button>
-        </nav>
+        <div className="flex items-center gap-2">
+          <span className="flex size-[30px] items-center justify-center rounded-[9px] bg-[#F2A83B] text-xs font-extrabold text-[#14263F]">A3</span>
+          <span className="text-[15px] font-bold text-[#EAF0F8]">Alma 3D Rent</span>
+        </div>
 
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" aria-label="Abrir menú">
-              <Menu className="size-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-72">
-            <Link
-              href="/"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 font-bold text-[var(--color-primary)] mb-8"
-            >
-              <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm">A3</div>
-              <span className="text-xl">Alma 3D Rent Card</span>
-            </Link>
-            <nav className="flex flex-col gap-4">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "text-base font-medium transition-colors hover:text-[var(--color-primary)]",
-                    pathname === link.href
-                      ? "text-[var(--color-primary)]"
-                      : "text-[var(--color-foreground)]"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <Button asChild variant="outline" className="mt-4 w-full">
-                <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2">
-                  <LogIn className="size-4" />
-                  Login
-                </Link>
-              </Button>
-              <Button asChild variant="accent" className="w-full">
-                <Link href="/catalogo" onClick={() => setOpen(false)}>
-                  Reservar ahora
-                </Link>
-              </Button>
-            </nav>
-          </SheetContent>
-        </Sheet>
+        <NotificacionesBell variant="dark" />
       </div>
-    </header>
+
+      <div className="mt-7">
+        <p className="text-[13px] font-medium text-[#EAF0F8]/60">Buenos días,</p>
+        <h1 className="mt-1 break-words text-[26px] font-extrabold leading-tight tracking-normal">{greetingName}</h1>
+        <p className="mt-2 text-[13px] text-[#EAF0F8]/55">Resumen general del negocio</p>
+      </div>
+    </div>
   );
 }

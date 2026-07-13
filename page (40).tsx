@@ -1,57 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { contactoSchema } from "@/lib/validations/contacto.schema";
+import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
 import { logEvent } from "@/lib/server/audit";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import { escapeHtml } from "@/lib/email/escape";
 
-export const dynamic = "force-dynamic";
-
-// Valida las credenciales en el servidor y registra el intento real en el
-// audit log — el cliente nunca puede reportar un resultado falso, porque el
-// resultado lo decide este endpoint, no el body de la petición.
 export async function POST(req: NextRequest) {
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
     req.headers.get("x-real-ip") ??
     "unknown";
 
-  if (!(await checkRateLimit("login", ip, 10, 10 * 60))) {
-    return NextResponse.json(
-      { ok: false, error: { code: "RATE_LIMIT", message: "Demasiados intentos. Intenta más tarde." } },
-      { status: 429 }
-    );
+  if (!(await checkRateLimit("contacto", ip, 3, 60 * 60))) {
+    return NextResponse.json({ ok: false, error: "Demasiadas solicitudes." }, { status: 429 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ ok: false, error: { code: "VALIDATION", message: "Solicitud inválida." } }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Solicitud inválida." }, { status: 400 });
   }
 
-  const { email, password } = (body ?? {}) as Record<string, unknown>;
-  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
-    return NextResponse.json({ ok: false, error: { code: "VALIDATION", message: "Email y contraseña son obligatorios." } }, { status: 422 });
+  const parsed = contactoSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ ok: false, error: "Datos inválidos." }, { status: 422 });
   }
 
-  const supabase = await createClient();
-  const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+  const { _honeypot, ...data } = parsed.data;
 
-  await logEvent({
-    type: "login",
-    level: authError ? "warn" : "info",
-    actorEmail: email,
-    ip,
-    path: "/login",
-    method: "POST",
-    message: authError ? "Intento de inicio de sesión fallido" : "Inicio de sesión exitoso",
-  });
-
-  if (authError) {
-    return NextResponse.json(
-      { ok: false, error: { code: "UNAUTHORIZED", message: "Credenciales incorrectas." } },
-      { status: 401 }
-    );
+  // Si el honeypot tiene contenido, es un bot
+  if (_honeypot) {
+    return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  return NextResponse.json({ ok: true });
+  try {
+    await sendMail({
+      to: ADMIN_EMAIL,
+      subject: `Contacto web: ${data.asunto}`,
+      html: `
+        <h3>Nuevo mensaje desde el formulario de contacto</h3>
+        <ul>
+          <li><strong>Nombre:</strong> ${escapeHtml(data.nombre)}</li>
+          <li><strong>Email:</strong> ${escapeHtml(data.email)}</li>
+          ${data.telefono ? `<li><strong>Teléfono:</strong> ${escapeHtml(data.telefono)}</li>` : ""}
+          <li><strong>Asunto:</strong> ${escapeHtml(data.asunto)}</li>
+        </ul>
+        <h4>Mensaje:</h4>
+        <p>${escapeHtml(data.mensaje).replace(/\n/g, "<br>")}</p>
+      `,
+    });
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err) {
+    console.error("Error enviando email de contacto:", err);
+    await logEvent({
+      type: "error",
+      level: "error",
+      ip,
+      path: "/api/contacto",
+      method: "POST",
+      message: "Error enviando email de contacto",
+      details: { error: err instanceof Error ? err.message : String(err) },
+    });
+    return NextResponse.json({ ok: false, error: "Error enviando mensaje." }, { status: 500 });
+  }
 }

@@ -1,81 +1,47 @@
-import Link from "next/link";
-import { Car, Phone, Mail, MapPin, Clock } from "lucide-react";
+"use client";
 
-export function Footer() {
+import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { NotificacionesBell } from "./NotificacionesBell";
+
+const pageMeta: Record<string, { title: string; subtitle: string }> = {
+  "/admin/vehiculos": { title: "Vehículos", subtitle: "Gestiona tu flota" },
+  "/admin/categorias": { title: "Categorías", subtitle: "Categorías de vehículos" },
+  "/admin/reservas": { title: "Reservas", subtitle: "Gestiona las solicitudes" },
+  "/admin/contactos": { title: "Contactos", subtitle: "Clientes y proveedores" },
+  "/admin/encuestas": { title: "Encuestas", subtitle: "Satisfacción de clientes" },
+  "/admin/analitica": { title: "Analítica", subtitle: "Últimos 6 meses" },
+  "/admin/gps": { title: "GPS / Flota", subtitle: "Ubicación en tiempo real" },
+  "/admin/logs": { title: "Logs", subtitle: "Actividad reciente" },
+  "/admin/equipo": { title: "Equipo", subtitle: "Gestión de miembros" },
+  "/admin/perfil": { title: "Mi perfil", subtitle: "Configuración de cuenta" },
+};
+
+export function MobileAdminHeader() {
+  const pathname = usePathname();
+
+  // El dashboard renderiza su propio encabezado combinado (DashboardMobileHeader).
+  if (pathname === "/admin") return null;
+
+  const meta = pageMeta[pathname];
+
   return (
-    <footer className="bg-[var(--color-primary)] text-[var(--color-primary-foreground)]">
-      <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <span className="flex items-center justify-center size-8 rounded-lg bg-[var(--color-accent)] text-white shrink-0">
-                <Car className="size-5" />
-              </span>
-              <span className="text-xl font-extrabold tracking-tight text-white">
-                Alma 3D Rent Card
-              </span>
-            </Link>
-            <p className="text-sm opacity-80">
-              Tu empresa de confianza para alquiler de vehículos en República Dominicana.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Navegación</h3>
-            <ul className="space-y-2 text-sm opacity-80">
-              <li><Link href="/" className="hover:opacity-100 transition-opacity">Inicio</Link></li>
-              <li><Link href="/catalogo" className="hover:opacity-100 transition-opacity">Catálogo</Link></li>
-              <li><Link href="/contacto" className="hover:opacity-100 transition-opacity">Contacto</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Categorías</h3>
-            <ul className="space-y-2 text-sm opacity-80">
-              {["Económico", "SUV", "Pickup", "Lujo", "Van"].map((cat) => (
-                <li key={cat}>
-                  <Link
-                    href={`/catalogo?categoria=${cat.toLowerCase()}`}
-                    className="hover:opacity-100 transition-opacity"
-                  >
-                    {cat}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Contacto</h3>
-            <ul className="space-y-3 text-sm opacity-80">
-              <li className="flex items-center gap-2">
-                <Phone className="size-4 shrink-0" />
-                <span>809-555-1234</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="size-4 shrink-0" />
-                <span>info@rentacard.com</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="size-4 shrink-0 mt-0.5" />
-                <span>Av. Winston Churchill, Santo Domingo</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Clock className="size-4 shrink-0" />
-                <span>Lun–Dom: 7am – 9pm</span>
-              </li>
-            </ul>
-          </div>
+    <header className="bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] text-white md:hidden rounded-b-[26px]">
+      <div className="flex items-center gap-3 px-5 pb-6 pt-[calc(env(safe-area-inset-top)+0.875rem)]">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("admin-menu-open"))}
+          className="flex size-[42px] shrink-0 items-center justify-center rounded-[14px] border border-white/15 bg-white/10 text-[#EAF0F8] transition-transform active:scale-95"
+          aria-label="Abrir menú"
+        >
+          <Menu className="size-5" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[22px] font-extrabold leading-tight">{meta?.title ?? "Panel administrativo"}</h1>
+          <p className="mt-2 text-[13px] text-[#EAF0F8]/60">{meta?.subtitle ?? "Alma 3D Rent Card"}</p>
         </div>
-
-        <div className="mt-12 border-t border-white/20 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm opacity-60">
-          <p>© {new Date().getFullYear()} Alma 3D Rent Card. Todos los derechos reservados.</p>
-          <div className="flex gap-4">
-            <Link href="/privacidad" className="hover:opacity-100 transition-opacity">Privacidad</Link>
-            <Link href="/terminos" className="hover:opacity-100 transition-opacity">Términos</Link>
-          </div>
-        </div>
+        <NotificacionesBell variant="dark" />
       </div>
-    </footer>
+    </header>
   );
 }

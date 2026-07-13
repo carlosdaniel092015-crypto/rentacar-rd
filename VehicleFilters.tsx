@@ -1,32 +1,62 @@
 import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
-  {
-    variants: {
-      variant: {
-        default: "border-transparent bg-[var(--color-primary)] text-[var(--color-primary-foreground)]",
-        secondary: "border-transparent bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]",
-        destructive: "border-transparent bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)]",
-        success: "border-transparent bg-[var(--color-success)] text-[var(--color-success-foreground)]",
-        outline: "text-[var(--color-foreground)]",
-        accent: "border-transparent bg-[var(--color-accent)] text-[var(--color-accent-foreground)]",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-sm",
+        className
+      )}
+      {...props}
+    />
+  )
 );
+Card.displayName = "Card";
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+  )
+);
+CardHeader.displayName = "CardHeader";
 
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
-}
+const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3
+      ref={ref}
+      className={cn("text-2xl font-semibold leading-none tracking-tight", className)}
+      {...props}
+    />
+  )
+);
+CardTitle.displayName = "CardTitle";
 
-export { Badge, badgeVariants };
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-[var(--color-muted-foreground)]", className)}
+    {...props}
+  />
+));
+CardDescription.displayName = "CardDescription";
+
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  )
+);
+CardContent.displayName = "CardContent";
+
+const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
+  )
+);
+CardFooter.displayName = "CardFooter";
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };

@@ -1,34 +1,69 @@
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentMember, type MiembroEquipo } from "@/lib/server/equipo";
-import { EquipoManager } from "@/components/admin/EquipoManager";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
+import { encryptSecret } from "@/lib/server/crypto";
 
-export const metadata: Metadata = { title: "Equipo | Admin" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminEquipoPage() {
+// GET — leer configuración actual (sin devolver la clave en texto plano)
+export async function GET() {
   const member = await getCurrentMember();
-  if (!member || member.rol !== "principal") notFound();
+  if (!member || !tieneAcceso(member, "gps")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
-  const supabase = await createClient();
+  const supabase = createAdminClient() as any;
   const { data } = await supabase
-    .from("equipo")
-    .select("id, email, nombre, cargo, rol, accesos, activo, debe_cambiar_password, created_at")
-    .order("created_at", { ascending: true })
-    .returns<(MiembroEquipo & { created_at: string })[]>();
+    .from("gps_configuracion")
+    .select("id, servidor_url, usuario, activo, ultimo_sync, updated_at")
+    .limit(1)
+    .single();
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="hidden text-2xl font-bold md:block">Equipo</h1>
-        <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
-          Jerarquía y accesos del panel administrativo. Solo el principal (CEO/líder) puede crear
-          y gestionar usuarios.
-        </p>
-      </div>
+  return NextResponse.json({ ok: true, data: data ?? null });
+}
 
-      <EquipoManager miembros={data ?? []} principalId={member.id} />
-    </div>
-  );
+// POST — guardar / actualizar credenciales
+export async function POST(req: NextRequest) {
+  const member = await getCurrentMember();
+  if (!member || !tieneAcceso(member, "gps")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
+
+  const body = await req.json();
+  const { servidor_url, usuario, clave } = body;
+
+  if (!usuario?.trim() || !clave?.trim()) {
+    return NextResponse.json({ ok: false, error: "usuario y clave son obligatorios" }, { status: 422 });
+  }
+
+  const supabase = createAdminClient() as any;
+
+  // Upsert — siempre una sola fila
+  const { data: existing } = await supabase.from("gps_configuracion").select("id").limit(1).single();
+
+  let result;
+  if (existing?.id) {
+    result = await supabase
+      .from("gps_configuracion")
+      .update({
+        servidor_url: servidor_url?.trim() || "https://www.whatsgps.com",
+        usuario: usuario.trim(),
+        clave: encryptSecret(clave.trim()),
+        activo: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .select("id, servidor_url, usuario, activo")
+      .single();
+  } else {
+    result = await supabase
+      .from("gps_configuracion")
+      .insert({
+        servidor_url: servidor_url?.trim() || "https://www.whatsgps.com",
+        usuario: usuario.trim(),
+        clave: encryptSecret(clave.trim()),
+        activo: true,
+      })
+      .select("id, servidor_url, usuario, activo")
+      .single();
+  }
+
+  if (result.error) return NextResponse.json({ ok: false, error: result.error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, data: result.data });
 }

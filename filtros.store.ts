@@ -1,68 +1,152 @@
 import { NextRequest, NextResponse } from "next/server";
-import { contactoSchema } from "@/lib/validations/contacto.schema";
-import { sendMail, ADMIN_EMAIL } from "@/lib/server/mailer";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentMember, MODULOS, type Modulo } from "@/lib/server/equipo";
 import { logEvent } from "@/lib/server/audit";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { sendMail } from "@/lib/server/mailer";
 import { escapeHtml } from "@/lib/email/escape";
 
-export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown";
+export const dynamic = "force-dynamic";
 
-  if (!(await checkRateLimit("contacto", ip, 3, 60 * 60))) {
-    return NextResponse.json({ ok: false, error: "Demasiadas solicitudes." }, { status: 429 });
+function generarPassword(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
+function validarAccesos(input: unknown): input is Modulo[] {
+  return Array.isArray(input) && input.every((m) => MODULOS.includes(m));
+}
+
+// Listar equipo: solo el principal (CEO/líder).
+export async function GET() {
+  const member = await getCurrentMember();
+  if (!member || member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede ver el equipo." } },
+      { status: 403 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("equipo")
+    .select("id, email, nombre, cargo, rol, accesos, activo, created_at")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true, data });
+}
+
+// Crear un nuevo miembro del equipo: cuenta de auth + fila en equipo + email con credenciales.
+// Solo el principal puede crear usuarios.
+export async function POST(req: NextRequest) {
+  const member = await getCurrentMember();
+  if (!member || member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede crear usuarios." } },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ ok: false, error: "Solicitud inválida." }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "Cuerpo de solicitud inválido." } },
+      { status: 400 }
+    );
   }
 
-  const parsed = contactoSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Datos inválidos." }, { status: 422 });
+  const { email, nombre, cargo, accesos, password: passwordInput } = (body ?? {}) as Record<string, unknown>;
+
+  if (
+    typeof email !== "string" || !email.includes("@") ||
+    typeof nombre !== "string" || nombre.trim().length < 2 ||
+    typeof cargo !== "string" || cargo.trim().length < 2 ||
+    !validarAccesos(accesos) ||
+    (passwordInput !== undefined && (typeof passwordInput !== "string" || passwordInput.length < 8))
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: {
+          code: "VALIDATION",
+          message: "Datos inválidos. Revisa email, nombre, cargo, accesos y que la contraseña tenga al menos 8 caracteres.",
+        },
+      },
+      { status: 422 }
+    );
   }
 
-  const { _honeypot, ...data } = parsed.data;
+  const supabase = createAdminClient();
+  const password = typeof passwordInput === "string" ? passwordInput : generarPassword();
 
-  // Si el honeypot tiene contenido, es un bot
-  if (_honeypot) {
-    return NextResponse.json({ ok: true }, { status: 200 });
+  const { data: nuevoUsuario, error: authError } = await supabase.auth.admin.createUser({
+    email: email.toLowerCase().trim(),
+    password,
+    email_confirm: true,
+  });
+
+  if (authError || !nuevoUsuario?.user) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: authError?.message ?? "No se pudo crear el usuario." } },
+      { status: 409 }
+    );
   }
 
-  try {
-    await sendMail({
-      to: ADMIN_EMAIL,
-      subject: `Contacto web: ${data.asunto}`,
-      html: `
-        <h3>Nuevo mensaje desde el formulario de contacto</h3>
-        <ul>
-          <li><strong>Nombre:</strong> ${escapeHtml(data.nombre)}</li>
-          <li><strong>Email:</strong> ${escapeHtml(data.email)}</li>
-          ${data.telefono ? `<li><strong>Teléfono:</strong> ${escapeHtml(data.telefono)}</li>` : ""}
-          <li><strong>Asunto:</strong> ${escapeHtml(data.asunto)}</li>
-        </ul>
-        <h4>Mensaje:</h4>
-        <p>${escapeHtml(data.mensaje).replace(/\n/g, "<br>")}</p>
-      `,
-    });
+  const { data: equipoRow, error: equipoError } = await supabase
+    .from("equipo")
+    .insert({
+      id: nuevoUsuario.user.id,
+      email: email.toLowerCase().trim(),
+      nombre: nombre.trim(),
+      cargo: cargo.trim(),
+      rol: "miembro",
+      accesos,
+      debe_cambiar_password: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+    .select("id, email, nombre, cargo, rol, accesos, activo")
+    .single();
 
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch (err) {
-    console.error("Error enviando email de contacto:", err);
-    await logEvent({
-      type: "error",
-      level: "error",
-      ip,
-      path: "/api/contacto",
-      method: "POST",
-      message: "Error enviando email de contacto",
-      details: { error: err instanceof Error ? err.message : String(err) },
-    });
-    return NextResponse.json({ ok: false, error: "Error enviando mensaje." }, { status: 500 });
+  if (equipoError) {
+    await supabase.auth.admin.deleteUser(nuevoUsuario.user.id);
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error creando el registro de equipo." } },
+      { status: 500 }
+    );
   }
+
+  void sendMail({
+    to: email,
+    subject: "Acceso al panel administrativo — Alma 3D Rent Card",
+    html: `
+      <h2>¡Bienvenido/a al equipo, ${escapeHtml(nombre)}!</h2>
+      <p>Se creó tu cuenta para el panel administrativo con el cargo <strong>${escapeHtml(cargo)}</strong>.</p>
+      <ul>
+        <li><strong>Correo:</strong> ${escapeHtml(email)}</li>
+        <li><strong>Contraseña temporal:</strong> ${escapeHtml(password)}</li>
+        <li><strong>Acceso al panel:</strong> ${process.env.NEXT_PUBLIC_SITE_URL}/login</li>
+      </ul>
+      <p>Por seguridad, cambia tu contraseña después de iniciar sesión.</p>
+    `,
+  }).catch((err: unknown) => {
+    console.error("Error enviando email de bienvenida:", err);
+  });
+
+  await logEvent({
+    type: "admin_action",
+    actorEmail: member.email,
+    path: "/api/equipo",
+    method: "POST",
+    message: "Nuevo miembro de equipo creado",
+    details: { email, cargo, accesos },
+  });
+
+  return NextResponse.json({ ok: true, data: equipoRow }, { status: 201 });
 }

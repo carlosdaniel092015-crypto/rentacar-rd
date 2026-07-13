@@ -1,244 +1,152 @@
-"use client";
-
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format, differenceInDays, addDays } from "date-fns";
-import { Calendar, MessageCircle } from "lucide-react";
-import { toast } from "sonner";
-import { reservaSchema, type ReservaFormData } from "@/lib/validations/reserva.schema";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils";
+import { Users, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import type { Vehiculo } from "@/types/database.types";
 
-interface ReservaFormProps {
-  vehiculo: Vehiculo;
-}
+export const metadata: Metadata = { title: "Contactos | Admin" };
+export const dynamic = "force-dynamic";
 
-interface ReservaSuccess {
-  id: string;
-  total: number;
-  dias: number;
-  nombreCliente: string;
-  emailCliente: string;
-  telefonoCliente: string;
-  fechaInicio: string;
-  fechaFin: string;
-}
+export default async function ContactosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q = "" } = await searchParams;
+  const supabase = await createClient();
 
-export function ReservaForm({ vehiculo }: ReservaFormProps) {
-  const [success, setSuccess] = useState<ReservaSuccess | null>(null);
-  // Clave de idempotencia estable por montaje del formulario: si el envío se
-  // repite (doble-click, reintento de red), el servidor devuelve la misma
-  // reserva en vez de crear un duplicado.
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
-  const today = format(new Date(), "yyyy-MM-dd");
-  const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
+  let query = supabase
+    .from("contactos")
+    .select("id, nombre, telefono, cedula, email, created_at")
+    .order("nombre");
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<ReservaFormData>({
-    resolver: zodResolver(reservaSchema),
-    defaultValues: {
-      vehiculoId: vehiculo.id,
-      fechaInicio: today,
-      fechaFin: tomorrow,
-    },
-  });
-
-  const fechaInicio = watch("fechaInicio");
-  const fechaFin = watch("fechaFin");
-
-  const dias = fechaInicio && fechaFin
-    ? Math.max(0, differenceInDays(new Date(fechaFin), new Date(fechaInicio)) + 1)
-    : 0;
-  const total = dias * vehiculo.precio_dia;
-
-  const onSubmit = async (data: ReservaFormData) => {
-    try {
-      const res = await fetch("/api/reservas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, idempotencyKey }),
-      });
-      const json = await res.json();
-
-      if (!res.ok || !json.ok) {
-        const msg =
-          json?.error?.code === "FECHAS_OCUPADAS"
-            ? "Esas fechas ya están ocupadas. Por favor selecciona otras fechas."
-            : json?.error?.code === "NO_DISPONIBLE"
-            ? "Este vehículo no está disponible en este momento."
-            : json?.error?.code === "RATE_LIMIT"
-            ? "Demasiadas solicitudes. Espera unos minutos e intenta de nuevo."
-            : json?.error?.message ?? "Error al crear la reserva.";
-        toast.error(msg);
-        return;
-      }
-
-      setSuccess({
-        ...json.data,
-        nombreCliente: data.nombreCliente,
-        emailCliente: data.emailCliente,
-        telefonoCliente: data.telefonoCliente,
-        fechaInicio: data.fechaInicio,
-        fechaFin: data.fechaFin,
-      });
-    } catch {
-      toast.error("Error de conexión. Intenta nuevamente.");
-    }
-  };
-
-  if (success) {
-    const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
-    const waMsg = encodeURIComponent(
-      `🚗 *Nueva Reserva - Alma 3D Rent Card*\n\n` +
-      `*# Reserva:* ${success.id.slice(0, 8).toUpperCase()}\n` +
-      `*Vehículo:* ${vehiculo.nombre} (${vehiculo.marca} ${vehiculo.anio})\n` +
-      `*Cliente:* ${success.nombreCliente}\n` +
-      `*Email:* ${success.emailCliente}\n` +
-      `*Teléfono:* ${success.telefonoCliente}\n` +
-      `*Desde:* ${success.fechaInicio}\n` +
-      `*Hasta:* ${success.fechaFin}\n` +
-      `*Días:* ${success.dias}\n` +
-      `*Total:* RD$${success.total.toLocaleString("es-DO")}\n\n` +
-      `Quiero confirmar mi reserva. 🙏`
-    );
-
-    return (
-      <div className="space-y-4">
-        <div className="rounded-[var(--radius-xl)] border border-[var(--color-success)] bg-green-50 p-6 text-center space-y-3">
-          <div className="text-4xl">✅</div>
-          <h3 className="font-bold text-lg text-[var(--color-foreground)]">
-            ¡Reserva recibida!
-          </h3>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Hola {success.nombreCliente}, tu solicitud fue registrada.
-            Recibirás un correo de confirmación en <strong>{success.emailCliente}</strong>.
-          </p>
-          <div className="bg-white rounded-lg p-4 text-sm space-y-1 text-left">
-            <p><strong># Reserva:</strong> {success.id.slice(0, 8).toUpperCase()}</p>
-            <p><strong>Vehículo:</strong> {vehiculo.nombre}</p>
-            <p><strong>Fechas:</strong> {success.fechaInicio} → {success.fechaFin}</p>
-            <p><strong>Días:</strong> {success.dias}</p>
-            <p><strong>Total:</strong> {formatCurrency(success.total)}</p>
-          </div>
-          <p className="text-xs text-[var(--color-muted-foreground)]">
-            El pago se realiza al recoger el vehículo.
-          </p>
-        </div>
-
-        {/* Botón WhatsApp con toda la info */}
-        <a
-          href={`https://wa.me/${waNumber}?text=${waMsg}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full rounded-[var(--radius-lg)] bg-[#25D366] text-white py-3 text-sm font-semibold hover:bg-[#1fb855] transition-colors"
-        >
-          <MessageCircle className="size-5" />
-          Confirmar por WhatsApp
-        </a>
-      </div>
+  if (q.trim()) {
+    query = query.or(
+      `nombre.ilike.%${q.trim()}%,telefono.ilike.%${q.trim()}%,cedula.ilike.%${q.trim()}%,email.ilike.%${q.trim()}%`
     );
   }
 
+  const { data: contactos } = await query as any;
+  const cs: any[] = contactos ?? [];
+
+  // Stats de reservas por contacto
+  const ids = cs.map((c: any) => c.id);
+  let statsMap = new Map<string, { count: number; total: number }>();
+  if (ids.length > 0) {
+    const { data: reservas } = await supabase
+      .from("reservas")
+      .select("contacto_id, total, estado")
+      .in("contacto_id", ids) as any;
+    for (const r of reservas ?? []) {
+      const prev = statsMap.get(r.contacto_id) ?? { count: 0, total: 0 };
+      statsMap.set(r.contacto_id, {
+        count: prev.count + 1,
+        total: prev.total + (r.estado === "completada" ? (r.total ?? 0) : 0),
+      });
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="reservar">
-      <input type="hidden" {...register("vehiculoId")} />
-
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <Label htmlFor="fechaInicio">Fecha inicio</Label>
-          <div className="relative mt-1">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted-foreground)]" />
-            <Input
-              id="fechaInicio"
-              type="date"
-              className="pl-9"
-              min={today}
-              {...register("fechaInicio")}
-            />
-          </div>
-          {errors.fechaInicio && (
-            <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.fechaInicio.message}</p>
-          )}
+          <h1 className="hidden text-2xl font-bold md:block">Contactos</h1>
+          <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
+            {cs.length} cliente{cs.length !== 1 ? "s" : ""} registrado{cs.length !== 1 ? "s" : ""}
+          </p>
         </div>
-        <div>
-          <Label htmlFor="fechaFin">Fecha fin</Label>
-          <div className="relative mt-1">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted-foreground)]" />
-            <Input
-              id="fechaFin"
-              type="date"
-              className="pl-9"
-              min={fechaInicio ?? today}
-              {...register("fechaFin")}
-            />
-          </div>
-          {errors.fechaFin && (
-            <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.fechaFin.message}</p>
-          )}
-        </div>
+        <Button asChild variant="accent" size="sm">
+          <Link href="/admin/contactos/nuevo">
+            <Plus className="size-4 mr-1.5" /> Nuevo contacto
+          </Link>
+        </Button>
       </div>
 
-      {dias > 0 && (
-        <div className="rounded-lg bg-[var(--color-muted)] p-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-[var(--color-muted-foreground)]">{dias} día{dias !== 1 ? "s" : ""} × {formatCurrency(vehiculo.precio_dia)}</span>
-            <span className="font-extrabold text-[var(--color-accent)] text-base">{formatCurrency(total)}</span>
-          </div>
+      {/* Buscador */}
+      <form method="GET" className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted-foreground)]" />
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Buscar por nombre, teléfono, cédula..."
+          className="w-full pl-9 pr-4 py-2 text-sm rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+        />
+      </form>
+
+      {cs.length === 0 ? (
+        <div className="rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--color-border)] p-16 text-center">
+          <Users className="size-10 mx-auto text-[var(--color-muted-foreground)] mb-3" />
+          <p className="font-semibold text-[var(--color-muted-foreground)]">
+            {q ? "Sin resultados" : "Aún no hay contactos"}
+          </p>
+          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
+            {q ? "Prueba otro término de búsqueda." : "Los contactos se crean automáticamente cuando alguien hace una reserva."}
+          </p>
         </div>
+      ) : (
+        <>
+          <div className="space-y-3 md:hidden">
+            {cs.map((c: any) => {
+              const initials = c.nombre.split(" ").filter(Boolean).slice(0, 2).map((part: string) => part[0]).join("").toUpperCase();
+              return (
+                <Link key={c.id} href={`/admin/contactos/${c.id}`} className="flex items-center gap-3 rounded-[18px] border border-[#ECE6DD] bg-white p-3.5">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF1F6] text-sm font-extrabold text-[#14263F]">{initials || "CL"}</span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-bold text-[#14263F]">{c.nombre}</span><span className="block truncate text-xs text-[#7B8794]">{c.telefono || c.email || "Sin contacto"}</span></span>
+                  <span className="text-xl text-[#C4CEDB]">›</span>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]/40">
+                  <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Cliente</th>
+                  <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)] hidden sm:table-cell">Teléfono</th>
+                  <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)] hidden md:table-cell">Cédula / Pasaporte</th>
+                  <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Reservas</th>
+                  <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)] hidden sm:table-cell">Total gastado</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-border)]">
+                {cs.map((c: any) => {
+                  const stats = statsMap.get(c.id) ?? { count: 0, total: 0 };
+                  return (
+                    <tr key={c.id} className="hover:bg-[var(--color-muted)]/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-medium">{c.nombre}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">{c.email || "—"}</p>
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell text-[var(--color-muted-foreground)]">{c.telefono}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-[var(--color-muted-foreground)] font-mono text-xs">{c.cedula}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="inline-flex items-center justify-center size-6 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-xs font-bold">
+                          {stats.count}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right hidden sm:table-cell font-medium">
+                        {stats.total > 0 ? formatCurrency(stats.total) : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          href={`/admin/contactos/${c.id}`}
+                          className="text-xs text-[var(--color-accent)] hover:underline font-medium"
+                        >
+                          Ver
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </>
       )}
-
-      <div>
-        <Label htmlFor="nombreCliente">Nombre completo</Label>
-        <Input id="nombreCliente" className="mt-1" placeholder="ej. Juan Pérez" {...register("nombreCliente")} />
-        {errors.nombreCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.nombreCliente.message}</p>}
-      </div>
-
-      <div>
-        <Label htmlFor="emailCliente">Correo electrónico</Label>
-        <Input id="emailCliente" type="email" className="mt-1" placeholder="ej. juan@gmail.com" {...register("emailCliente")} />
-        {errors.emailCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.emailCliente.message}</p>}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor="telefonoCliente">Teléfono</Label>
-          <Input id="telefonoCliente" className="mt-1" placeholder="809-555-1234" {...register("telefonoCliente")} />
-          {errors.telefonoCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.telefonoCliente.message}</p>}
-        </div>
-        <div>
-          <Label htmlFor="cedulaCliente">Cédula / Pasaporte</Label>
-          <Input id="cedulaCliente" className="mt-1" placeholder="ej. 00100000001 o AB123456" {...register("cedulaCliente")} />
-          {errors.cedulaCliente && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.cedulaCliente.message}</p>}
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="notas">Notas adicionales (opcional)</Label>
-        <Textarea id="notas" className="mt-1" placeholder="Ej. necesito entrega en el aeropuerto..." rows={3} {...register("notas")} />
-      </div>
-
-      <Button type="submit" variant="accent" size="lg" className="w-full" disabled={isSubmitting || !vehiculo.disponible}>
-        {isSubmitting ? "Enviando reserva..." : "Confirmar reserva"}
-      </Button>
-
-      {!vehiculo.disponible && (
-        <p className="text-center text-sm text-[var(--color-destructive)]">
-          Este vehículo no está disponible actualmente.
-        </p>
-      )}
-
-      <p className="text-xs text-center text-[var(--color-muted-foreground)]">
-        Sin pago por adelantado. El pago se realiza al recoger el vehículo.
-      </p>
-    </form>
+    </div>
   );
 }

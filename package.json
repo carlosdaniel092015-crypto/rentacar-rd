@@ -1,152 +1,191 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Users, Fuel, Zap, Calendar, CheckCircle2, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency } from "@/lib/utils";
-import { Users, Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ReservaForm } from "@/components/catalogo/ReservaForm";
+import { VehicleGallery } from "@/components/catalogo/VehicleGallery";
+import { formatCurrency, TRANSMISIONES, COMBUSTIBLES } from "@/lib/utils";
+import type { Vehiculo, Categoria } from "@/types/database.types";
 
-export const metadata: Metadata = { title: "Contactos | Admin" };
-export const dynamic = "force-dynamic";
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-export default async function ContactosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q = "" } = await searchParams;
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
   const supabase = await createClient();
+  const { data } = await supabase.from("vehiculos").select("nombre, descripcion").eq("id", id).single<{ nombre: string; descripcion: string | null }>();
+  if (!data) return { title: "Vehículo no encontrado" };
+  return {
+    title: data.nombre,
+    description: data.descripcion ?? `Reserva el ${data.nombre} en Alma 3D Rent Card.`,
+  };
+}
 
-  let query = supabase
-    .from("contactos")
-    .select("id, nombre, telefono, cedula, email, created_at")
-    .order("nombre");
+export const revalidate = 600;
 
-  if (q.trim()) {
-    query = query.or(
-      `nombre.ilike.%${q.trim()}%,telefono.ilike.%${q.trim()}%,cedula.ilike.%${q.trim()}%,email.ilike.%${q.trim()}%`
-    );
-  }
+export default async function VehiculoDetallePage({ params }: PageProps) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: vehiculo } = await supabase.from("vehiculos").select("*").eq("id", id).single<Vehiculo>();
+  const { data: categoriasList } = await supabase.from("categorias").select("*");
+  const categorias = (categoriasList ?? []) as Categoria[];
 
-  const { data: contactos } = await query as any;
-  const cs: any[] = contactos ?? [];
+  if (!vehiculo) notFound();
 
-  // Stats de reservas por contacto
-  const ids = cs.map((c: any) => c.id);
-  let statsMap = new Map<string, { count: number; total: number }>();
-  if (ids.length > 0) {
-    const { data: reservas } = await supabase
-      .from("reservas")
-      .select("contacto_id, total, estado")
-      .in("contacto_id", ids) as any;
-    for (const r of reservas ?? []) {
-      const prev = statsMap.get(r.contacto_id) ?? { count: 0, total: 0 };
-      statsMap.set(r.contacto_id, {
-        count: prev.count + 1,
-        total: prev.total + (r.estado === "completada" ? (r.total ?? 0) : 0),
-      });
-    }
-  }
+  const categoriaLabel = categorias.find((c: Categoria) => c.slug === vehiculo.categoria)?.nombre ?? vehiculo.categoria;
+  const transmisionLabel = TRANSMISIONES.find((t) => t.value === vehiculo.transmision)?.label ?? vehiculo.transmision;
+  const combustibleLabel = COMBUSTIBLES.find((c) => c.value === vehiculo.combustible)?.label ?? vehiculo.combustible;
+
+  const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
+  const waMsg = encodeURIComponent(`Hola, me interesa el ${vehiculo.nombre}`);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="hidden text-2xl font-bold md:block">Contactos</h1>
-          <p className="text-[var(--color-muted-foreground)] text-sm mt-1">
-            {cs.length} cliente{cs.length !== 1 ? "s" : ""} registrado{cs.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <Button asChild variant="accent" size="sm">
-          <Link href="/admin/contactos/nuevo">
-            <Plus className="size-4 mr-1.5" /> Nuevo contacto
-          </Link>
-        </Button>
-      </div>
+    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+      <div className="lg:grid lg:grid-cols-[1.5fr_1fr] lg:gap-10">
+        {/* Galería interactiva */}
+        <div className="space-y-4">
+          <VehicleGallery
+            id={vehiculo.id}
+            nombre={vehiculo.nombre}
+            imagenPrincipal={vehiculo.imagen_url}
+            imagenesUrls={vehiculo.imagenes_urls ?? []}
+          />
 
-      {/* Buscador */}
-      <form method="GET" className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted-foreground)]" />
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Buscar por nombre, teléfono, cédula..."
-          className="w-full pl-9 pr-4 py-2 text-sm rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-        />
-      </form>
+          {/* Info desktop */}
+          <div className="hidden lg:block space-y-6 mt-6">
+            <div>
+              <h2 className="font-semibold mb-3">Características</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: Users, label: "Filas de asientos", value: String(vehiculo.pasajeros) },
+                  { icon: Zap, label: "Transmisión", value: transmisionLabel },
+                  { icon: Fuel, label: "Combustible", value: combustibleLabel },
+                  { icon: Calendar, label: "Año", value: String(vehiculo.anio) },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] p-3">
+                    <item.icon className="size-5 text-[var(--color-accent)]" />
+                    <div>
+                      <p className="text-xs text-[var(--color-muted-foreground)]">{item.label}</p>
+                      <p className="text-sm font-medium">{item.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-      {cs.length === 0 ? (
-        <div className="rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--color-border)] p-16 text-center">
-          <Users className="size-10 mx-auto text-[var(--color-muted-foreground)] mb-3" />
-          <p className="font-semibold text-[var(--color-muted-foreground)]">
-            {q ? "Sin resultados" : "Aún no hay contactos"}
-          </p>
-          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-            {q ? "Prueba otro término de búsqueda." : "Los contactos se crean automáticamente cuando alguien hace una reserva."}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="space-y-3 md:hidden">
-            {cs.map((c: any) => {
-              const initials = c.nombre.split(" ").filter(Boolean).slice(0, 2).map((part: string) => part[0]).join("").toUpperCase();
-              return (
-                <Link key={c.id} href={`/admin/contactos/${c.id}`} className="flex items-center gap-3 rounded-[18px] border border-[#ECE6DD] bg-white p-3.5">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF1F6] text-sm font-extrabold text-[#14263F]">{initials || "CL"}</span>
-                  <span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-bold text-[#14263F]">{c.nombre}</span><span className="block truncate text-xs text-[#7B8794]">{c.telefono || c.email || "Sin contacto"}</span></span>
-                  <span className="text-xl text-[#C4CEDB]">›</span>
-                </Link>
-              );
-            })}
+            {vehiculo.caracteristicas.length > 0 && (
+              <div>
+                <h2 className="font-semibold mb-3">Equipamiento</h2>
+                <ul className="grid grid-cols-2 gap-2">
+                  {vehiculo.caracteristicas.map((c) => (
+                    <li key={c} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="size-4 text-[var(--color-success)] shrink-0" />
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {vehiculo.descripcion && (
+              <div>
+                <h2 className="font-semibold mb-2">Descripción</h2>
+                <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed">
+                  {vehiculo.descripcion}
+                </p>
+              </div>
+            )}
           </div>
-          <div className="hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
-            <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]/40">
-                  <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Cliente</th>
-                  <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)] hidden sm:table-cell">Teléfono</th>
-                  <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)] hidden md:table-cell">Cédula / Pasaporte</th>
-                  <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Reservas</th>
-                  <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)] hidden sm:table-cell">Total gastado</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
-                {cs.map((c: any) => {
-                  const stats = statsMap.get(c.id) ?? { count: 0, total: 0 };
-                  return (
-                    <tr key={c.id} className="hover:bg-[var(--color-muted)]/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <p className="font-medium">{c.nombre}</p>
-                        <p className="text-xs text-[var(--color-muted-foreground)]">{c.email || "—"}</p>
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell text-[var(--color-muted-foreground)]">{c.telefono}</td>
-                      <td className="px-4 py-3 hidden md:table-cell text-[var(--color-muted-foreground)] font-mono text-xs">{c.cedula}</td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="inline-flex items-center justify-center size-6 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-xs font-bold">
-                          {stats.count}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right hidden sm:table-cell font-medium">
-                        {stats.total > 0 ? formatCurrency(stats.total) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/contactos/${c.id}`}
-                          className="text-xs text-[var(--color-accent)] hover:underline font-medium"
-                        >
-                          Ver
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        </div>
+
+        {/* Panel derecho — sticky */}
+        <div className="mt-6 lg:mt-0">
+          <div className="lg:sticky lg:top-24 space-y-6">
+            <div>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <Badge variant="secondary">{categoriaLabel}</Badge>
+                  <h1 className="text-2xl font-bold mt-2">{vehiculo.nombre}</h1>
+                  <p className="text-[var(--color-muted-foreground)] text-sm">
+                    {vehiculo.marca} · {vehiculo.anio}
+                  </p>
+                </div>
+                <Badge variant={vehiculo.disponible ? "success" : "destructive"}>
+                  {vehiculo.disponible ? "Disponible" : "No disponible"}
+                </Badge>
+              </div>
+              <div className="mt-3">
+                <span className="text-3xl font-extrabold text-[var(--color-accent)]">
+                  {formatCurrency(vehiculo.precio_dia)}
+                </span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">/día</span>
+              </div>
+            </div>
+
+            {/* Formulario de reserva */}
+            <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+              <h2 className="font-semibold mb-4">Hacer reserva</h2>
+              <ReservaForm vehiculo={vehiculo} />
+            </div>
+
+            <a
+              href={`https://wa.me/${WHATSAPP}?text=${waMsg}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full rounded-[var(--radius-lg)] border-2 border-[#25D366] text-[#25D366] py-3 text-sm font-medium hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageCircle className="size-5" />
+              Consultar por WhatsApp
+            </a>
+          </div>
+        </div>
+
+        {/* Info mobile (debajo del panel de reserva) */}
+        <div className="lg:hidden mt-6 space-y-6">
+          <div>
+            <h2 className="font-semibold mb-3">Características</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { icon: Users, label: "Filas de asientos", value: String(vehiculo.pasajeros) },
+                { icon: Zap, label: "Transmisión", value: transmisionLabel },
+                { icon: Fuel, label: "Combustible", value: combustibleLabel },
+                { icon: Calendar, label: "Año", value: String(vehiculo.anio) },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] p-3">
+                  <item.icon className="size-5 text-[var(--color-accent)]" />
+                  <div>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">{item.label}</p>
+                    <p className="text-sm font-medium">{item.value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </>
-      )}
+
+          {vehiculo.caracteristicas.length > 0 && (
+            <div>
+              <h2 className="font-semibold mb-3">Equipamiento</h2>
+              <ul className="grid grid-cols-2 gap-2">
+                {vehiculo.caracteristicas.map((c) => (
+                  <li key={c} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="size-4 text-[var(--color-success)] shrink-0" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {vehiculo.descripcion && (
+            <div>
+              <h2 className="font-semibold mb-2">Descripción</h2>
+              <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed">{vehiculo.descripcion}</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

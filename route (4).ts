@@ -1,61 +1,28 @@
-"use client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { useFiltrosStore } from "@/store/filtros.store";
-import { VehicleCard } from "./VehicleCard";
-import type { Vehiculo, Categoria } from "@/types/database.types";
-
-interface VehicleGridProps {
-  vehiculos: Vehiculo[];
-  categorias: Categoria[];
-}
-
-export function VehicleGrid({ vehiculos, categorias }: VehicleGridProps) {
-  const { categorias: categoriasFiltro, transmision, pasajeros, precioMax, soloDisponibles } = useFiltrosStore();
-
-  const filtrados = useMemo(() => {
-    return vehiculos.filter((v) => {
-      if (soloDisponibles && !v.disponible) return false;
-      if (categoriasFiltro.length > 0 && !categoriasFiltro.includes(v.categoria)) return false;
-      if (transmision !== "todos" && v.transmision !== transmision) return false;
-      if (v.precio_dia > precioMax) return false;
-      if (pasajeros === "2-4" && (v.pasajeros < 2 || v.pasajeros > 4)) return false;
-      if (pasajeros === "5-7" && (v.pasajeros < 5 || v.pasajeros > 7)) return false;
-      if (pasajeros === "8+" && v.pasajeros < 8) return false;
-      return true;
-    });
-  }, [vehiculos, categoriasFiltro, transmision, pasajeros, precioMax, soloDisponibles]);
-
-  if (filtrados.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="text-6xl mb-4">🚗</div>
-        <h3 className="text-lg font-semibold mb-2">No encontramos vehículos</h3>
-        <p className="text-[var(--color-muted-foreground)] text-sm max-w-xs">
-          Prueba ajustando los filtros o ampliando el rango de precios.
-        </p>
-      </div>
-    );
-  }
-
+export function VehicleCardSkeleton() {
   return (
-    <div>
-      <p className="text-sm text-[var(--color-muted-foreground)] mb-4">
-        {filtrados.length} {filtrados.length === 1 ? "vehículo" : "vehículos"} disponible{filtrados.length !== 1 ? "s" : ""}
-      </p>
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {filtrados.map((vehiculo, i) => (
-          <motion.div
-            key={vehiculo.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.4 }}
-          >
-            <VehicleCard vehiculo={vehiculo} categorias={categorias} />
-          </motion.div>
-        ))}
-      </div>
-    </div>
+    <Card className="overflow-hidden">
+      <Skeleton className="aspect-[16/10] w-full rounded-none" />
+      <CardContent className="p-4 space-y-3">
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+        <div className="flex gap-4">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-24" />
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

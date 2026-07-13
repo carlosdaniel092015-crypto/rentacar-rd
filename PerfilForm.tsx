@@ -1,173 +1,103 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+"use client";
 
-export interface Database {
-  public: {
-    Tables: {
-      categorias: {
-        Row: {
-          id: string;
-          slug: string;
-          nombre: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          slug: string;
-          nombre: string;
-          created_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["categorias"]["Insert"]>;
-      };
-      vehiculos: {
-        Row: {
-          id: string;
-          nombre: string;
-          marca: string;
-          modelo: string;
-          anio: number;
-          categoria: string;
-          transmision: "manual" | "automatica";
-          combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
-          pasajeros: number;
-          precio_dia: number;
-          disponible: boolean;
-          imagen_url: string | null;
-          imagenes_urls: string[];
-          descripcion: string | null;
-          caracteristicas: string[];
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-          marca: string;
-          modelo: string;
-          anio: number;
-          categoria: string;
-          transmision: "manual" | "automatica";
-          combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
-          pasajeros: number;
-          precio_dia: number;
-          disponible?: boolean;
-          imagen_url?: string | null;
-          imagenes_urls?: string[];
-          descripcion?: string | null;
-          caracteristicas?: string[];
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["vehiculos"]["Insert"]>;
-      };
-      contactos: {
-        Row: {
-          id: string;
-          nombre: string;
-          telefono: string;
-          cedula: string;
-          email: string;
-          notas: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-          telefono: string;
-          cedula: string;
-          email?: string;
-          notas?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["contactos"]["Insert"]>;
-      };
-      reservas: {
-        Row: {
-          id: string;
-          vehiculo_id: string;
-          contacto_id: string | null;
-          nombre_cliente: string;
-          email_cliente: string;
-          telefono_cliente: string;
-          cedula_cliente: string;
-          fecha_inicio: string;
-          fecha_fin: string;
-          dias: number;
-          precio_dia: number;
-          total: number;
-          estado: "pendiente" | "confirmada" | "en_curso" | "completada" | "cancelada";
-          notas: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          vehiculo_id: string;
-          contacto_id?: string | null;
-          nombre_cliente: string;
-          email_cliente: string;
-          telefono_cliente: string;
-          cedula_cliente: string;
-          fecha_inicio: string;
-          fecha_fin: string;
-          precio_dia: number;
-          estado?: "pendiente" | "confirmada" | "en_curso" | "completada" | "cancelada";
-          notas?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["reservas"]["Insert"]>;
-      };
-      equipo: {
-        Row: {
-          id: string;
-          email: string;
-          nombre: string;
-          cargo: string;
-          rol: "principal" | "miembro";
-          accesos: string[];
-          activo: boolean;
-          debe_cambiar_password: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          email: string;
-          nombre: string;
-          cargo: string;
-          rol?: "principal" | "miembro";
-          accesos?: string[];
-          activo?: boolean;
-          debe_cambiar_password?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["equipo"]["Insert"]>;
-      };
-    };
-    Views: Record<string, never>;
-    Functions: {
-      is_principal: { Args: { uid?: string }; Returns: boolean };
-      has_acceso: { Args: { modulo: string; uid?: string }; Returns: boolean };
-      debe_cambiar_password: { Args: { uid?: string }; Returns: boolean };
-      mark_password_changed: { Args: Record<string, never>; Returns: undefined };
-    };
-    Enums: Record<string, never>;
-  };
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Menu, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+
+const links = [
+  { href: "/", label: "Inicio" },
+  { href: "/catalogo", label: "Catálogo" },
+  { href: "/contacto", label: "Contacto" },
+];
+
+export function Navbar() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <header className="sticky top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-surface)]/60">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2 font-bold text-[var(--color-primary)]">
+          <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm" aria-hidden>A3</div>
+          <span className="text-xl">Alma 3D Rent Card</span>
+        </Link>
+
+        <nav className="hidden md:flex items-center gap-6">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-[var(--color-primary)]",
+                pathname === link.href
+                  ? "text-[var(--color-primary)]"
+                  : "text-[var(--color-muted-foreground)]"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Button asChild variant="outline" size="sm">
+            <Link href="/login" className="flex items-center gap-1.5">
+              <LogIn className="size-4" />
+              Login
+            </Link>
+          </Button>
+          <Button asChild variant="accent" size="sm">
+            <Link href="/catalogo">Reservar ahora</Link>
+          </Button>
+        </nav>
+
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="ghost" size="icon" aria-label="Abrir menú">
+              <Menu className="size-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-72">
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 font-bold text-[var(--color-primary)] mb-8"
+            >
+              <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm">A3</div>
+              <span className="text-xl">Alma 3D Rent Card</span>
+            </Link>
+            <nav className="flex flex-col gap-4">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "text-base font-medium transition-colors hover:text-[var(--color-primary)]",
+                    pathname === link.href
+                      ? "text-[var(--color-primary)]"
+                      : "text-[var(--color-foreground)]"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Button asChild variant="outline" className="mt-4 w-full">
+                <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2">
+                  <LogIn className="size-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button asChild variant="accent" className="w-full">
+                <Link href="/catalogo" onClick={() => setOpen(false)}>
+                  Reservar ahora
+                </Link>
+              </Button>
+            </nav>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </header>
+  );
 }
-
-export type Categoria = Database["public"]["Tables"]["categorias"]["Row"];
-export type Vehiculo = Database["public"]["Tables"]["vehiculos"]["Row"];
-export type VehiculoInsert = Database["public"]["Tables"]["vehiculos"]["Insert"];
-export type Reserva = Database["public"]["Tables"]["reservas"]["Row"];
-export type ReservaInsert = Database["public"]["Tables"]["reservas"]["Insert"];
-export type Contacto = Database["public"]["Tables"]["contactos"]["Row"];
-export type ContactoInsert = Database["public"]["Tables"]["contactos"]["Insert"];

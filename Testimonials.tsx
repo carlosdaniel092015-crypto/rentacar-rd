@@ -1,20 +1,32 @@
 import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  ({ className, ...props }, ref) => {
-    return (
-      <textarea
-        className={cn(
-          "flex min-h-[60px] w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-[var(--color-muted-foreground)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-ring)] disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    );
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-[var(--color-primary)] text-[var(--color-primary-foreground)]",
+        secondary: "border-transparent bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]",
+        destructive: "border-transparent bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)]",
+        success: "border-transparent bg-[var(--color-success)] text-[var(--color-success-foreground)]",
+        outline: "text-[var(--color-foreground)]",
+        accent: "border-transparent bg-[var(--color-accent)] text-[var(--color-accent-foreground)]",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
   }
 );
-Textarea.displayName = "Textarea";
 
-export { Textarea };
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+}
+
+export { Badge, badgeVariants };

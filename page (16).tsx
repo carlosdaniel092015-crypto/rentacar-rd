@@ -1,20 +1,56 @@
-import Link from "next/link";
-import { ShieldOff } from "lucide-react";
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentMember } from "@/lib/server/equipo";
 
-export default function SinAccesoPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-muted)] px-4">
-      <div className="max-w-sm text-center space-y-3">
-        <ShieldOff className="size-10 mx-auto text-[var(--color-muted-foreground)]" />
-        <h1 className="text-xl font-semibold">Sin acceso al panel</h1>
-        <p className="text-[var(--color-muted-foreground)] text-sm">
-          Tu cuenta no tiene un usuario asignado en el equipo administrativo. Contacta al
-          CEO/líder de la empresa para que te dé acceso.
-        </p>
-        <Link href="/login" className="text-[var(--color-primary)] text-sm font-medium underline">
-          Volver al inicio de sesión
-        </Link>
-      </div>
-    </div>
-  );
+export const dynamic = "force-dynamic";
+
+// Lista las notificaciones recientes del panel + cuántas sin leer.
+export async function GET() {
+  const member = await getCurrentMember();
+  if (!member) {
+    return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "No autorizado." } }, { status: 403 });
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("notificaciones")
+    .select("id, tipo, titulo, mensaje, url, leida, created_at")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (error) {
+    return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } }, { status: 500 });
+  }
+
+  const items = data ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const noLeidas = items.filter((n: any) => !n.leida).length;
+  return NextResponse.json({ ok: true, data: items, noLeidas });
+}
+
+// Marca notificaciones como leídas (todas, o una por id).
+export async function PATCH(req: Request) {
+  const member = await getCurrentMember();
+  if (!member) {
+    return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "No autorizado." } }, { status: 403 });
+  }
+
+  let id: string | undefined;
+  try {
+    const body = await req.json();
+    id = body?.id;
+  } catch {
+    // sin body → marcar todas
+  }
+
+  const supabase = createAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase.from("notificaciones") as any).update({ leida: true });
+  query = id ? query.eq("id", id) : query.eq("leida", false);
+  const { error } = await query;
+
+  if (error) {
+    return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
 }

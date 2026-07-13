@@ -1,28 +1,40 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { NextResponse } from "next/server";
 
-export function VehicleCardSkeleton() {
-  return (
-    <Card className="overflow-hidden">
-      <Skeleton className="aspect-[16/10] w-full rounded-none" />
-      <CardContent className="p-4 space-y-3">
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
-        <div className="flex gap-4">
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-16" />
-        </div>
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-7 w-24" />
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-8 w-20" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+export function GET() {
+  return NextResponse.json(
+    {
+      name: "Alma 3D Rent Card - Panel administrativo",
+      short_name: "Alma 3D Admin",
+      description: "Panel administrativo de Alma 3D Rent Card.",
+      id: "/admin",
+      start_url: "/login",
+      scope: "/",
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#1a2440",
+      theme_color: "#1a2440",
+      categories: ["business"],
+      lang: "es",
+      icons: [
+        {
+          src: "/apple-touch-icon.png",
+          sizes: "180x180",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/icon.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+          purpose: "maskable",
+        },
+      ],
+    },
+    {
+      headers: {
+        "Content-Type": "application/manifest+json",
+        "Cache-Control": "public, max-age=3600",
+      },
+    }
   );
 }

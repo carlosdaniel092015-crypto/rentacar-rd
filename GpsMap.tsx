@@ -1,34 +1,64 @@
 "use client";
 
-import { Menu } from "lucide-react";
-import { NotificacionesBell } from "./NotificacionesBell";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ESTADOS_RESERVA } from "@/lib/utils";
+import type { EstadoReserva } from "@/lib/utils";
 
-export function DashboardMobileHeader({ greetingName }: { greetingName: string }) {
+interface ReservaEstadoSelectProps {
+  reservaId: string;
+  vehiculoId: string;
+  estadoActual: EstadoReserva;
+}
+
+export function ReservaEstadoSelect({ reservaId, vehiculoId, estadoActual }: ReservaEstadoSelectProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  // vehiculoId se mantiene como prop para compatibilidad con el componente padre
+  void vehiculoId;
+
+  const handleChange = async (nuevoEstado: EstadoReserva) => {
+    if (nuevoEstado === estadoActual) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/admin/reservas/${reservaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+
+      if (!res.ok) {
+        toast.error("Error actualizando estado.");
+        return;
+      }
+
+      toast.success(
+        nuevoEstado === "confirmada"
+          ? "Estado actualizado. Se envió correo de confirmación al cliente."
+          : "Estado actualizado."
+      );
+      router.refresh();
+    } catch {
+      toast.error("Error de conexión.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const estadoConfig = ESTADOS_RESERVA.find((e) => e.value === estadoActual);
+
   return (
-    <div className="rounded-b-[28px] bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] px-5 pb-8 pt-[calc(env(safe-area-inset-top)+0.875rem)] text-white shadow-[0_10px_30px_-12px_rgba(20,38,63,0.55)]">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new Event("admin-menu-open"))}
-          className="flex size-[42px] shrink-0 items-center justify-center rounded-[14px] border border-white/15 bg-white/10 text-[#EAF0F8] transition-transform active:scale-95"
-          aria-label="Abrir menú"
-        >
-          <Menu className="size-5" />
-        </button>
-
-        <div className="flex items-center gap-2">
-          <span className="flex size-[30px] items-center justify-center rounded-[9px] bg-[#F2A83B] text-xs font-extrabold text-[#14263F]">A3</span>
-          <span className="text-[15px] font-bold text-[#EAF0F8]">Alma 3D Rent</span>
-        </div>
-
-        <NotificacionesBell variant="dark" />
-      </div>
-
-      <div className="mt-7">
-        <p className="text-[13px] font-medium text-[#EAF0F8]/60">Buenos días,</p>
-        <h1 className="mt-1 break-words text-[26px] font-extrabold leading-tight tracking-normal">{greetingName}</h1>
-        <p className="mt-2 text-[13px] text-[#EAF0F8]/55">Resumen general del negocio</p>
-      </div>
-    </div>
+    <select
+      value={estadoActual}
+      onChange={(e) => handleChange(e.target.value as EstadoReserva)}
+      disabled={loading}
+      className={`rounded-full px-3 py-1 text-xs font-semibold border-0 cursor-pointer ${estadoConfig?.color ?? ""}`}
+    >
+      {ESTADOS_RESERVA.map((e) => (
+        <option key={e.value} value={e.value}>{e.label}</option>
+      ))}
+    </select>
   );
 }

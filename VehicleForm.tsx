@@ -1,126 +1,349 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, X } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Check, X, Dices, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MODULOS, type Modulo, type MiembroEquipo } from "@/lib/equipo-shared";
 
-type Notificacion = {
-  id: string;
-  tipo: string;
-  titulo: string;
-  mensaje: string | null;
-  url: string | null;
-  leida: boolean;
-  created_at: string;
+const MODULO_LABELS: Record<Modulo, string> = {
+  vehiculos: "Vehículos",
+  reservas: "Reservas",
+  contactos: "Contactos",
+  encuestas: "Encuestas",
+  categorias: "Categorías",
+  logs: "Logs",
+  automatizacion: "Automatización",
+  equipo: "Equipo",
+  analitica: "Analítica",
+  gps: "GPS / Flota",
 };
 
-function tiempoRelativo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return "ahora";
-  if (min < 60) return `hace ${min} min`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `hace ${h} h`;
-  const d = Math.floor(h / 24);
-  return `hace ${d} d`;
+interface EquipoManagerProps {
+  miembros: (MiembroEquipo & { created_at: string })[];
+  principalId: string;
 }
 
-export function NotificacionesBell({ variant = "dark" }: { variant?: "dark" | "light" }) {
+export function EquipoManager({ miembros, principalId }: EquipoManagerProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<Notificacion[]>([]);
-  const [noLeidas, setNoLeidas] = useState(0);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const [creando, setCreando] = useState(false);
 
-  const cargar = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/notificaciones", { cache: "no-store" });
-      if (!res.ok) return;
-      const json = await res.json();
-      if (json.ok) {
-        setItems(json.data ?? []);
-        setNoLeidas(json.noLeidas ?? 0);
-      }
-    } catch {
-      /* silencioso */
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button variant="accent" onClick={() => setCreando((v) => !v)}>
+          <Plus className="size-4 mr-2" />
+          Nuevo usuario
+        </Button>
+      </div>
+
+      {creando && (
+        <CrearMiembroForm
+          onDone={() => {
+            setCreando(false);
+            router.refresh();
+          }}
+        />
+      )}
+
+      <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[var(--color-muted)]">
+              <tr>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Nombre</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Cargo</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Rol</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Accesos</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Estado</th>
+                <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {miembros.map((m) => (
+                <FilaMiembro key={m.id} miembro={m} esUnoMismo={m.id === principalId} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function generarPasswordAleatoria(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+}
+
+function CrearMiembroForm({ onDone }: { onDone: () => void }) {
+  const [email, setEmail] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [cargo, setCargo] = useState("");
+  const [password, setPassword] = useState("");
+  const [rolNuevo, setRolNuevo] = useState<"principal" | "miembro">("miembro");
+  const [accesos, setAccesos] = useState<Modulo[]>([]);
+  const [enviando, setEnviando] = useState(false);
+
+  const toggleAcceso = (modulo: Modulo) =>
+    setAccesos((prev) => (prev.includes(modulo) ? prev.filter((m) => m !== modulo) : [...prev, modulo]));
+
+  const crear = async () => {
+    if (!email.trim() || !nombre.trim() || !cargo.trim()) return;
+    if (password && password.length < 8) {
+      toast.error("La contraseña debe tener al menos 8 caracteres.");
+      return;
     }
-  }, []);
-
-  useEffect(() => {
-    cargar();
-    const t = setInterval(cargar, 30000);
-    return () => clearInterval(t);
-  }, [cargar]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
-
-  const abrir = async () => {
-    setOpen(true);
-    if (noLeidas > 0) {
-      setNoLeidas(0);
-      setItems((prev) => prev.map((n) => ({ ...n, leida: true })));
-      try {
-        await fetch("/api/admin/notificaciones", { method: "PATCH" });
-      } catch {
-        /* silencioso */
+    setEnviando(true);
+    try {
+      const res = await fetch("/api/equipo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          nombre: nombre.trim(),
+          cargo: cargo.trim(),
+          rol: rolNuevo,
+          accesos,
+          ...(password ? { password } : {}),
+        }),
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        toast.error(json.error?.message ?? "Error creando usuario.");
+        return;
       }
+      toast.success("Usuario creado. Se le envió un correo con sus credenciales y deberá cambiar la contraseña al entrar.");
+      onDone();
+    } finally {
+      setEnviando(false);
     }
   };
 
-  const btnClass =
-    variant === "dark"
-      ? "relative flex size-[42px] items-center justify-center rounded-[14px] border border-white/15 bg-white/10 text-[#EAF0F8]"
-      : "relative flex size-10 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-foreground)]";
+  return (
+    <div className="border border-[var(--color-border)] rounded-[var(--radius-xl)] p-4 bg-[var(--color-surface)] space-y-3 max-w-lg">
+      <h2 className="font-semibold text-sm">Nuevo usuario del equipo</h2>
+      <div>
+        <Label>Nombre</Label>
+        <Input className="mt-1" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="ej. María Pérez" />
+      </div>
+      <div>
+        <Label>Correo electrónico</Label>
+        <Input className="mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="maria@rentacard.com" />
+      </div>
+      <div>
+        <Label>Cargo</Label>
+        <Input className="mt-1" value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="ej. Agente de Reservas" />
+      </div>
+      <div>
+        <Label>Contraseña temporal (opcional)</Label>
+        <div className="mt-1 flex gap-2">
+          <Input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Si la dejas vacía, se genera una aleatoria"
+          />
+          <Button type="button" size="sm" variant="outline" onClick={() => setPassword(generarPasswordAleatoria())}>
+            <Dices className="size-4" />
+          </Button>
+        </div>
+        <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+          El usuario deberá cambiarla al iniciar sesión por primera vez.
+        </p>
+      </div>
+      <div>
+        <Label>Rol</Label>
+        <select
+          value={rolNuevo}
+          onChange={(e) => setRolNuevo(e.target.value as "principal" | "miembro")}
+          className="mt-1 w-full text-sm rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2"
+        >
+          <option value="miembro">Miembro</option>
+          <option value="principal">Principal (acceso total)</option>
+        </select>
+      </div>
+      <div>
+        <Label>Accesos</Label>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {MODULOS.map((modulo) => (
+            <label key={modulo} className="flex items-center gap-2 text-sm">
+              <Checkbox checked={accesos.includes(modulo)} onCheckedChange={() => toggleAcceso(modulo)} />
+              {MODULO_LABELS[modulo]}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="flex gap-2 pt-2">
+        <Button size="sm" variant="accent" onClick={crear} disabled={enviando || !email.trim() || !nombre.trim() || !cargo.trim()}>
+          <Check className="size-4 mr-1" /> Crear usuario
+        </Button>
+        <Button size="sm" variant="outline" onClick={onDone} disabled={enviando}>
+          <X className="size-4 mr-1" /> Cancelar
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function FilaMiembro({ miembro, esUnoMismo }: { miembro: MiembroEquipo & { created_at: string }; esUnoMismo: boolean }) {
+  const router = useRouter();
+  const [editando, setEditando] = useState(false);
+  const [cargo, setCargo] = useState(miembro.cargo);
+  const [rol, setRol] = useState<"principal" | "miembro">(miembro.rol);
+  const [accesos, setAccesos] = useState<Modulo[]>(miembro.accesos);
+  const [guardando, setGuardando] = useState(false);
+
+  const toggleAcceso = (modulo: Modulo) =>
+    setAccesos((prev) => (prev.includes(modulo) ? prev.filter((m) => m !== modulo) : [...prev, modulo]));
+
+  const guardar = async () => {
+    setGuardando(true);
+    try {
+      const res = await fetch(`/api/equipo/${miembro.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cargo: cargo.trim(), accesos, rol }),
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        toast.error(json.error?.message ?? "Error actualizando.");
+        return;
+      }
+      toast.success("Actualizado.");
+      setEditando(false);
+      router.refresh();
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const cambiarActivo = async (activo: boolean) => {
+    const res = await fetch(`/api/equipo/${miembro.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activo }),
+    });
+    const json = await res.json();
+    if (!json.ok) {
+      toast.error(json.error?.message ?? "Error actualizando.");
+      return;
+    }
+    toast.success(activo ? "Usuario reactivado." : "Usuario desactivado.");
+    router.refresh();
+  };
+
+  const eliminar = async () => {
+    if (!confirm(`¿Eliminar definitivamente a "${miembro.nombre}"? Esta acción no se puede deshacer.`)) return;
+    const res = await fetch(`/api/equipo/${miembro.id}`, { method: "DELETE" });
+    const json = await res.json();
+    if (!json.ok) {
+      toast.error(json.error?.message ?? "Error eliminando usuario.");
+      return;
+    }
+    toast.success("Usuario eliminado.");
+    router.refresh();
+  };
+
+  if (editando) {
+    return (
+      <tr className="bg-[var(--color-muted)]/30">
+        <td className="px-4 py-3 font-medium">{miembro.nombre}</td>
+        <td className="px-4 py-3">
+          <Input className="h-8 text-sm" value={cargo} onChange={(e) => setCargo(e.target.value)} />
+        </td>
+        <td className="px-4 py-3">
+          {esUnoMismo ? (
+            <span className="text-xs text-[var(--color-muted-foreground)]">Principal (tú)</span>
+          ) : (
+            <select
+              value={rol}
+              onChange={(e) => setRol(e.target.value as "principal" | "miembro")}
+              className="text-xs rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1"
+            >
+              <option value="principal">Principal</option>
+              <option value="miembro">Miembro</option>
+            </select>
+          )}
+        </td>
+        <td className="px-4 py-3">
+          <div className="grid grid-cols-2 gap-1">
+            {MODULOS.map((modulo) => (
+              <label key={modulo} className="flex items-center gap-1.5 text-xs">
+                <Checkbox checked={accesos.includes(modulo)} onCheckedChange={() => toggleAcceso(modulo)} />
+                {MODULO_LABELS[modulo]}
+              </label>
+            ))}
+          </div>
+        </td>
+        <td className="px-4 py-3">
+          <Badge variant={miembro.activo ? "success" : "destructive"}>{miembro.activo ? "Activo" : "Inactivo"}</Badge>
+        </td>
+        <td className="px-4 py-3 text-right space-x-1">
+          <Button size="sm" variant="accent" onClick={guardar} disabled={guardando}>
+            <Check className="size-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setEditando(false)} disabled={guardando}>
+            <X className="size-4" />
+          </Button>
+        </td>
+      </tr>
+    );
+  }
 
   return (
-    <div className="relative" ref={panelRef}>
-      <button type="button" onClick={open ? () => setOpen(false) : abrir} className={btnClass} aria-label="Notificaciones">
-        <Bell className="size-5" />
-        {noLeidas > 0 && (
-          <span className="absolute -right-1 -top-1 flex min-w-[18px] items-center justify-center rounded-full bg-[#F2A83B] px-1 text-[10px] font-bold text-[#14263F]">
-            {noLeidas > 9 ? "9+" : noLeidas}
-          </span>
+    <tr className="hover:bg-[var(--color-muted)]/30">
+      <td className="px-4 py-3">
+        <p className="font-medium">{miembro.nombre}</p>
+        <p className="text-xs text-[var(--color-muted-foreground)]">{miembro.email}</p>
+      </td>
+      <td className="px-4 py-3">{miembro.cargo}</td>
+      <td className="px-4 py-3">
+        <Badge variant={miembro.rol === "principal" ? "default" : "secondary"}>
+          {miembro.rol === "principal" ? "Principal (CEO/líder)" : "Miembro"}
+        </Badge>
+      </td>
+      <td className="px-4 py-3">
+        {miembro.rol === "principal" ? (
+          <span className="text-xs text-[var(--color-muted-foreground)]">Acceso total</span>
+        ) : miembro.accesos.length === 0 ? (
+          <span className="text-xs text-[var(--color-muted-foreground)]">Sin accesos</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {miembro.accesos.map((a) => (
+              <Badge key={a} variant="secondary" className="text-xs">
+                {MODULO_LABELS[a]}
+              </Badge>
+            ))}
+          </div>
         )}
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-[52px] z-50 w-[min(88vw,340px)] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-foreground)] shadow-xl">
-          <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
-            <span className="text-sm font-bold">Notificaciones</span>
-            <button type="button" onClick={() => setOpen(false)} className="text-[var(--color-muted-foreground)]">
-              <X className="size-4" />
-            </button>
-          </div>
-          <div className="max-h-[60vh] overflow-y-auto">
-            {items.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-[var(--color-muted-foreground)]">No hay notificaciones.</p>
-            ) : (
-              items.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    if (n.url) router.push(n.url);
-                  }}
-                  className="flex w-full flex-col items-start gap-0.5 border-b border-[var(--color-border)] px-4 py-3 text-left last:border-0 hover:bg-[var(--color-muted)]/40"
-                >
-                  <span className="text-sm font-semibold">{n.titulo}</span>
-                  {n.mensaje && <span className="text-xs text-[var(--color-muted-foreground)]">{n.mensaje}</span>}
-                  <span className="mt-0.5 text-[11px] text-[var(--color-muted-foreground)]">{tiempoRelativo(n.created_at)}</span>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+      </td>
+      <td className="px-4 py-3">
+        <Badge variant={miembro.activo ? "success" : "destructive"}>{miembro.activo ? "Activo" : "Inactivo"}</Badge>
+      </td>
+      <td className="px-4 py-3 text-right space-x-1">
+        {miembro.rol !== "principal" && (
+          <>
+            <Button size="sm" variant="outline" onClick={() => setEditando(true)}>
+              Editar
+            </Button>
+            <Button
+              size="sm"
+              variant={miembro.activo ? "destructive" : "outline"}
+              disabled={esUnoMismo}
+              onClick={() => cambiarActivo(!miembro.activo)}
+            >
+              {miembro.activo ? "Desactivar" : "Reactivar"}
+            </Button>
+            <Button size="sm" variant="destructive" disabled={esUnoMismo} onClick={eliminar}>
+              <Trash2 className="size-4" />
+            </Button>
+          </>
+        )}
+      </td>
+    </tr>
   );
 }

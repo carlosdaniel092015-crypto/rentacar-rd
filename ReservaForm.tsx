@@ -1,62 +1,71 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
+"use client";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-sm",
-        className
-      )}
-      {...props}
-    />
-  )
-);
-Card.displayName = "Card";
+import { motion } from "framer-motion";
+import { Star } from "lucide-react";
 
-const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
-  )
-);
-CardHeader.displayName = "CardHeader";
+const testimonios = [
+  {
+    nombre: "María García",
+    ciudad: "Santo Domingo",
+    texto:
+      "Excelente servicio. El vehículo estaba en perfectas condiciones y el proceso de reserva fue rapidísimo. Definitivamente los vuelvo a usar.",
+    estrellas: 5,
+  },
+  {
+    nombre: "Carlos Méndez",
+    ciudad: "Santiago",
+    texto:
+      "Llevaba años buscando una empresa de rent a car confiable en RD. Precios justos, sin sorpresas al momento de devolver el carro. 100% recomendados.",
+    estrellas: 5,
+  },
+  {
+    nombre: "Ana Rodríguez",
+    ciudad: "Punta Cana",
+    texto:
+      "Me entregaron el SUV directo en el aeropuerto. El equipo es muy amable y profesional. El mejor servicio que he tenido aquí en RD.",
+    estrellas: 5,
+  },
+];
 
-const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h3
-      ref={ref}
-      className={cn("text-2xl font-semibold leading-none tracking-tight", className)}
-      {...props}
-    />
-  )
-);
-CardTitle.displayName = "CardTitle";
+export function Testimonials() {
+  return (
+    <section className="bg-[var(--color-surface)] py-20">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-3xl font-bold sm:text-4xl">Lo que dicen nuestros clientes</h2>
+        </motion.div>
 
-const CardDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn("text-sm text-[var(--color-muted-foreground)]", className)}
-    {...props}
-  />
-));
-CardDescription.displayName = "CardDescription";
-
-const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-  )
-);
-CardContent.displayName = "CardContent";
-
-const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
-  )
-);
-CardFooter.displayName = "CardFooter";
-
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+        <div className="grid gap-6 md:grid-cols-3">
+          {testimonios.map((t, i) => (
+            <motion.div
+              key={t.nombre}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-muted)] p-6"
+            >
+              <div className="flex gap-1 mb-3">
+                {Array.from({ length: t.estrellas }).map((_, j) => (
+                  <Star key={j} className="size-4 fill-[var(--color-accent)] text-[var(--color-accent)]" />
+                ))}
+              </div>
+              <p className="text-sm text-[var(--color-foreground)] mb-4 leading-relaxed">
+                "{t.texto}"
+              </p>
+              <div>
+                <p className="font-semibold text-sm">{t.nombre}</p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">{t.ciudad}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

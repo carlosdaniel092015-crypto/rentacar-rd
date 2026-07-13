@@ -1,173 +1,39 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+"use client";
 
-export interface Database {
-  public: {
-    Tables: {
-      categorias: {
-        Row: {
-          id: string;
-          slug: string;
-          nombre: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          slug: string;
-          nombre: string;
-          created_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["categorias"]["Insert"]>;
-      };
-      vehiculos: {
-        Row: {
-          id: string;
-          nombre: string;
-          marca: string;
-          modelo: string;
-          anio: number;
-          categoria: string;
-          transmision: "manual" | "automatica";
-          combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
-          pasajeros: number;
-          precio_dia: number;
-          disponible: boolean;
-          imagen_url: string | null;
-          imagenes_urls: string[];
-          descripcion: string | null;
-          caracteristicas: string[];
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-          marca: string;
-          modelo: string;
-          anio: number;
-          categoria: string;
-          transmision: "manual" | "automatica";
-          combustible: "gasolina" | "diesel" | "hibrido" | "electrico";
-          pasajeros: number;
-          precio_dia: number;
-          disponible?: boolean;
-          imagen_url?: string | null;
-          imagenes_urls?: string[];
-          descripcion?: string | null;
-          caracteristicas?: string[];
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["vehiculos"]["Insert"]>;
-      };
-      contactos: {
-        Row: {
-          id: string;
-          nombre: string;
-          telefono: string;
-          cedula: string;
-          email: string;
-          notas: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-          telefono: string;
-          cedula: string;
-          email?: string;
-          notas?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["contactos"]["Insert"]>;
-      };
-      reservas: {
-        Row: {
-          id: string;
-          vehiculo_id: string;
-          contacto_id: string | null;
-          nombre_cliente: string;
-          email_cliente: string;
-          telefono_cliente: string;
-          cedula_cliente: string;
-          fecha_inicio: string;
-          fecha_fin: string;
-          dias: number;
-          precio_dia: number;
-          total: number;
-          estado: "pendiente" | "confirmada" | "en_curso" | "completada" | "cancelada";
-          notas: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          vehiculo_id: string;
-          contacto_id?: string | null;
-          nombre_cliente: string;
-          email_cliente: string;
-          telefono_cliente: string;
-          cedula_cliente: string;
-          fecha_inicio: string;
-          fecha_fin: string;
-          precio_dia: number;
-          estado?: "pendiente" | "confirmada" | "en_curso" | "completada" | "cancelada";
-          notas?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["reservas"]["Insert"]>;
-      };
-      equipo: {
-        Row: {
-          id: string;
-          email: string;
-          nombre: string;
-          cargo: string;
-          rol: "principal" | "miembro";
-          accesos: string[];
-          activo: boolean;
-          debe_cambiar_password: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          email: string;
-          nombre: string;
-          cargo: string;
-          rol?: "principal" | "miembro";
-          accesos?: string[];
-          activo?: boolean;
-          debe_cambiar_password?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["equipo"]["Insert"]>;
-      };
-    };
-    Views: Record<string, never>;
-    Functions: {
-      is_principal: { Args: { uid?: string }; Returns: boolean };
-      has_acceso: { Args: { modulo: string; uid?: string }; Returns: boolean };
-      debe_cambiar_password: { Args: { uid?: string }; Returns: boolean };
-      mark_password_changed: { Args: Record<string, never>; Returns: undefined };
-    };
-    Enums: Record<string, never>;
-  };
+import { useEffect, useState } from "react";
+import { MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
+const MESSAGE = encodeURIComponent("Hola, me interesa rentar un vehículo");
+
+export function WhatsAppButton() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setVisible(true);
+    } else {
+      const timer = setTimeout(() => setVisible(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  return (
+    <a
+      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${MESSAGE}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chatear por WhatsApp"
+      className={cn(
+        "fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-500",
+        "bg-[#25D366] text-white hover:bg-[#20BA5C] hover:scale-110",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}
+    >
+      <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#25D366] opacity-30" />
+      <MessageCircle className="size-7 fill-white" />
+    </a>
+  );
 }
-
-export type Categoria = Database["public"]["Tables"]["categorias"]["Row"];
-export type Vehiculo = Database["public"]["Tables"]["vehiculos"]["Row"];
-export type VehiculoInsert = Database["public"]["Tables"]["vehiculos"]["Insert"];
-export type Reserva = Database["public"]["Tables"]["reservas"]["Row"];
-export type ReservaInsert = Database["public"]["Tables"]["reservas"]["Insert"];
-export type Contacto = Database["public"]["Tables"]["contactos"]["Row"];
-export type ContactoInsert = Database["public"]["Tables"]["contactos"]["Insert"];

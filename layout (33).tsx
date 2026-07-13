@@ -1,55 +1,85 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
+import { requireApiKey } from "@/lib/server/api-auth";
+import { logEvent } from "@/lib/server/audit";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
-  const member = await getCurrentMember();
-  if (!member || !tieneAcceso(member, "encuestas")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
+const ESTADOS = ["pendiente", "confirmada", "en_curso", "completada", "cancelada"] as const;
+type Estado = (typeof ESTADOS)[number];
 
-  const { searchParams } = new URL(req.url);
-  const estrellas = searchParams.get("estrellas");
+export async function GET(req: NextRequest, ctx: RouteContext<"/api/reservas/[id]">) {
+  const authError = requireApiKey(req);
+  if (authError) return authError;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createAdminClient() as any;
-
-  let query = supabase
+  const { id } = await ctx.params;
+  const supabase = createAdminClient();
+  const { data: reserva, error } = await supabase
     .from("reservas")
-    .select("id, nombre_cliente, email_cliente, vehiculo_id, fecha_inicio, fecha_fin, total, encuesta_estrellas, encuesta_comentario, encuesta_fecha, vehiculos(nombre)")
-    .not("encuesta_estrellas", "is", null)
-    .order("encuesta_fecha", { ascending: false });
+    .select(
+      "id, vehiculo_id, contacto_id, nombre_cliente, email_cliente, telefono_cliente, cedula_cliente, " +
+        "fecha_inicio, fecha_fin, dias, precio_dia, total, estado, notas, archivada, " +
+        "encuesta_estrellas, encuesta_comentario, encuesta_fecha, created_at, updated_at"
+    )
+    .eq("id", id)
+    .single();
 
-  if (estrellas) {
-    query = query.eq("encuesta_estrellas", Number(estrellas));
+  if (error || !reserva) {
+    return NextResponse.json(
+      { ok: false, error: { code: "NOT_FOUND", message: "Reserva no encontrada." } },
+      { status: 404 }
+    );
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, data: reserva });
+}
 
-  const encuestas = (data ?? []).map((r: any) => ({
-    id: r.id,
-    numId: (r.id as string).slice(0, 8).toUpperCase(),
-    nombreCliente: r.nombre_cliente,
-    emailCliente: r.email_cliente,
-    vehiculoNombre: r.vehiculos?.nombre ?? "—",
-    fechaInicio: r.fecha_inicio,
-    fechaFin: r.fecha_fin,
-    total: r.total,
-    estrellas: r.encuesta_estrellas,
-    comentario: r.encuesta_comentario,
-    fechaEncuesta: r.encuesta_fecha,
-  }));
+export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/reservas/[id]">) {
+  const authError = requireApiKey(req);
+  if (authError) return authError;
 
-  const total = encuestas.length;
-  const promedio = total > 0
-    ? encuestas.reduce((sum: number, e: any) => sum + e.estrellas, 0) / total
-    : 0;
+  const { id } = await ctx.params;
 
-  const distribucion = [1, 2, 3, 4, 5].map((n) => ({
-    estrellas: n,
-    count: encuestas.filter((e: any) => e.estrellas === n).length,
-  }));
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "Cuerpo de solicitud inválido." } },
+      { status: 400 }
+    );
+  }
 
-  return NextResponse.json({ ok: true, data: encuestas, stats: { total, promedio, distribucion } });
+  const estado = (body as { estado?: string } | null)?.estado;
+  if (!estado || !ESTADOS.includes(estado as Estado)) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: `estado debe ser uno de: ${ESTADOS.join(", ")}` } },
+      { status: 422 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  const { data: reserva, error } = await supabase
+    .from("reservas")
+    .update({ estado } as never)
+    .eq("id", id)
+    .select("id, estado")
+    .single();
+
+  if (error || !reserva) {
+    return NextResponse.json(
+      { ok: false, error: { code: "NOT_FOUND", message: "Reserva no encontrada." } },
+      { status: 404 }
+    );
+  }
+
+  await logEvent({
+    type: "admin_action",
+    path: `/api/reservas/${id}`,
+    method: "PATCH",
+    message: "Estado de reserva actualizado vía API de automatización",
+    details: { estado },
+  });
+
+  return NextResponse.json({ ok: true, data: reserva });
 }

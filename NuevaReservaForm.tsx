@@ -3,82 +3,97 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { KeyRound } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { Contacto } from "@/types/database.types";
 
-export function PerfilForm({ obligatorio }: { obligatorio: boolean }) {
+interface ContactoFormProps {
+  contacto?: Contacto;
+  onSuccess?: (id: string) => void;
+}
+
+export function ContactoForm({ contacto, onSuccess }: ContactoFormProps) {
   const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [confirmar, setConfirmar] = useState("");
-  const [enviando, setEnviando] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    nombre: contacto?.nombre ?? "",
+    telefono: contacto?.telefono ?? "",
+    cedula: contacto?.cedula ?? "",
+    email: contacto?.email ?? "",
+    notas: contacto?.notas ?? "",
+  });
 
-  const cambiar = async () => {
-    if (password.length < 8) {
-      toast.error("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
-    if (password !== confirmar) {
-      toast.error("Las contraseñas no coinciden.");
-      return;
-    }
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
 
-    setEnviando(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      const supabase = createClient();
-      const { error: updateError } = await supabase.auth.updateUser({ password });
-      if (updateError) {
-        toast.error(updateError.message);
+      const url = contacto ? `/api/admin/contactos/${contacto.id}` : "/api/admin/contactos";
+      const method = contacto ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        toast.error(json.error ?? "Error al guardar");
         return;
       }
-
-      await supabase.rpc("mark_password_changed");
-
-      toast.success("Contraseña actualizada.");
-      setPassword("");
-      setConfirmar("");
-      router.push("/admin");
-      router.refresh();
+      toast.success(contacto ? "Contacto actualizado" : "Contacto creado");
+      if (onSuccess) {
+        onSuccess(json.data.id);
+      } else {
+        router.push(`/admin/contactos/${json.data.id}`);
+        router.refresh();
+      }
     } finally {
-      setEnviando(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="border border-[var(--color-border)] rounded-[var(--radius-xl)] p-5 bg-[var(--color-surface)] space-y-4">
-      {obligatorio && (
-        <div className="flex items-start gap-2 rounded-[var(--radius)] bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800">
-          <KeyRound className="size-4 mt-0.5 shrink-0" />
-          <p>Por seguridad, debes establecer una nueva contraseña antes de continuar.</p>
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2 space-y-1.5">
+          <Label htmlFor="nombre">Nombre completo *</Label>
+          <Input id="nombre" value={form.nombre} onChange={set("nombre")} required placeholder="Juan Pérez" />
         </div>
-      )}
-
-      <div>
-        <Label>Nueva contraseña</Label>
-        <Input
-          className="mt-1"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Mínimo 8 caracteres"
-          autoFocus
-        />
+        <div className="space-y-1.5">
+          <Label htmlFor="telefono">Teléfono *</Label>
+          <Input id="telefono" value={form.telefono} onChange={set("telefono")} required placeholder="809-555-0000" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cedula">Cédula / Pasaporte *</Label>
+          <Input id="cedula" value={form.cedula} onChange={set("cedula")} required placeholder="001-0000000-0" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <Label htmlFor="email">Correo electrónico</Label>
+          <Input id="email" type="email" value={form.email} onChange={set("email")} placeholder="cliente@ejemplo.com" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <Label htmlFor="notas">Notas internas</Label>
+          <textarea
+            id="notas"
+            value={form.notas}
+            onChange={set("notas")}
+            rows={3}
+            placeholder="Observaciones del cliente..."
+            className="w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] resize-none"
+          />
+        </div>
       </div>
-      <div>
-        <Label>Confirmar contraseña</Label>
-        <Input
-          className="mt-1"
-          type="password"
-          value={confirmar}
-          onChange={(e) => setConfirmar(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && cambiar()}
-        />
+      <div className="flex gap-3 pt-2">
+        <Button type="submit" variant="accent" disabled={loading}>
+          {loading ? "Guardando..." : contacto ? "Guardar cambios" : "Crear contacto"}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Cancelar
+        </Button>
       </div>
-      <Button variant="accent" onClick={cambiar} disabled={enviando || !password || !confirmar}>
-        Actualizar contraseña
-      </Button>
-    </div>
+    </form>
   );
 }

@@ -1,73 +1,118 @@
-"use client";
+import Image from "next/image";
 
-import { motion } from "framer-motion";
-import { Shield, Tag, Clock, MapPin } from "lucide-react";
+interface VehicleGalleryProps {
+  nombre: string;
+  imagenPrincipal: string | null;
+  imagenesUrls: string[];
+  id: string;
+}
 
-const features = [
-  {
-    icon: Shield,
-    title: "Flota certificada",
-    description:
-      "Todos nuestros vehículos pasan revisiones mecánicas periódicas. Viaja con total tranquilidad.",
-  },
-  {
-    icon: Tag,
-    title: "Precios transparentes",
-    description:
-      "Sin cargos ocultos ni sorpresas. El precio que ves es lo que pagas. Todo incluido.",
-  },
-  {
-    icon: Clock,
-    title: "Atención 24/7",
-    description:
-      "Nuestro equipo está disponible las 24 horas para asistirte en lo que necesites.",
-  },
-  {
-    icon: MapPin,
-    title: "Entrega donde estés",
-    description:
-      "Te llevamos el vehículo al aeropuerto, hotel o donde prefieras sin costo adicional.",
-  },
-];
+export function VehicleGallery({ nombre, imagenPrincipal, imagenesUrls, id }: VehicleGalleryProps) {
+  const todas: string[] = [];
+  if (imagenPrincipal) todas.push(imagenPrincipal);
+  for (const u of imagenesUrls) {
+    if (!todas.includes(u)) todas.push(u);
+  }
 
-export function Features() {
-  return (
-    <section className="bg-[var(--color-surface)] py-20">
-      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl font-bold text-[var(--color-foreground)] sm:text-4xl">
-            ¿Por qué elegirnos?
-          </h2>
-          <p className="mt-3 text-[var(--color-muted-foreground)]">
-            Más de 10 años siendo la opción preferida en República Dominicana
-          </p>
-        </motion.div>
-
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature, i) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="flex flex-col items-center text-center p-6 rounded-[var(--radius-xl)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all"
-            >
-              <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-[var(--color-accent)]/10">
-                <feature.icon className="size-7 text-[var(--color-accent)]" />
-              </div>
-              <h3 className="font-semibold text-[var(--color-foreground)] mb-2">{feature.title}</h3>
-              <p className="text-sm text-[var(--color-muted-foreground)]">{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
+  if (todas.length === 0) {
+    return (
+      <div className="relative aspect-[16/10] overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-muted-foreground)]">
+        Sin imagen
       </div>
-    </section>
+    );
+  }
+
+  if (todas.length === 1) {
+    return (
+      <div className="relative aspect-[16/10] overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-muted)]">
+        <Image src={todas[0]} alt={nombre} fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 60vw" />
+      </div>
+    );
+  }
+
+  const gid = `vg-${id.slice(0, 8)}`;
+
+  // CSS-only gallery: radio inputs control which image is shown via :checked + sibling selectors
+  // Structure: inputs → main-image-div → thumbnails-div  (all siblings inside wrapper)
+  const css = `
+    #${gid}-main img { opacity: 0; transition: opacity 0.3s; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    ${todas.map((_, i) => `
+      #${gid}-r${i}:checked ~ #${gid}-main label[for="${gid}-r${i}"] img { opacity: 1; z-index: 1; }
+      #${gid}-r${i}:checked ~ #${gid}-thumbs label[for="${gid}-r${i}"] { border-color: #F97316 !important; opacity: 1 !important; }
+    `).join("")}
+  `;
+
+  return (
+    <div id={gid} className="space-y-3">
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+
+      {/* Radio inputs — ocultos, preceden a los divs para que el selector ~ funcione */}
+      {todas.map((_, i) => (
+        <input
+          key={i}
+          type="radio"
+          id={`${gid}-r${i}`}
+          name={gid}
+          defaultChecked={i === 0}
+          className="sr-only"
+          style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)" }}
+          aria-label={`${nombre} — foto ${i + 1}`}
+        />
+      ))}
+
+      {/* Imagen principal: labels apilados, el CSS muestra el activo */}
+      <div
+        id={`${gid}-main`}
+        className="relative aspect-[16/10] overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-muted)]"
+      >
+        {todas.map((url, i) => (
+          <label
+            key={url}
+            htmlFor={`${gid}-r${i}`}
+            style={{ position: "absolute", inset: 0, display: "block", cursor: "default", zIndex: 0 }}
+          >
+            <Image
+              src={url}
+              alt={`${nombre} — foto ${i + 1}`}
+              fill
+              priority={i === 0}
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 60vw"
+            />
+          </label>
+        ))}
+      </div>
+
+      {/* Miniaturas: labels que activan el radio correspondiente */}
+      <div id={`${gid}-thumbs`} className="flex gap-2 overflow-x-auto pb-1">
+        {todas.map((url, i) => (
+          <label
+            key={url}
+            htmlFor={`${gid}-r${i}`}
+            style={{
+              flexShrink: 0,
+              width: 80,
+              height: 80,
+              borderRadius: 8,
+              overflow: "hidden",
+              position: "relative",
+              cursor: "pointer",
+              display: "block",
+              border: "3px solid transparent",
+              opacity: i === 0 ? 1 : 0.6,
+              transition: "border-color 0.2s, opacity 0.2s",
+            }}
+          >
+            <Image
+              src={url}
+              alt={`${nombre} miniatura ${i + 1}`}
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
+          </label>
+        ))}
+      </div>
+    </div>
   );
 }
