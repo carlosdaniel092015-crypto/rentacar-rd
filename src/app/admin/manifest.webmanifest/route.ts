@@ -6,8 +6,11 @@ export function GET() {
       name: "Alma 3D Rent Card - Panel administrativo",
       short_name: "Alma 3D Admin",
       description: "Panel administrativo de Alma 3D Rent Card.",
-      start_url: "/admin",
-      scope: "/admin",
+      // Abre en el login (no en la pantalla principal). El scope "/" permite que
+      // login → panel se mantengan dentro de la app instalada (standalone); el
+      // sitio público solo se abre vía "Ver sitio principal" (en pestaña externa).
+      start_url: "/login",
+      scope: "/",
       display: "standalone",
       orientation: "portrait",
       background_color: "#1a2440",

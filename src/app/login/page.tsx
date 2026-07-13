@@ -42,6 +42,8 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-8 gap-3">
           <Link
             href="/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors self-start"
           >
             <ArrowLeft className="size-4" />
