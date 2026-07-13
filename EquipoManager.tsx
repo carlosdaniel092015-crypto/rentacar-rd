@@ -1,103 +1,22 @@
-"use client";
+import type { Metadata } from "next";
+import { EncuestaForm } from "@/components/catalogo/EncuestaForm";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, LogIn } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+export const metadata: Metadata = { title: "Encuesta de satisfacción | Alma 3D Rent Card" };
 
-const links = [
-  { href: "/", label: "Inicio" },
-  { href: "/catalogo", label: "Catálogo" },
-  { href: "/contacto", label: "Contacto" },
-];
+interface Props { params: Promise<{ id: string }> }
 
-export function Navbar() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-
+export default async function EncuestaPage({ params }: Props) {
+  const { id } = await params;
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-surface)]/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 font-bold text-[var(--color-primary)]">
-          <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm" aria-hidden>A3</div>
-          <span className="text-xl">Alma 3D Rent Card</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-6">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-[var(--color-primary)]",
-                pathname === link.href
-                  ? "text-[var(--color-primary)]"
-                  : "text-[var(--color-muted-foreground)]"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Button asChild variant="outline" size="sm">
-            <Link href="/login" className="flex items-center gap-1.5">
-              <LogIn className="size-4" />
-              Login
-            </Link>
-          </Button>
-          <Button asChild variant="accent" size="sm">
-            <Link href="/catalogo">Reservar ahora</Link>
-          </Button>
-        </nav>
-
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" aria-label="Abrir menú">
-              <Menu className="size-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-72">
-            <Link
-              href="/"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 font-bold text-[var(--color-primary)] mb-8"
-            >
-              <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm">A3</div>
-              <span className="text-xl">Alma 3D Rent Card</span>
-            </Link>
-            <nav className="flex flex-col gap-4">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "text-base font-medium transition-colors hover:text-[var(--color-primary)]",
-                    pathname === link.href
-                      ? "text-[var(--color-primary)]"
-                      : "text-[var(--color-foreground)]"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <Button asChild variant="outline" className="mt-4 w-full">
-                <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2">
-                  <LogIn className="size-4" />
-                  Login
-                </Link>
-              </Button>
-              <Button asChild variant="accent" className="w-full">
-                <Link href="/catalogo" onClick={() => setOpen(false)}>
-                  Reservar ahora
-                </Link>
-              </Button>
-            </nav>
-          </SheetContent>
-        </Sheet>
+    <div className="mx-auto max-w-lg px-4 py-16">
+      <div className="text-center mb-8">
+        <div className="text-5xl mb-4">⭐</div>
+        <h1 className="text-2xl font-bold mb-2">¿Cómo fue tu experiencia?</h1>
+        <p className="text-[var(--color-muted-foreground)] text-sm">
+          Tu opinión nos ayuda a seguir mejorando. Solo toma un minuto.
+        </p>
       </div>
-    </header>
+      <EncuestaForm reservaId={id} />
+    </div>
   );
 }

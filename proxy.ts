@@ -1,112 +1,114 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { sendMail, ADMIN_EMAIL, SECONDARY_ADMIN_EMAIL } from "@/lib/server/mailer";
-import { escapeHtml } from "@/lib/email/escape";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { Contacto } from "@/types/database.types";
 
-const ETIQUETAS: Record<number, string> = {
-  1: "Muy malo", 2: "Malo", 3: "Regular", 4: "Bueno", 5: "Excelente",
-};
+export function ContactoEditInline({ contacto }: { contacto: Contacto }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    nombre: contacto.nombre,
+    telefono: contacto.telefono,
+    cedula: contacto.cedula,
+    email: contacto.email,
+    notas: contacto.notas ?? "",
+  });
 
-const COMENTARIO_MAX_LENGTH = 1000;
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
 
-export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown";
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/contactos/${contacto.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (!json.ok) { toast.error(json.error ?? "Error al guardar"); return; }
+      toast.success("Contacto actualizado");
+      setEditing(false);
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (!(await checkRateLimit("encuesta", ip, 5, 60 * 60))) {
-    return NextResponse.json({ ok: false, error: "Demasiadas solicitudes." }, { status: 429 });
-  }
+  const handleDelete = async () => {
+    if (!confirm(`¿Eliminar el contacto "${contacto.nombre}"? Las reservas no se eliminarán.`)) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/contactos/${contacto.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.ok) { toast.error(json.error ?? "Error al eliminar"); return; }
+      toast.success("Contacto eliminado");
+      router.push("/admin/contactos");
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  let body: unknown;
-  try { body = await req.json(); } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
-
-  const { reservaId, estrellas, comentario } = (body ?? {}) as Record<string, unknown>;
-
-  if (!reservaId || typeof reservaId !== "string" || typeof estrellas !== "number" || estrellas < 1 || estrellas > 5) {
-    return NextResponse.json({ ok: false, error: "Datos inválidos." }, { status: 422 });
-  }
-
-  if (comentario !== undefined && (typeof comentario !== "string" || comentario.length > COMENTARIO_MAX_LENGTH)) {
-    return NextResponse.json(
-      { ok: false, error: `El comentario no puede superar ${COMENTARIO_MAX_LENGTH} caracteres.` },
-      { status: 422 }
+  if (!editing) {
+    return (
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" className="flex-1" onClick={() => setEditing(true)}>
+          <Pencil className="size-3.5 mr-1.5" /> Editar
+        </Button>
+        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleDelete} disabled={loading}>
+          <Trash2 className="size-3.5" />
+        </Button>
+      </div>
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createAdminClient() as any;
-
-  // Obtener datos de la reserva (busca por UUID completo)
-  const { data: reserva } = await supabase
-    .from("reservas")
-    .select("id, nombre_cliente, email_cliente, estado, encuesta_estrellas, vehiculos(nombre)")
-    .eq("id", reservaId)
-    .single();
-
-  if (!reserva) {
-    return NextResponse.json({ ok: false, error: "Reserva no encontrada." }, { status: 404 });
-  }
-
-  if (reserva.estado !== "completada") {
-    return NextResponse.json({ ok: false, error: "Solo se puede calificar una reserva completada." }, { status: 409 });
-  }
-
-  if (reserva.encuesta_estrellas !== null && reserva.encuesta_estrellas !== undefined) {
-    return NextResponse.json({ ok: false, error: "Esta reserva ya fue calificada." }, { status: 409 });
-  }
-
-  // Guardar la encuesta
-  await supabase
-    .from("reservas")
-    .update({
-      encuesta_estrellas: estrellas,
-      encuesta_comentario: typeof comentario === "string" && comentario.trim() ? comentario.trim() : null,
-      encuesta_fecha: new Date().toISOString(),
-    })
-    .eq("id", reservaId);
-
-  // Enviar copia a los admins
-  const numId = (reserva.id as string).slice(0, 8).toUpperCase();
-  const vehiculoNombre = reserva.vehiculos?.nombre ?? "Vehículo";
-  const estrellaStr = "★".repeat(estrellas) + "☆".repeat(5 - estrellas);
-
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
-      <div style="background:#1a2440;padding:24px 32px;border-radius:8px 8px 0 0">
-        <h1 style="color:#fff;margin:0;font-size:22px">Alma 3D Rent Card</h1>
-        <p style="color:#a0aec0;margin:4px 0 0">Nueva encuesta de satisfacción</p>
-      </div>
-      <div style="background:#fff;padding:32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px">
-        <h2 style="margin-top:0">Encuesta recibida</h2>
-        <p>El cliente <strong>${escapeHtml(reserva.nombre_cliente)}</strong> calificó su experiencia con el <strong>${escapeHtml(vehiculoNombre)}</strong>.</p>
-        <div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;text-align:center">
-          <p style="font-size:28px;margin:0;letter-spacing:2px;color:#d97706">${estrellaStr}</p>
-          <p style="font-size:18px;font-weight:700;margin:8px 0 0;color:#92400e">${ETIQUETAS[estrellas]}</p>
+  return (
+    <div className="rounded-[var(--radius-xl)] border border-[var(--color-accent)]/30 bg-[var(--color-surface)] p-5 space-y-3">
+      <h3 className="font-semibold text-sm">Editar contacto</h3>
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="e-nombre">Nombre *</Label>
+          <Input id="e-nombre" value={form.nombre} onChange={set("nombre")} />
         </div>
-        ${comentario ? `<p style="font-size:13px"><strong>Comentario:</strong> ${escapeHtml(comentario)}</p>` : ""}
-        <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:13px">
-          <tr style="background:#f3f4f6"><td style="padding:8px 12px;font-weight:600;width:40%"># Reserva</td><td style="padding:8px 12px">${numId}</td></tr>
-          <tr><td style="padding:8px 12px;font-weight:600">Cliente</td><td style="padding:8px 12px">${escapeHtml(reserva.nombre_cliente)}</td></tr>
-          <tr style="background:#f3f4f6"><td style="padding:8px 12px;font-weight:600">Correo</td><td style="padding:8px 12px">${escapeHtml(reserva.email_cliente)}</td></tr>
-        </table>
+        <div className="space-y-1.5">
+          <Label htmlFor="e-telefono">Teléfono *</Label>
+          <Input id="e-telefono" value={form.telefono} onChange={set("telefono")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="e-cedula">Cédula / Pasaporte *</Label>
+          <Input id="e-cedula" value={form.cedula} onChange={set("cedula")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="e-email">Correo</Label>
+          <Input id="e-email" type="email" value={form.email} onChange={set("email")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="e-notas">Notas internas</Label>
+          <textarea
+            id="e-notas"
+            value={form.notas}
+            onChange={set("notas")}
+            rows={2}
+            className="w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] resize-none"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2 pt-1">
+        <Button variant="accent" size="sm" onClick={handleSave} disabled={loading} className="flex-1">
+          {loading ? "Guardando..." : "Guardar"}
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
+          Cancelar
+        </Button>
       </div>
     </div>
-  `;
-
-  await Promise.allSettled([
-    sendMail({
-      to: [...new Set([ADMIN_EMAIL, ...(SECONDARY_ADMIN_EMAIL ? [SECONDARY_ADMIN_EMAIL] : [])])],
-      subject: `Encuesta ${estrellaStr} — ${reserva.nombre_cliente} (#${numId})`,
-      html,
-    }),
-  ]);
-
-  return NextResponse.json({ ok: true });
+  );
 }

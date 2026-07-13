@@ -1,349 +1,183 @@
-"use client";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentMember, MODULOS, type Modulo } from "@/lib/server/equipo";
+import { logEvent } from "@/lib/server/audit";
+import type { Database } from "@/types/database.types";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Plus, Check, X, Dices, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MODULOS, type Modulo, type MiembroEquipo } from "@/lib/equipo-shared";
+type EquipoUpdate = Database["public"]["Tables"]["equipo"]["Update"];
 
-const MODULO_LABELS: Record<Modulo, string> = {
-  vehiculos: "Vehículos",
-  reservas: "Reservas",
-  contactos: "Contactos",
-  encuestas: "Encuestas",
-  categorias: "Categorías",
-  logs: "Logs",
-  automatizacion: "Automatización",
-  equipo: "Equipo",
-  analitica: "Analítica",
-  gps: "GPS / Flota",
-};
+export const dynamic = "force-dynamic";
 
-interface EquipoManagerProps {
-  miembros: (MiembroEquipo & { created_at: string })[];
-  principalId: string;
+function validarAccesos(input: unknown): input is Modulo[] {
+  return Array.isArray(input) && input.every((m) => MODULOS.includes(m));
 }
 
-export function EquipoManager({ miembros, principalId }: EquipoManagerProps) {
-  const router = useRouter();
-  const [creando, setCreando] = useState(false);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button variant="accent" onClick={() => setCreando((v) => !v)}>
-          <Plus className="size-4 mr-2" />
-          Nuevo usuario
-        </Button>
-      </div>
-
-      {creando && (
-        <CrearMiembroForm
-          onDone={() => {
-            setCreando(false);
-            router.refresh();
-          }}
-        />
-      )}
-
-      <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--color-muted)]">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Nombre</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Cargo</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Rol</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Accesos</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Estado</th>
-                <th className="text-right px-4 py-3 font-medium text-[var(--color-muted-foreground)]">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
-              {miembros.map((m) => (
-                <FilaMiembro key={m.id} miembro={m} esUnoMismo={m.id === principalId} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function generarPasswordAleatoria(): string {
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
-}
-
-function CrearMiembroForm({ onDone }: { onDone: () => void }) {
-  const [email, setEmail] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [cargo, setCargo] = useState("");
-  const [password, setPassword] = useState("");
-  const [rolNuevo, setRolNuevo] = useState<"principal" | "miembro">("miembro");
-  const [accesos, setAccesos] = useState<Modulo[]>([]);
-  const [enviando, setEnviando] = useState(false);
-
-  const toggleAcceso = (modulo: Modulo) =>
-    setAccesos((prev) => (prev.includes(modulo) ? prev.filter((m) => m !== modulo) : [...prev, modulo]));
-
-  const crear = async () => {
-    if (!email.trim() || !nombre.trim() || !cargo.trim()) return;
-    if (password && password.length < 8) {
-      toast.error("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
-    setEnviando(true);
-    try {
-      const res = await fetch("/api/equipo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          nombre: nombre.trim(),
-          cargo: cargo.trim(),
-          rol: rolNuevo,
-          accesos,
-          ...(password ? { password } : {}),
-        }),
-      });
-      const json = await res.json();
-      if (!json.ok) {
-        toast.error(json.error?.message ?? "Error creando usuario.");
-        return;
-      }
-      toast.success("Usuario creado. Se le envió un correo con sus credenciales y deberá cambiar la contraseña al entrar.");
-      onDone();
-    } finally {
-      setEnviando(false);
-    }
-  };
-
-  return (
-    <div className="border border-[var(--color-border)] rounded-[var(--radius-xl)] p-4 bg-[var(--color-surface)] space-y-3 max-w-lg">
-      <h2 className="font-semibold text-sm">Nuevo usuario del equipo</h2>
-      <div>
-        <Label>Nombre</Label>
-        <Input className="mt-1" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="ej. María Pérez" />
-      </div>
-      <div>
-        <Label>Correo electrónico</Label>
-        <Input className="mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="maria@rentacard.com" />
-      </div>
-      <div>
-        <Label>Cargo</Label>
-        <Input className="mt-1" value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="ej. Agente de Reservas" />
-      </div>
-      <div>
-        <Label>Contraseña temporal (opcional)</Label>
-        <div className="mt-1 flex gap-2">
-          <Input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Si la dejas vacía, se genera una aleatoria"
-          />
-          <Button type="button" size="sm" variant="outline" onClick={() => setPassword(generarPasswordAleatoria())}>
-            <Dices className="size-4" />
-          </Button>
-        </div>
-        <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
-          El usuario deberá cambiarla al iniciar sesión por primera vez.
-        </p>
-      </div>
-      <div>
-        <Label>Rol</Label>
-        <select
-          value={rolNuevo}
-          onChange={(e) => setRolNuevo(e.target.value as "principal" | "miembro")}
-          className="mt-1 w-full text-sm rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2"
-        >
-          <option value="miembro">Miembro</option>
-          <option value="principal">Principal (acceso total)</option>
-        </select>
-      </div>
-      <div>
-        <Label>Accesos</Label>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {MODULOS.map((modulo) => (
-            <label key={modulo} className="flex items-center gap-2 text-sm">
-              <Checkbox checked={accesos.includes(modulo)} onCheckedChange={() => toggleAcceso(modulo)} />
-              {MODULO_LABELS[modulo]}
-            </label>
-          ))}
-        </div>
-      </div>
-      <div className="flex gap-2 pt-2">
-        <Button size="sm" variant="accent" onClick={crear} disabled={enviando || !email.trim() || !nombre.trim() || !cargo.trim()}>
-          <Check className="size-4 mr-1" /> Crear usuario
-        </Button>
-        <Button size="sm" variant="outline" onClick={onDone} disabled={enviando}>
-          <X className="size-4 mr-1" /> Cancelar
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function FilaMiembro({ miembro, esUnoMismo }: { miembro: MiembroEquipo & { created_at: string }; esUnoMismo: boolean }) {
-  const router = useRouter();
-  const [editando, setEditando] = useState(false);
-  const [cargo, setCargo] = useState(miembro.cargo);
-  const [rol, setRol] = useState<"principal" | "miembro">(miembro.rol);
-  const [accesos, setAccesos] = useState<Modulo[]>(miembro.accesos);
-  const [guardando, setGuardando] = useState(false);
-
-  const toggleAcceso = (modulo: Modulo) =>
-    setAccesos((prev) => (prev.includes(modulo) ? prev.filter((m) => m !== modulo) : [...prev, modulo]));
-
-  const guardar = async () => {
-    setGuardando(true);
-    try {
-      const res = await fetch(`/api/equipo/${miembro.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cargo: cargo.trim(), accesos, rol }),
-      });
-      const json = await res.json();
-      if (!json.ok) {
-        toast.error(json.error?.message ?? "Error actualizando.");
-        return;
-      }
-      toast.success("Actualizado.");
-      setEditando(false);
-      router.refresh();
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  const cambiarActivo = async (activo: boolean) => {
-    const res = await fetch(`/api/equipo/${miembro.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ activo }),
-    });
-    const json = await res.json();
-    if (!json.ok) {
-      toast.error(json.error?.message ?? "Error actualizando.");
-      return;
-    }
-    toast.success(activo ? "Usuario reactivado." : "Usuario desactivado.");
-    router.refresh();
-  };
-
-  const eliminar = async () => {
-    if (!confirm(`¿Eliminar definitivamente a "${miembro.nombre}"? Esta acción no se puede deshacer.`)) return;
-    const res = await fetch(`/api/equipo/${miembro.id}`, { method: "DELETE" });
-    const json = await res.json();
-    if (!json.ok) {
-      toast.error(json.error?.message ?? "Error eliminando usuario.");
-      return;
-    }
-    toast.success("Usuario eliminado.");
-    router.refresh();
-  };
-
-  if (editando) {
-    return (
-      <tr className="bg-[var(--color-muted)]/30">
-        <td className="px-4 py-3 font-medium">{miembro.nombre}</td>
-        <td className="px-4 py-3">
-          <Input className="h-8 text-sm" value={cargo} onChange={(e) => setCargo(e.target.value)} />
-        </td>
-        <td className="px-4 py-3">
-          {esUnoMismo ? (
-            <span className="text-xs text-[var(--color-muted-foreground)]">Principal (tú)</span>
-          ) : (
-            <select
-              value={rol}
-              onChange={(e) => setRol(e.target.value as "principal" | "miembro")}
-              className="text-xs rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1"
-            >
-              <option value="principal">Principal</option>
-              <option value="miembro">Miembro</option>
-            </select>
-          )}
-        </td>
-        <td className="px-4 py-3">
-          <div className="grid grid-cols-2 gap-1">
-            {MODULOS.map((modulo) => (
-              <label key={modulo} className="flex items-center gap-1.5 text-xs">
-                <Checkbox checked={accesos.includes(modulo)} onCheckedChange={() => toggleAcceso(modulo)} />
-                {MODULO_LABELS[modulo]}
-              </label>
-            ))}
-          </div>
-        </td>
-        <td className="px-4 py-3">
-          <Badge variant={miembro.activo ? "success" : "destructive"}>{miembro.activo ? "Activo" : "Inactivo"}</Badge>
-        </td>
-        <td className="px-4 py-3 text-right space-x-1">
-          <Button size="sm" variant="accent" onClick={guardar} disabled={guardando}>
-            <Check className="size-4" />
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setEditando(false)} disabled={guardando}>
-            <X className="size-4" />
-          </Button>
-        </td>
-      </tr>
+// Editar cargo/accesos/rol/estado de un miembro. Solo el principal.
+export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/equipo/[id]">) {
+  const member = await getCurrentMember();
+  if (!member || member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede editar el equipo." } },
+      { status: 403 }
     );
   }
 
-  return (
-    <tr className="hover:bg-[var(--color-muted)]/30">
-      <td className="px-4 py-3">
-        <p className="font-medium">{miembro.nombre}</p>
-        <p className="text-xs text-[var(--color-muted-foreground)]">{miembro.email}</p>
-      </td>
-      <td className="px-4 py-3">{miembro.cargo}</td>
-      <td className="px-4 py-3">
-        <Badge variant={miembro.rol === "principal" ? "default" : "secondary"}>
-          {miembro.rol === "principal" ? "Principal (CEO/líder)" : "Miembro"}
-        </Badge>
-      </td>
-      <td className="px-4 py-3">
-        {miembro.rol === "principal" ? (
-          <span className="text-xs text-[var(--color-muted-foreground)]">Acceso total</span>
-        ) : miembro.accesos.length === 0 ? (
-          <span className="text-xs text-[var(--color-muted-foreground)]">Sin accesos</span>
-        ) : (
-          <div className="flex flex-wrap gap-1">
-            {miembro.accesos.map((a) => (
-              <Badge key={a} variant="secondary" className="text-xs">
-                {MODULO_LABELS[a]}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </td>
-      <td className="px-4 py-3">
-        <Badge variant={miembro.activo ? "success" : "destructive"}>{miembro.activo ? "Activo" : "Inactivo"}</Badge>
-      </td>
-      <td className="px-4 py-3 text-right space-x-1">
-        {miembro.rol !== "principal" && (
-          <>
-            <Button size="sm" variant="outline" onClick={() => setEditando(true)}>
-              Editar
-            </Button>
-            <Button
-              size="sm"
-              variant={miembro.activo ? "destructive" : "outline"}
-              disabled={esUnoMismo}
-              onClick={() => cambiarActivo(!miembro.activo)}
-            >
-              {miembro.activo ? "Desactivar" : "Reactivar"}
-            </Button>
-            <Button size="sm" variant="destructive" disabled={esUnoMismo} onClick={eliminar}>
-              <Trash2 className="size-4" />
-            </Button>
-          </>
-        )}
-      </td>
-    </tr>
-  );
+  const { id } = await ctx.params;
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "Cuerpo de solicitud inválido." } },
+      { status: 400 }
+    );
+  }
+
+  const { cargo, accesos, activo, rol } = (body ?? {}) as Record<string, unknown>;
+  const update: EquipoUpdate = {};
+
+  if (cargo !== undefined) {
+    if (typeof cargo !== "string" || cargo.trim().length < 2) {
+      return NextResponse.json(
+        { ok: false, error: { code: "VALIDATION", message: "Cargo inválido." } },
+        { status: 422 }
+      );
+    }
+    update.cargo = cargo.trim();
+  }
+
+  if (accesos !== undefined) {
+    if (!validarAccesos(accesos)) {
+      return NextResponse.json(
+        { ok: false, error: { code: "VALIDATION", message: "Accesos inválidos." } },
+        { status: 422 }
+      );
+    }
+    update.accesos = accesos;
+  }
+
+  if (activo !== undefined) {
+    if (typeof activo !== "boolean") {
+      return NextResponse.json(
+        { ok: false, error: { code: "VALIDATION", message: "activo debe ser booleano." } },
+        { status: 422 }
+      );
+    }
+    if (id === member.id && activo === false) {
+      return NextResponse.json(
+        { ok: false, error: { code: "VALIDATION", message: "No puedes desactivar tu propia cuenta." } },
+        { status: 422 }
+      );
+    }
+    update.activo = activo;
+  }
+
+  if (rol !== undefined) {
+    if (rol !== "principal" && rol !== "miembro") {
+      return NextResponse.json(
+        { ok: false, error: { code: "VALIDATION", message: "rol debe ser principal o miembro." } },
+        { status: 422 }
+      );
+    }
+    if (id === member.id && rol === "miembro") {
+      return NextResponse.json(
+        { ok: false, error: { code: "VALIDATION", message: "No puedes quitarte el rol de principal." } },
+        { status: 422 }
+      );
+    }
+    update.rol = rol;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "Nada que actualizar." } },
+      { status: 422 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await (supabase.from("equipo") as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+    .update(update)
+    .eq("id", id)
+    .select("id, email, nombre, cargo, rol, accesos, activo")
+    .single();
+
+  if (error || !data) {
+    return NextResponse.json(
+      { ok: false, error: { code: "NOT_FOUND", message: "Miembro no encontrado." } },
+      { status: 404 }
+    );
+  }
+
+  await logEvent({
+    type: "admin_action",
+    actorEmail: member.email,
+    path: `/api/equipo/${id}`,
+    method: "PATCH",
+    message: "Miembro de equipo actualizado",
+    details: update,
+  });
+
+  return NextResponse.json({ ok: true, data });
+}
+
+// Eliminar un miembro del equipo (cuenta de auth + fila en equipo vía cascade). Solo el principal.
+export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/equipo/[id]">) {
+  const member = await getCurrentMember();
+  if (!member || member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede eliminar usuarios." } },
+      { status: 403 }
+    );
+  }
+
+  const { id } = await ctx.params;
+
+  if (id === member.id) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "No puedes eliminar tu propia cuenta." } },
+      { status: 422 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  const { data: objetivo } = await supabase
+    .from("equipo")
+    .select("rol, email")
+    .eq("id", id)
+    .single<{ rol: "principal" | "miembro"; email: string }>();
+
+  if (!objetivo) {
+    return NextResponse.json(
+      { ok: false, error: { code: "NOT_FOUND", message: "Miembro no encontrado." } },
+      { status: 404 }
+    );
+  }
+
+  if (objetivo.rol === "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "No se puede eliminar a un usuario principal." } },
+      { status: 422 }
+    );
+  }
+
+  const { error } = await supabase.auth.admin.deleteUser(id);
+  if (error) {
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "No se pudo eliminar el usuario." } },
+      { status: 500 }
+    );
+  }
+
+  await logEvent({
+    type: "admin_action",
+    actorEmail: member.email,
+    path: `/api/equipo/${id}`,
+    method: "DELETE",
+    message: "Miembro de equipo eliminado",
+    details: { email: objetivo.email },
+  });
+
+  return NextResponse.json({ ok: true });
 }

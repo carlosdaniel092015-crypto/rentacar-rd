@@ -1,49 +1,81 @@
-import type { Metadata } from "next";
-import type React from "react";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { MobileAdminNav } from "@/components/admin/MobileAdminNav";
-import { MobileAdminHeader } from "@/components/admin/MobileAdminHeader";
-import { getCurrentMember } from "@/lib/server/equipo";
+import Link from "next/link";
+import { Car, Phone, Mail, MapPin, Clock } from "lucide-react";
 
-export const metadata: Metadata = {
-  manifest: "/admin/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Alma 3D Admin",
-  },
-  other: {
-    "mobile-web-app-capable": "yes",
-  },
-};
-
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const member = await getCurrentMember();
-  if (!member) redirect("/sin-acceso");
-
+export function Footer() {
   return (
-    <div className="admin-mobile-shell flex min-h-screen bg-[#F5F1EB] md:bg-[var(--color-muted)]">
-      <AdminSidebar rol={member.rol} accesos={member.accesos} />
-      {/* min-w-0 + w-full: sin esto, una tabla ancha estira el <main> más que la
-          pantalla en móvil (bug de flexbox `min-width: auto`) y encoge toda la
-          página. Con min-w-0, la tabla hace scroll interno y la página queda
-          ajustada al ancho del teléfono. */}
-      <main className="flex-1 w-full min-w-0 overflow-auto">
-        <MobileAdminHeader />
-        <div
-          className="min-w-0 p-5 pt-4 md:p-8 md:pt-6"
-        >
-          {children}
+    <footer className="bg-[var(--color-primary)] text-[var(--color-primary-foreground)]">
+      <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Link href="/" className="flex items-center gap-2 mb-4">
+              <span className="flex items-center justify-center size-8 rounded-lg bg-[var(--color-accent)] text-white shrink-0">
+                <Car className="size-5" />
+              </span>
+              <span className="text-xl font-extrabold tracking-tight text-white">
+                Alma 3D Rent Card
+              </span>
+            </Link>
+            <p className="text-sm opacity-80">
+              Tu empresa de confianza para alquiler de vehículos en República Dominicana.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-4">Navegación</h3>
+            <ul className="space-y-2 text-sm opacity-80">
+              <li><Link href="/" className="hover:opacity-100 transition-opacity">Inicio</Link></li>
+              <li><Link href="/catalogo" className="hover:opacity-100 transition-opacity">Catálogo</Link></li>
+              <li><Link href="/contacto" className="hover:opacity-100 transition-opacity">Contacto</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-4">Categorías</h3>
+            <ul className="space-y-2 text-sm opacity-80">
+              {["Económico", "SUV", "Pickup", "Lujo", "Van"].map((cat) => (
+                <li key={cat}>
+                  <Link
+                    href={`/catalogo?categoria=${cat.toLowerCase()}`}
+                    className="hover:opacity-100 transition-opacity"
+                  >
+                    {cat}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-4">Contacto</h3>
+            <ul className="space-y-3 text-sm opacity-80">
+              <li className="flex items-center gap-2">
+                <Phone className="size-4 shrink-0" />
+                <span>809-555-1234</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="size-4 shrink-0" />
+                <span>info@rentacard.com</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <MapPin className="size-4 shrink-0 mt-0.5" />
+                <span>Av. Winston Churchill, Santo Domingo</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Clock className="size-4 shrink-0" />
+                <span>Lun–Dom: 7am – 9pm</span>
+              </li>
+            </ul>
+          </div>
         </div>
-      </main>
-      <MobileAdminNav />
-    </div>
+
+        <div className="mt-12 border-t border-white/20 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm opacity-60">
+          <p>© {new Date().getFullYear()} Alma 3D Rent Card. Todos los derechos reservados.</p>
+          <div className="flex gap-4">
+            <Link href="/privacidad" className="hover:opacity-100 transition-opacity">Privacidad</Link>
+            <Link href="/terminos" className="hover:opacity-100 transition-opacity">Términos</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }

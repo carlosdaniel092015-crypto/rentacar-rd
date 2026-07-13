@@ -1,71 +1,69 @@
-"use client";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
+import { encryptSecret } from "@/lib/server/crypto";
 
-import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+export const dynamic = "force-dynamic";
 
-interface YearPickerProps {
-  value?: number;
-  onChange: (year: number) => void;
-  min?: number;
-  max?: number;
-  className?: string;
+// GET — leer configuración actual (sin devolver la clave en texto plano)
+export async function GET() {
+  const member = await getCurrentMember();
+  if (!member || !tieneAcceso(member, "gps")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
+
+  const supabase = createAdminClient() as any;
+  const { data } = await supabase
+    .from("gps_configuracion")
+    .select("id, servidor_url, usuario, activo, ultimo_sync, updated_at")
+    .limit(1)
+    .single();
+
+  return NextResponse.json({ ok: true, data: data ?? null });
 }
 
-export function YearPicker({ value, onChange, min = 1990, max = new Date().getFullYear() + 1, className }: YearPickerProps) {
-  const currentYear = new Date().getFullYear();
-  const [page, setPage] = useState(() => {
-    const selectedYear = value ?? currentYear;
-    return Math.floor((selectedYear - min) / 12);
-  });
+// POST — guardar / actualizar credenciales
+export async function POST(req: NextRequest) {
+  const member = await getCurrentMember();
+  if (!member || !tieneAcceso(member, "gps")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
 
-  const totalPages = Math.ceil((max - min + 1) / 12);
-  const startYear = min + page * 12;
-  const years = Array.from({ length: 12 }, (_, i) => startYear + i).filter(y => y <= max);
+  const body = await req.json();
+  const { servidor_url, usuario, clave } = body;
 
-  return (
-    <div className={cn("border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface)] p-3 w-64", className)}>
-      <div className="flex items-center justify-between mb-3">
-        <button
-          type="button"
-          onClick={() => setPage(p => Math.max(0, p - 1))}
-          disabled={page === 0}
-          className="p-1 rounded hover:bg-[var(--color-muted)] disabled:opacity-30 transition-colors"
-        >
-          <ChevronLeft className="size-4" />
-        </button>
-        <span className="text-sm font-semibold text-[var(--color-foreground)]">
-          {startYear} – {Math.min(startYear + 11, max)}
-        </span>
-        <button
-          type="button"
-          onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-          disabled={page >= totalPages - 1}
-          className="p-1 rounded hover:bg-[var(--color-muted)] disabled:opacity-30 transition-colors"
-        >
-          <ChevronRight className="size-4" />
-        </button>
-      </div>
+  if (!usuario?.trim() || !clave?.trim()) {
+    return NextResponse.json({ ok: false, error: "usuario y clave son obligatorios" }, { status: 422 });
+  }
 
-      <div className="grid grid-cols-4 gap-1">
-        {years.map(year => (
-          <button
-            key={year}
-            type="button"
-            onClick={() => onChange(year)}
-            className={cn(
-              "py-2 rounded-[var(--radius)] text-sm font-medium transition-colors",
-              value === year
-                ? "bg-[var(--color-primary)] text-white"
-                : year === currentYear
-                ? "border border-[var(--color-primary)] text-[var(--color-primary)]"
-                : "hover:bg-[var(--color-muted)] text-[var(--color-foreground)]"
-            )}
-          >
-            {year}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+  const supabase = createAdminClient() as any;
+
+  // Upsert — siempre una sola fila
+  const { data: existing } = await supabase.from("gps_configuracion").select("id").limit(1).single();
+
+  let result;
+  if (existing?.id) {
+    result = await supabase
+      .from("gps_configuracion")
+      .update({
+        servidor_url: servidor_url?.trim() || "https://www.whatsgps.com",
+        usuario: usuario.trim(),
+        clave: encryptSecret(clave.trim()),
+        activo: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .select("id, servidor_url, usuario, activo")
+      .single();
+  } else {
+    result = await supabase
+      .from("gps_configuracion")
+      .insert({
+        servidor_url: servidor_url?.trim() || "https://www.whatsgps.com",
+        usuario: usuario.trim(),
+        clave: encryptSecret(clave.trim()),
+        activo: true,
+      })
+      .select("id, servidor_url, usuario, activo")
+      .single();
+  }
+
+  if (result.error) return NextResponse.json({ ok: false, error: result.error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, data: result.data });
 }

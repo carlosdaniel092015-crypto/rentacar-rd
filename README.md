@@ -1,75 +1,103 @@
-import type { Metadata, Viewport } from "next";
-import { Inter, Manrope } from "next/font/google";
-import { Toaster } from "sonner";
-import Script from "next/script";
-import RegisterSW from "./register-sw";
-import NativeAppShell from "./native-app-shell";
-import "./globals.css";
+"use client";
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
-const GSC_VERIFICATION = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Menu, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-admin-mobile" });
+const links = [
+  { href: "/", label: "Inicio" },
+  { href: "/catalogo", label: "Catálogo" },
+  { href: "/contacto", label: "Contacto" },
+];
 
-export const viewport: Viewport = {
-  themeColor: "#1a2440",
-  width: "device-width",
-  initialScale: 1,
-  minimumScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-  interactiveWidget: "resizes-content",
-};
+export function Navbar() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
-export const metadata: Metadata = {
-  title: {
-    default: "Alma 3D Rent Card — Alquiler de Vehículos en República Dominicana",
-    template: "%s | Alma 3D Rent Card",
-  },
-  description:
-    "La mejor flota de vehículos en República Dominicana. Económicos, SUVs, pickups y más. Precios transparentes, sin cargos ocultos.",
-  keywords: ["rent a car", "alquiler de carros", "República Dominicana", "Santo Domingo"],
-  openGraph: {
-    type: "website",
-    locale: "es_DO",
-    siteName: "Alma 3D Rent Card",
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-  },
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${manrope.variable}`}>
-      <head>
-        {GSC_VERIFICATION && (
-          <meta name="google-site-verification" content={GSC_VERIFICATION} />
-        )}
-      </head>
-      <body className="min-h-screen flex flex-col antialiased">
-        {GA_ID && (
-          <>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-            <Script id="ga4-init" strategy="afterInteractive">{`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${GA_ID}');
-            `}</Script>
-          </>
-        )}
-        <RegisterSW />
-        <NativeAppShell />
-        {children}
-        <Toaster richColors position="top-center" />
-      </body>
-    </html>
+    <header className="sticky top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-surface)]/60">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2 font-bold text-[var(--color-primary)]">
+          <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm" aria-hidden>A3</div>
+          <span className="text-xl">Alma 3D Rent Card</span>
+        </Link>
+
+        <nav className="hidden md:flex items-center gap-6">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-[var(--color-primary)]",
+                pathname === link.href
+                  ? "text-[var(--color-primary)]"
+                  : "text-[var(--color-muted-foreground)]"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Button asChild variant="outline" size="sm">
+            <Link href="/login" className="flex items-center gap-1.5">
+              <LogIn className="size-4" />
+              Login
+            </Link>
+          </Button>
+          <Button asChild variant="accent" size="sm">
+            <Link href="/catalogo">Reservar ahora</Link>
+          </Button>
+        </nav>
+
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="ghost" size="icon" aria-label="Abrir menú">
+              <Menu className="size-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-72">
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 font-bold text-[var(--color-primary)] mb-8"
+            >
+              <div className="size-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs tracking-tight shadow-sm">A3</div>
+              <span className="text-xl">Alma 3D Rent Card</span>
+            </Link>
+            <nav className="flex flex-col gap-4">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "text-base font-medium transition-colors hover:text-[var(--color-primary)]",
+                    pathname === link.href
+                      ? "text-[var(--color-primary)]"
+                      : "text-[var(--color-foreground)]"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Button asChild variant="outline" className="mt-4 w-full">
+                <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2">
+                  <LogIn className="size-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button asChild variant="accent" className="w-full">
+                <Link href="/catalogo" onClick={() => setOpen(false)}>
+                  Reservar ahora
+                </Link>
+              </Button>
+            </nav>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </header>
   );
 }

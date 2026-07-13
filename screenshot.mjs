@@ -1,19 +1,39 @@
-import { chromium } from 'playwright';
+"use client";
 
-const browser = await chromium.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-const page = await browser.newPage();
-await page.setViewportSize({ width: 1280, height: 800 });
+import { useEffect, useState } from "react";
+import { MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-await page.goto('http://localhost:3100/', { waitUntil: 'networkidle', timeout: 20000 });
-await page.screenshot({ path: '/tmp/landing.png' });
-console.log('Landing OK');
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
+const MESSAGE = encodeURIComponent("Hola, me interesa rentar un vehículo");
 
-await page.goto('http://localhost:3100/catalogo', { waitUntil: 'domcontentloaded', timeout: 20000 });
-await page.screenshot({ path: '/tmp/catalogo.png' });
-console.log('Catalogo OK');
+export function WhatsAppButton() {
+  const [visible, setVisible] = useState(false);
 
-await page.goto('http://localhost:3100/login', { waitUntil: 'domcontentloaded', timeout: 20000 });
-await page.screenshot({ path: '/tmp/login.png' });
-console.log('Login OK');
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setVisible(true);
+    } else {
+      const timer = setTimeout(() => setVisible(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
-await browser.close();
+  return (
+    <a
+      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${MESSAGE}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chatear por WhatsApp"
+      className={cn(
+        "fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-500",
+        "bg-[#25D366] text-white hover:bg-[#20BA5C] hover:scale-110",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}
+    >
+      <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#25D366] opacity-30" />
+      <MessageCircle className="size-7 fill-white" />
+    </a>
+  );
+}

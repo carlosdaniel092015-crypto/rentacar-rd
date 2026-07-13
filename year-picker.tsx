@@ -1,108 +1,152 @@
-"use client";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentMember, MODULOS, type Modulo } from "@/lib/server/equipo";
+import { logEvent } from "@/lib/server/audit";
+import { sendMail } from "@/lib/server/mailer";
+import { escapeHtml } from "@/lib/email/escape";
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
-import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+export const dynamic = "force-dynamic";
 
-interface VehiculoActionsProps {
-  vehiculoId: string;
-  disponible: boolean;
+function generarPassword(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 }
 
-export function VehiculoActions({ vehiculoId, disponible }: VehiculoActionsProps) {
-  const router = useRouter();
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [loading, setLoading] = useState(false);
+function validarAccesos(input: unknown): input is Modulo[] {
+  return Array.isArray(input) && input.every((m) => MODULOS.includes(m));
+}
 
-  const toggleDisponibilidad = async () => {
-    setLoading(true);
-    const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from("vehiculos") as any)
-      .update({ disponible: !disponible })
-      .eq("id", vehiculoId);
+// Listar equipo: solo el principal (CEO/líder).
+export async function GET() {
+  const member = await getCurrentMember();
+  if (!member || member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede ver el equipo." } },
+      { status: 403 }
+    );
+  }
 
-    if (error) {
-      toast.error("Error al actualizar disponibilidad.");
-    } else {
-      toast.success(`Vehículo marcado como ${!disponible ? "disponible" : "no disponible"}.`);
-      router.refresh();
-    }
-    setLoading(false);
-  };
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("equipo")
+    .select("id, email, nombre, cargo, rol, accesos, activo, created_at")
+    .order("created_at", { ascending: true });
 
-  const handleDelete = async () => {
-    setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.from("vehiculos").delete().eq("id", vehiculoId);
+  if (error) {
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } },
+      { status: 500 }
+    );
+  }
 
-    if (error) {
-      if (error.code === "23503") {
-        toast.error("No se puede eliminar: tiene reservas asociadas.");
-      } else {
-        toast.error("Error al eliminar vehículo.");
-      }
-    } else {
-      toast.success("Vehículo eliminado.");
-      router.refresh();
-    }
-    setLoading(false);
-    setConfirmDelete(false);
-  };
+  return NextResponse.json({ ok: true, data });
+}
 
-  return (
-    <>
-      <div className="flex items-center justify-end gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleDisponibilidad}
-          disabled={loading}
-          title={disponible ? "Marcar no disponible" : "Marcar disponible"}
-        >
-          {disponible ? (
-            <ToggleRight className="size-4 text-[var(--color-success)]" />
-          ) : (
-            <ToggleLeft className="size-4 text-[var(--color-muted-foreground)]" />
-          )}
-        </Button>
-        <Button variant="ghost" size="icon" asChild title="Editar">
-          <Link href={`/admin/vehiculos/${vehiculoId}/editar`}>
-            <Pencil className="size-4" />
-          </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setConfirmDelete(true)}
-          className="text-[var(--color-destructive)] hover:text-[var(--color-destructive)]"
-          title="Eliminar"
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </div>
+// Crear un nuevo miembro del equipo: cuenta de auth + fila en equipo + email con credenciales.
+// Solo el principal puede crear usuarios.
+export async function POST(req: NextRequest) {
+  const member = await getCurrentMember();
+  if (!member || member.rol !== "principal") {
+    return NextResponse.json(
+      { ok: false, error: { code: "FORBIDDEN", message: "Solo el principal puede crear usuarios." } },
+      { status: 403 }
+    );
+  }
 
-      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>¿Eliminar vehículo?</DialogTitle>
-            <DialogDescription>
-              Esta acción no se puede deshacer. Si el vehículo tiene reservas asociadas, no podrá eliminarse.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={loading}>
-              {loading ? "Eliminando..." : "Sí, eliminar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: "Cuerpo de solicitud inválido." } },
+      { status: 400 }
+    );
+  }
+
+  const { email, nombre, cargo, accesos, password: passwordInput } = (body ?? {}) as Record<string, unknown>;
+
+  if (
+    typeof email !== "string" || !email.includes("@") ||
+    typeof nombre !== "string" || nombre.trim().length < 2 ||
+    typeof cargo !== "string" || cargo.trim().length < 2 ||
+    !validarAccesos(accesos) ||
+    (passwordInput !== undefined && (typeof passwordInput !== "string" || passwordInput.length < 8))
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: {
+          code: "VALIDATION",
+          message: "Datos inválidos. Revisa email, nombre, cargo, accesos y que la contraseña tenga al menos 8 caracteres.",
+        },
+      },
+      { status: 422 }
+    );
+  }
+
+  const supabase = createAdminClient();
+  const password = typeof passwordInput === "string" ? passwordInput : generarPassword();
+
+  const { data: nuevoUsuario, error: authError } = await supabase.auth.admin.createUser({
+    email: email.toLowerCase().trim(),
+    password,
+    email_confirm: true,
+  });
+
+  if (authError || !nuevoUsuario?.user) {
+    return NextResponse.json(
+      { ok: false, error: { code: "VALIDATION", message: authError?.message ?? "No se pudo crear el usuario." } },
+      { status: 409 }
+    );
+  }
+
+  const { data: equipoRow, error: equipoError } = await supabase
+    .from("equipo")
+    .insert({
+      id: nuevoUsuario.user.id,
+      email: email.toLowerCase().trim(),
+      nombre: nombre.trim(),
+      cargo: cargo.trim(),
+      rol: "miembro",
+      accesos,
+      debe_cambiar_password: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+    .select("id, email, nombre, cargo, rol, accesos, activo")
+    .single();
+
+  if (equipoError) {
+    await supabase.auth.admin.deleteUser(nuevoUsuario.user.id);
+    return NextResponse.json(
+      { ok: false, error: { code: "SERVER_ERROR", message: "Error creando el registro de equipo." } },
+      { status: 500 }
+    );
+  }
+
+  void sendMail({
+    to: email,
+    subject: "Acceso al panel administrativo — Alma 3D Rent Card",
+    html: `
+      <h2>¡Bienvenido/a al equipo, ${escapeHtml(nombre)}!</h2>
+      <p>Se creó tu cuenta para el panel administrativo con el cargo <strong>${escapeHtml(cargo)}</strong>.</p>
+      <ul>
+        <li><strong>Correo:</strong> ${escapeHtml(email)}</li>
+        <li><strong>Contraseña temporal:</strong> ${escapeHtml(password)}</li>
+        <li><strong>Acceso al panel:</strong> ${process.env.NEXT_PUBLIC_SITE_URL}/login</li>
+      </ul>
+      <p>Por seguridad, cambia tu contraseña después de iniciar sesión.</p>
+    `,
+  }).catch((err: unknown) => {
+    console.error("Error enviando email de bienvenida:", err);
+  });
+
+  await logEvent({
+    type: "admin_action",
+    actorEmail: member.email,
+    path: "/api/equipo",
+    method: "POST",
+    message: "Nuevo miembro de equipo creado",
+    details: { email, cargo, accesos },
+  });
+
+  return NextResponse.json({ ok: true, data: equipoRow }, { status: 201 });
 }

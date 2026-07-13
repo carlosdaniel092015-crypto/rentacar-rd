@@ -1,79 +1,75 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import type { Metadata, Viewport } from "next";
+import { Inter, Manrope } from "next/font/google";
+import { Toaster } from "sonner";
+import Script from "next/script";
+import RegisterSW from "./register-sw";
+import NativeAppShell from "./native-app-shell";
+import "./globals.css";
 
-export const dynamic = "force-dynamic";
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+const GSC_VERIFICATION = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
 
-// Lectura pública (igual a lo que ya muestra el catálogo del sitio) con filtros
-// pensados para automatizaciones: categoría, precio y disponibilidad por fecha.
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const categoria = searchParams.get("categoria");
-  const precioMax = searchParams.get("precioMax");
-  const precioMin = searchParams.get("precioMin");
-  const fechaInicio = searchParams.get("fechaInicio");
-  const fechaFin = searchParams.get("fechaFin");
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-admin-mobile" });
 
-  if ((fechaInicio && !fechaFin) || (!fechaInicio && fechaFin)) {
-    return NextResponse.json(
-      { ok: false, error: { code: "VALIDATION", message: "fechaInicio y fechaFin deben enviarse juntas." } },
-      { status: 422 }
-    );
-  }
+export const viewport: Viewport = {
+  themeColor: "#1a2440",
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
 
-  const supabase = createAdminClient();
-  let query = supabase
-    .from("vehiculos")
-    .select(
-      "id, nombre, marca, modelo, anio, categoria, transmision, combustible, pasajeros, " +
-        "precio_dia, disponible, imagen_url, imagenes_urls, descripcion, caracteristicas"
-    )
-    .eq("disponible", true);
+export const metadata: Metadata = {
+  title: {
+    default: "Alma 3D Rent Card — Alquiler de Vehículos en República Dominicana",
+    template: "%s | Alma 3D Rent Card",
+  },
+  description:
+    "La mejor flota de vehículos en República Dominicana. Económicos, SUVs, pickups y más. Precios transparentes, sin cargos ocultos.",
+  keywords: ["rent a car", "alquiler de carros", "República Dominicana", "Santo Domingo"],
+  openGraph: {
+    type: "website",
+    locale: "es_DO",
+    siteName: "Alma 3D Rent Card",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
 
-  if (categoria) query = query.eq("categoria", categoria);
-  if (precioMin) query = query.gte("precio_dia", Number(precioMin));
-  if (precioMax) query = query.lte("precio_dia", Number(precioMax));
-
-  const { data: vehiculos, error } = await query
-    .order("precio_dia", { ascending: true })
-    .overrideTypes<{ id: string }[]>();
-
-  if (error) {
-    console.error("Error listando vehículos:", error);
-    return NextResponse.json(
-      { ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } },
-      { status: 500 }
-    );
-  }
-
-  if (!fechaInicio || !fechaFin) {
-    // Listado base (sin filtro de fechas): dato público poco cambiante → se
-    // cachea en la CDN de Vercel 60s y se sirve en background hasta 5 min más
-    // mientras se revalida. Absorbe picos de lectura sin tocar la BD.
-    return NextResponse.json(
-      { ok: true, data: vehiculos ?? [] },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
-    );
-  }
-
-  // Excluir vehículos con reservas activas que se solapen con el rango pedido
-  const { data: ocupados, error: rError } = await supabase
-    .from("reservas")
-    .select("vehiculo_id")
-    .in("estado", ["pendiente", "confirmada", "en_curso"])
-    .lt("fecha_inicio", fechaFin)
-    .gt("fecha_fin", fechaInicio)
-    .overrideTypes<{ vehiculo_id: string }[]>();
-
-  if (rError) {
-    console.error("Error consultando solapamientos:", rError);
-    return NextResponse.json(
-      { ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } },
-      { status: 500 }
-    );
-  }
-
-  const idsOcupados = new Set((ocupados ?? []).map((r) => r.vehiculo_id));
-  const disponibles = (vehiculos ?? []).filter((v) => !idsOcupados.has(v.id));
-
-  return NextResponse.json({ ok: true, data: disponibles });
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es" className={`${inter.variable} ${manrope.variable}`}>
+      <head>
+        {GSC_VERIFICATION && (
+          <meta name="google-site-verification" content={GSC_VERIFICATION} />
+        )}
+      </head>
+      <body className="min-h-screen flex flex-col antialiased">
+        {GA_ID && (
+          <>
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+            <Script id="ga4-init" strategy="afterInteractive">{`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_ID}');
+            `}</Script>
+          </>
+        )}
+        <RegisterSW />
+        <NativeAppShell />
+        {children}
+        <Toaster richColors position="top-center" />
+      </body>
+    </html>
+  );
 }
