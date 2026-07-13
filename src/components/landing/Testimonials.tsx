@@ -56,7 +56,7 @@ export function Testimonials() {
                 ))}
               </div>
               <p className="text-sm text-[var(--color-foreground)] mb-4 leading-relaxed">
-                "{t.texto}"
+                &ldquo;{t.texto}&rdquo;
               </p>
               <div>
                 <p className="font-semibold text-sm">{t.nombre}</p>

@@ -12,12 +12,8 @@ export function WhatsAppButton() {
 
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
-    if (isMobile) {
-      setVisible(true);
-    } else {
-      const timer = setTimeout(() => setVisible(true), 3000);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => setVisible(true), isMobile ? 0 : 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
