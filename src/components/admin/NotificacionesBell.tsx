@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, X } from "lucide-react";
+import { PushSubscriber } from "./PushSubscriber";
 
 type Notificacion = {
   id: string;
@@ -98,6 +99,7 @@ export function NotificacionesBell({ variant = "dark" }: { variant?: "dark" | "l
               <X className="size-4" />
             </button>
           </div>
+          <PushSubscriber />
           <div className="max-h-[60vh] overflow-y-auto">
             {items.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-[var(--color-muted-foreground)]">No hay notificaciones.</p>

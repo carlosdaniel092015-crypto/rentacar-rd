@@ -23,7 +23,7 @@ export function MobileAdminHeader() {
   const isDashboard = pathname === "/admin";
 
   return (
-    <header className="bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] text-white md:hidden rounded-b-[26px]">
+    <header className={`text-white md:hidden ${isDashboard ? "bg-[#1C3555]" : "bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] rounded-b-[26px]"}`}>
       <div className={`flex items-center ${isDashboard ? "justify-between" : "gap-3"} px-5 pb-6 pt-[calc(env(safe-area-inset-top)+0.875rem)]`}>
         <button
           type="button"

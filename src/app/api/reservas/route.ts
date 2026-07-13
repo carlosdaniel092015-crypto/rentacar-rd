@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/server/rate-limit";
 import { sendMail, ADMIN_EMAIL, SECONDARY_ADMIN_EMAIL } from "@/lib/server/mailer";
 import { cotizacionClienteHtml, cotizacionAdminHtml } from "@/lib/email/templates";
 import { upsertContacto } from "@/lib/server/contactos";
+import { enviarPush } from "@/lib/server/push";
 
 export const dynamic = "force-dynamic";
 
@@ -258,6 +259,13 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("Error creando notificación:", err);
   }
+
+  // Notificación push nativa a los dispositivos del panel. Best-effort.
+  void enviarPush({
+    title: "Nueva reserva",
+    body: `${data.nombreCliente} reservó ${vehiculo.nombre}`,
+    url: "/admin/reservas",
+  }).catch((err: unknown) => console.error("Error enviando push:", err));
 
   return NextResponse.json(
     {
