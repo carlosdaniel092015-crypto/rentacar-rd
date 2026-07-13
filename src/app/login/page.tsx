@@ -43,7 +43,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--color-surface)] md:items-center md:justify-center md:bg-[var(--color-muted)] md:px-4">
       <div className="bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] px-6 pb-16 pt-[calc(env(safe-area-inset-top)+2.25rem)] text-white md:hidden">
-        <Link href="/" className="mb-9 inline-flex items-center gap-1.5 text-[13px] font-medium text-white/65 transition-colors active:text-white">
+        <Link href="/" target="_blank" rel="noopener noreferrer" className="mb-9 inline-flex items-center gap-1.5 text-[13px] font-medium text-white/65 transition-colors active:text-white">
           <ArrowLeft className="size-4" />
           Ir al sitio principal
         </Link>
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
       <div className="-mt-8 flex-1 rounded-t-[28px] bg-[var(--color-surface)] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 shadow-[0_-10px_30px_-12px_rgba(20,38,63,0.18)] md:mt-0 md:w-full md:max-w-sm md:flex-none md:rounded-[var(--radius-xl)] md:border md:border-[var(--color-border)] md:p-8 md:shadow-sm">
         <div className="mb-8 hidden flex-col items-center gap-3 md:flex">
-          <Link href="/" className="flex items-center gap-1.5 self-start text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-primary)]">
+          <Link href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 self-start text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-primary)]">
             <ArrowLeft className="size-4" />
             Ir al sitio principal
           </Link>
