@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,26 +37,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-muted)] px-4">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-8 gap-3">
-          <Link
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors self-start"
-          >
-            <ArrowLeft className="size-4" />
-            Ir al sitio principal
-          </Link>
-          <div className="flex items-center gap-2 text-[var(--color-primary)] font-bold text-2xl">
-            <div className="size-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-base tracking-tight shadow">A3</div>
-            Alma 3D Rent Card
+    <div className="flex min-h-[100dvh] flex-col bg-[#F5F1EB]">
+      {/* Hero navy con logo — se siente como app nativa */}
+      <div
+        className="rounded-b-[32px] bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] px-6 pb-12 text-white"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
+      >
+        <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-4 text-center">
+          <span className="flex size-16 items-center justify-center rounded-2xl bg-[#F2A83B] text-2xl font-black text-[#14263F] shadow-lg">
+            A3
+          </span>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight">Alma 3D Rent Card</h1>
+            <p className="mt-1 text-sm text-white/55">Panel administrativo</p>
           </div>
         </div>
+      </div>
 
-        <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-8 shadow-sm">
-          <h1 className="text-xl font-semibold text-center mb-6">Panel administrativo</h1>
+      {/* Formulario */}
+      <div className="flex-1 px-6">
+        <div className="mx-auto -mt-8 w-full max-w-sm rounded-[24px] border border-[#ECE6DD] bg-white p-6 shadow-[0_12px_40px_-12px_rgba(20,38,63,0.25)]">
+          <h2 className="mb-5 text-lg font-bold text-[#14263F]">Iniciar sesión</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -64,11 +65,13 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                className="mt-1"
+                inputMode="email"
+                className="mt-1.5 h-12 rounded-xl text-base"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                placeholder="tucorreo@ejemplo.com"
               />
             </div>
             <div>
@@ -76,22 +79,42 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                className="mt-1"
+                className="mt-1.5 h-12 rounded-xl text-base"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
+                placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <p className="text-sm text-[var(--color-destructive)] text-center">{error}</p>
+              <p className="rounded-lg bg-[var(--color-destructive)]/10 px-3 py-2 text-center text-sm text-[var(--color-destructive)]">
+                {error}
+              </p>
             )}
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            <Button
+              type="submit"
+              variant="accent"
+              className="mt-1 h-12 w-full rounded-xl text-base font-semibold"
+              disabled={loading}
+            >
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
           </form>
+        </div>
+
+        <div className="mx-auto mt-6 flex w-full max-w-sm justify-center pb-8">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-[#7B8794] transition-colors hover:text-[#14263F]"
+          >
+            <ExternalLink className="size-4" />
+            Ir al sitio principal
+          </Link>
         </div>
       </div>
     </div>
