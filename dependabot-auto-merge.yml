@@ -1,0 +1,49 @@
+version: 2
+updates:
+  # Dependencias de Node (npm)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Santo_Domingo"
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(dev-deps)"
+    # Agrupa parches y menores en un solo PR para reducir ruido.
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # TypeScript 7.x es el nuevo compilador nativo (preview) y aún NO es
+      # compatible con el typecheck de Next.js 16 (el build falla). Se ignora
+      # el salto major hasta que Next lo soporte; los minor/patch de 5.x/6.x
+      # siguen entrando normal. Quitar esta regla cuando TS 7 sea estable.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # eslint 10.x aún no es compatible con eslint-config-next@16 (sus plugins
+      # exigen eslint ^9). Provoca conflictos de peer dependency. Se ignora el
+      # major hasta que Next actualice su config. Quitar cuando sea compatible.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+
+  # Actualiza las propias GitHub Actions usadas en los workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Santo_Domingo"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
