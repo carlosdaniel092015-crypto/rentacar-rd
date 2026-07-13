@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { StatsCards } from "@/components/admin/StatsCards";
+import { DashboardMobileHeader } from "@/components/admin/DashboardMobileHeader";
 import { formatCurrency, formatDate, ESTADOS_RESERVA } from "@/lib/utils";
 import type { Metadata } from "next";
 import { startOfMonth } from "date-fns";
@@ -41,14 +42,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <>
-      <section className="-mx-5 -mt-4 bg-[#F5F1EB] pb-28 md:hidden">
-        <div className="rounded-b-[28px] bg-[linear-gradient(160deg,#1C3555_0%,#14263F_100%)] px-5 pb-7 pt-4 text-white">
-          <div>
-            <p className="text-[13px] font-medium text-[#EAF0F8]/60">Buenos días,</p>
-            <h1 className="mt-1 text-[26px] font-extrabold leading-none tracking-normal">{greetingName}</h1>
-            <p className="mt-2 text-[13px] text-[#EAF0F8]/55">Resumen general del negocio</p>
-          </div>
-        </div>
+     <section className="-mx-5 -mt-4 bg-[#F5F1EB] pb-28 md:hidden">
+        <DashboardMobileHeader greetingName={greetingName} />
 
         <div className="space-y-4 px-4 pt-[18px]">
           <Link href="/admin/reservas" className="flex items-center gap-3 rounded-[18px] border border-[#F1E0B0] bg-[linear-gradient(100deg,#FBEFCF,#FCF5E1)] p-3.5 text-[#14263F]">
