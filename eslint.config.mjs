@@ -1,18 +1,25 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import { ContactoForm } from "@/components/admin/ContactoForm";
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
+export const metadata: Metadata = { title: "Nuevo contacto | Admin" };
 
-export default eslintConfig;
+export default function NuevoContactoPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <Link
+          href="/admin/contactos"
+          className="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] mb-3"
+        >
+          <ChevronLeft className="size-4" /> Contactos
+        </Link>
+        <h1 className="text-2xl font-bold">Nuevo contacto</h1>
+      </div>
+      <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <ContactoForm />
+      </div>
+    </div>
+  );
+}

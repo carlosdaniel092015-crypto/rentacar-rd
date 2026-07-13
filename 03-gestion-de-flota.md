@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancela ejecuciones antiguas del mismo ref si llega una nueva.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `next build` genera los tipos de rutas (RouteContext, etc.) en .next/types
+      # y luego corre el chequeo de TypeScript. Por eso NO usamos un `tsc --noEmit`
+      # aislado: fallaría porque esos tipos globales aún no existen antes del build.
+      - name: Build (incluye typecheck)
+        run: npm run build
+        env:
+          # Valores dummy: el build no contacta servicios externos, solo necesita
+          # que las variables existan para no romper en tiempo de compilación.
+          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key"
+          SUPABASE_SERVICE_ROLE_KEY: "placeholder-service-key"
+          NEXT_PUBLIC_SITE_URL: "https://example.com"
