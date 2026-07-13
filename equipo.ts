@@ -1,29 +1,32 @@
 "use client";
+
 import { useEffect } from "react";
-import type { Serwist } from "@serwist/window";
 
-declare global {
-  interface Window {
-    serwist: Serwist;
-  }
-}
-
+/**
+ * El modo offline (Serwist) se desactivó para hacer el build compatible con
+ * Next 16. Este componente ya no registra un service worker; en su lugar limpia
+ * cualquier service worker y caché que hubiera quedado de una instalación
+ * anterior, para que los usuarios que ya tenían el PWA instalado dejen de ver la
+ * versión cacheada vieja y reciban siempre la última.
+ */
 export default function RegisterSW() {
   useEffect(() => {
-    if ("serviceWorker" in navigator && window.serwist !== undefined) {
-      // Cuando un service worker nuevo toma el control (skipWaiting + clientsClaim
-      // en sw.ts), recargamos una vez para que la app instalada muestre siempre la
-      // última versión. Sin esto, un PWA instalado puede quedarse mostrando una
-      // versión vieja cacheada hasta que el usuario lo reinstala.
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (refreshing) return;
-        refreshing = true;
-        window.location.reload();
-      });
+    if (typeof navigator === "undefined") return;
 
-      window.serwist.register();
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => regs.forEach((reg) => reg.unregister()))
+        .catch(() => {});
+    }
+
+    if ("caches" in window) {
+      caches
+        .keys()
+        .then((keys) => keys.forEach((key) => caches.delete(key)))
+        .catch(() => {});
     }
   }, []);
+
   return null;
 }
