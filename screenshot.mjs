@@ -1,39 +1,75 @@
-"use client";
+import type { Metadata, Viewport } from "next";
+import { Inter, Manrope } from "next/font/google";
+import { Toaster } from "sonner";
+import Script from "next/script";
+import RegisterSW from "./register-sw";
+import NativeAppShell from "./native-app-shell";
+import "./globals.css";
 
-import { useEffect, useState } from "react";
-import { MessageCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+const GSC_VERIFICATION = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
-const MESSAGE = encodeURIComponent("Hola, me interesa rentar un vehículo");
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-admin-mobile" });
 
-export function WhatsAppButton() {
-  const [visible, setVisible] = useState(false);
+export const viewport: Viewport = {
+  themeColor: "#1a2440",
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
 
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    if (isMobile) {
-      setVisible(true);
-    } else {
-      const timer = setTimeout(() => setVisible(true), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+export const metadata: Metadata = {
+  title: {
+    default: "Alma 3D Rent Card — Alquiler de Vehículos en República Dominicana",
+    template: "%s | Alma 3D Rent Card",
+  },
+  description:
+    "La mejor flota de vehículos en República Dominicana. Económicos, SUVs, pickups y más. Precios transparentes, sin cargos ocultos.",
+  keywords: ["rent a car", "alquiler de carros", "República Dominicana", "Santo Domingo"],
+  openGraph: {
+    type: "website",
+    locale: "es_DO",
+    siteName: "Alma 3D Rent Card",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <a
-      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${MESSAGE}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Chatear por WhatsApp"
-      className={cn(
-        "fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-500",
-        "bg-[#25D366] text-white hover:bg-[#20BA5C] hover:scale-110",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
-      )}
-    >
-      <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#25D366] opacity-30" />
-      <MessageCircle className="size-7 fill-white" />
-    </a>
+    <html lang="es" className={`${inter.variable} ${manrope.variable}`}>
+      <head>
+        {GSC_VERIFICATION && (
+          <meta name="google-site-verification" content={GSC_VERIFICATION} />
+        )}
+      </head>
+      <body className="min-h-screen flex flex-col antialiased">
+        {GA_ID && (
+          <>
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+            <Script id="ga4-init" strategy="afterInteractive">{`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_ID}');
+            `}</Script>
+          </>
+        )}
+        <RegisterSW />
+        <NativeAppShell />
+        {children}
+        <Toaster richColors position="top-center" />
+      </body>
+    </html>
   );
 }

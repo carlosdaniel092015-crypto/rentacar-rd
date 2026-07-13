@@ -1,57 +1,57 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { logEvent } from "@/lib/server/audit";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { Car, CalendarCheck, DollarSign, CheckCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+interface StatsCardsProps {
+  totalVehiculos: number;
+  reservasPendientes: number;
+  ingresoesMes: number;
+  vehiculosDisponibles: number;
+}
 
-// Valida las credenciales en el servidor y registra el intento real en el
-// audit log — el cliente nunca puede reportar un resultado falso, porque el
-// resultado lo decide este endpoint, no el body de la petición.
-export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown";
+export function StatsCards({ totalVehiculos, reservasPendientes, ingresoesMes, vehiculosDisponibles }: StatsCardsProps) {
+  const stats = [
+    {
+      label: "Total vehículos",
+      value: totalVehiculos,
+      icon: Car,
+      color: "text-blue-600 bg-blue-100",
+    },
+    {
+      label: "Reservas pendientes",
+      value: reservasPendientes,
+      icon: CalendarCheck,
+      color: "text-yellow-600 bg-yellow-100",
+    },
+    {
+      label: "Ingresos del mes",
+      value: formatCurrency(ingresoesMes),
+      icon: DollarSign,
+      color: "text-green-600 bg-green-100",
+    },
+    {
+      label: "Disponibles",
+      value: vehiculosDisponibles,
+      icon: CheckCircle,
+      color: "text-emerald-600 bg-emerald-100",
+    },
+  ];
 
-  if (!(await checkRateLimit("login", ip, 10, 10 * 60))) {
-    return NextResponse.json(
-      { ok: false, error: { code: "RATE_LIMIT", message: "Demasiados intentos. Intenta más tarde." } },
-      { status: 429 }
-    );
-  }
-
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ ok: false, error: { code: "VALIDATION", message: "Solicitud inválida." } }, { status: 400 });
-  }
-
-  const { email, password } = (body ?? {}) as Record<string, unknown>;
-  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
-    return NextResponse.json({ ok: false, error: { code: "VALIDATION", message: "Email y contraseña son obligatorios." } }, { status: 422 });
-  }
-
-  const supabase = await createClient();
-  const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-
-  await logEvent({
-    type: "login",
-    level: authError ? "warn" : "info",
-    actorEmail: email,
-    ip,
-    path: "/login",
-    method: "POST",
-    message: authError ? "Intento de inicio de sesión fallido" : "Inicio de sesión exitoso",
-  });
-
-  if (authError) {
-    return NextResponse.json(
-      { ok: false, error: { code: "UNAUTHORIZED", message: "Credenciales incorrectas." } },
-      { status: 401 }
-    );
-  }
-
-  return NextResponse.json({ ok: true });
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {stats.map((stat) => (
+        <Card key={stat.label}>
+          <CardContent className="flex items-center gap-4 p-5 sm:p-6">
+            <div className={`flex size-14 items-center justify-center rounded-full ${stat.color}`}>
+              <stat.icon className="size-7" />
+            </div>
+            <div>
+              <p className="text-base sm:text-sm text-[var(--color-muted-foreground)]">{stat.label}</p>
+              <p className="text-3xl sm:text-2xl font-bold">{stat.value}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }

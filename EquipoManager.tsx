@@ -1,22 +1,39 @@
-import type { Metadata } from "next";
-import { EncuestaForm } from "@/components/catalogo/EncuestaForm";
+"use client";
 
-export const metadata: Metadata = { title: "Encuesta de satisfacción | Alma 3D Rent Card" };
+import { useEffect, useState } from "react";
+import { MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface Props { params: Promise<{ id: string }> }
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
+const MESSAGE = encodeURIComponent("Hola, me interesa rentar un vehículo");
 
-export default async function EncuestaPage({ params }: Props) {
-  const { id } = await params;
+export function WhatsAppButton() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setVisible(true);
+    } else {
+      const timer = setTimeout(() => setVisible(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   return (
-    <div className="mx-auto max-w-lg px-4 py-16">
-      <div className="text-center mb-8">
-        <div className="text-5xl mb-4">⭐</div>
-        <h1 className="text-2xl font-bold mb-2">¿Cómo fue tu experiencia?</h1>
-        <p className="text-[var(--color-muted-foreground)] text-sm">
-          Tu opinión nos ayuda a seguir mejorando. Solo toma un minuto.
-        </p>
-      </div>
-      <EncuestaForm reservaId={id} />
-    </div>
+    <a
+      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${MESSAGE}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chatear por WhatsApp"
+      className={cn(
+        "fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-500",
+        "bg-[#25D366] text-white hover:bg-[#20BA5C] hover:scale-110",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}
+    >
+      <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#25D366] opacity-30" />
+      <MessageCircle className="size-7 fill-white" />
+    </a>
   );
 }

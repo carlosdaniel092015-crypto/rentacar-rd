@@ -1,87 +1,62 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember, tieneAcceso } from "@/lib/server/equipo";
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+);
+Card.displayName = "Card";
 
-// GET /api/admin/contactos/[id] — detalle + historial de reservas
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const member = await getCurrentMember();
-  if (!member || !tieneAcceso(member, "contactos")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+  )
+);
+CardHeader.displayName = "CardHeader";
 
-  const { id } = await params;
-  const supabase = await createClient();
+const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3
+      ref={ref}
+      className={cn("text-2xl font-semibold leading-none tracking-tight", className)}
+      {...props}
+    />
+  )
+);
+CardTitle.displayName = "CardTitle";
 
-  const [contactoRes, reservasRes] = await Promise.all([
-    supabase.from("contactos").select("*").eq("id", id).single() as any,
-    supabase
-      .from("reservas")
-      .select("id, vehiculo_id, fecha_inicio, fecha_fin, dias, precio_dia, total, estado, created_at, vehiculos(nombre, imagen_url)")
-      .eq("contacto_id", id)
-      .order("created_at", { ascending: false }) as any,
-  ]);
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-[var(--color-muted-foreground)]", className)}
+    {...props}
+  />
+));
+CardDescription.displayName = "CardDescription";
 
-  if (contactoRes.error || !contactoRes.data) return NextResponse.json({ ok: false, error: "No encontrado" }, { status: 404 });
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  )
+);
+CardContent.displayName = "CardContent";
 
-  const data = { ...contactoRes.data, reservas: reservasRes.data ?? [] };
-  return NextResponse.json({ ok: true, data });
-}
+const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
+  )
+);
+CardFooter.displayName = "CardFooter";
 
-// PATCH /api/admin/contactos/[id] — actualizar contacto
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const member = await getCurrentMember();
-  if (!member || !tieneAcceso(member, "contactos")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
-
-  const { id } = await params;
-  const body = await req.json();
-  const { nombre, telefono, cedula, email, notas } = body;
-
-  if (!nombre?.trim() || !telefono?.trim() || !cedula?.trim()) {
-    return NextResponse.json(
-      { ok: false, error: "nombre, telefono y cedula son obligatorios" },
-      { status: 422 }
-    );
-  }
-
-  const supabase = createAdminClient();
-
-  // Verificar que no haya otro contacto con mismo teléfono o cédula
-  const { data: conflicto } = await supabase
-    .from("contactos")
-    .select("id")
-    .or(`telefono.eq.${telefono.trim()},cedula.eq.${cedula.trim()}`)
-    .neq("id", id)
-    .limit(1)
-    .single();
-
-  if (conflicto) {
-    return NextResponse.json(
-      { ok: false, error: "Ya existe otro contacto con ese teléfono o cédula" },
-      { status: 409 }
-    );
-  }
-
-  const { data, error } = await (supabase as any)
-    .from("contactos")
-    .update({ nombre: nombre.trim(), telefono: telefono.trim(), cedula: cedula.trim(), email: email?.trim() ?? "", notas: notas?.trim() ?? null })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true, data });
-}
-
-// DELETE /api/admin/contactos/[id] — eliminar contacto (desvincula reservas)
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const member = await getCurrentMember();
-  if (!member || !tieneAcceso(member, "contactos")) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 403 });
-
-  const { id } = await params;
-  const supabase = createAdminClient();
-
-  const { error } = await supabase.from("contactos").delete().eq("id", id);
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
-}
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };

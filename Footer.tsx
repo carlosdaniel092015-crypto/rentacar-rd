@@ -1,56 +1,14 @@
-import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentMember } from "@/lib/server/equipo";
-
-export const dynamic = "force-dynamic";
-
-// Lista las notificaciones recientes del panel + cuántas sin leer.
-export async function GET() {
-  const member = await getCurrentMember();
-  if (!member) {
-    return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "No autorizado." } }, { status: 403 });
-  }
-
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("notificaciones")
-    .select("id, tipo, titulo, mensaje, url, leida, created_at")
-    .order("created_at", { ascending: false })
-    .limit(30);
-
-  if (error) {
-    return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } }, { status: 500 });
-  }
-
-  const items = data ?? [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const noLeidas = items.filter((n: any) => !n.leida).length;
-  return NextResponse.json({ ok: true, data: items, noLeidas });
-}
-
-// Marca notificaciones como leídas (todas, o una por id).
-export async function PATCH(req: Request) {
-  const member = await getCurrentMember();
-  if (!member) {
-    return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "No autorizado." } }, { status: 403 });
-  }
-
-  let id: string | undefined;
-  try {
-    const body = await req.json();
-    id = body?.id;
-  } catch {
-    // sin body → marcar todas
-  }
-
-  const supabase = createAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (supabase.from("notificaciones") as any).update({ leida: true });
-  query = id ? query.eq("id", id) : query.eq("leida", false);
-  const { error } = await query;
-
-  if (error) {
-    return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: "Error interno." } }, { status: 500 });
-  }
-  return NextResponse.json({ ok: true });
-}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="28" fill="#1a2440"/>
+  <g transform="translate(20, 56)">
+    <rect x="14" y="28" width="112" height="35" rx="4" fill="#d4842a"/>
+    <path d="M35 28 L49 7 L91 7 L105 28 Z" fill="#d4842a"/>
+    <path d="M53 26 L58 11 L82 11 L87 26 Z" fill="#1a2440" opacity="0.8"/>
+    <circle cx="39" cy="65" r="14" fill="#111827"/>
+    <circle cx="39" cy="65" r="7" fill="#9ca3af"/>
+    <circle cx="101" cy="65" r="14" fill="#111827"/>
+    <circle cx="101" cy="65" r="7" fill="#9ca3af"/>
+    <rect x="119" y="35" width="11" height="6" rx="2" fill="#fef08a"/>
+    <rect x="10" y="35" width="9" height="6" rx="2" fill="#ef4444"/>
+  </g>
+</svg>

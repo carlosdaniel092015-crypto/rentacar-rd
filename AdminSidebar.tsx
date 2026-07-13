@@ -1,140 +1,152 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
-import { contactoSchema, type ContactoFormData } from "@/lib/validations/contacto.schema";
+import { Settings, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
-const MAPS_EMBED = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL ?? "";
+interface GpsConfigFormProps {
+  configuracionActual?: {
+    servidor_url: string;
+    usuario: string;
+    ultimo_sync: string | null;
+  } | null;
+}
 
-const info = [
-  { icon: Phone, label: "Teléfono", value: "809-555-1234" },
-  { icon: Mail, label: "Correo", value: "info@rentacard.com" },
-  { icon: MapPin, label: "Dirección", value: "Av. Winston Churchill #123, Santo Domingo, RD" },
-  { icon: Clock, label: "Horario", value: "Lunes–Domingo: 7:00am – 9:00pm" },
-];
-
-export default function ContactoPage() {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<ContactoFormData>({
-    resolver: zodResolver(contactoSchema),
+export function GpsConfigForm({ configuracionActual }: GpsConfigFormProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(!configuracionActual);
+  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [form, setForm] = useState({
+    servidor_url: configuracionActual?.servidor_url ?? "https://www.whatsgps.com",
+    usuario: configuracionActual?.usuario ?? "",
+    clave: "",
   });
 
-  const onSubmit = async (data: ContactoFormData) => {
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.clave.trim() && !configuracionActual) {
+      toast.error("La clave es obligatoria");
+      return;
+    }
+    setLoading(true);
     try {
-      const res = await fetch("/api/contacto", {
+      const body: any = { servidor_url: form.servidor_url, usuario: form.usuario };
+      if (form.clave.trim()) body.clave = form.clave;
+
+      const res = await fetch("/api/admin/gps/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(body),
       });
-      if (res.ok) {
-        toast.success("Mensaje enviado. Te responderemos a la brevedad.");
-        reset();
-      } else {
-        toast.error("Error al enviar. Intenta nuevamente.");
-      }
-    } catch {
-      toast.error("Error de conexión.");
+      const json = await res.json();
+      if (!json.ok) { toast.error(json.error ?? "Error al guardar"); return; }
+      toast.success("Credenciales guardadas. Conectando con WhatsGPS...");
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (!open) {
+    return (
+      <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <CheckCircle2 className="size-5 text-green-500 shrink-0" />
+          <div>
+            <p className="text-sm font-medium">WhatsGPS conectado</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              Cuenta: {configuracionActual?.usuario}
+              {configuracionActual?.ultimo_sync && (
+                <> · Último sync: {new Date(configuracionActual.ultimo_sync).toLocaleString("es-DO")}</>
+              )}
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <Settings className="size-3.5 mr-1.5" /> Cambiar credenciales
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
-      <div className="mb-10 text-center">
-        <h1 className="text-3xl font-bold">Contáctanos</h1>
-        <p className="mt-2 text-[var(--color-muted-foreground)]">
-          Estamos para ayudarte en lo que necesites
-        </p>
+    <div className="rounded-[var(--radius-xl)] border-2 border-[var(--color-accent)]/30 bg-[var(--color-surface)] p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <Settings className="size-5 text-[var(--color-accent)]" />
+        <div>
+          <h2 className="font-semibold">Credenciales WhatsGPS</h2>
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            Ingresa los datos de tu cuenta en la plataforma WhatsGPS
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-2">
-        {/* Formulario */}
-        <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-8">
-          <h2 className="font-semibold text-lg mb-6">Envíanos un mensaje</h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Honeypot */}
-            <input type="text" className="hidden" tabIndex={-1} {...register("_honeypot")} />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" className="mt-1" placeholder="Tu nombre" {...register("nombre")} />
-                {errors.nombre && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.nombre.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input id="email" type="email" className="mt-1" placeholder="tu@email.com" {...register("email")} />
-                {errors.email && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.email.message}</p>}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="telefono">Teléfono (opcional)</Label>
-              <Input id="telefono" className="mt-1" placeholder="809-000-0000" {...register("telefono")} />
-            </div>
-
-            <div>
-              <Label htmlFor="asunto">Asunto</Label>
-              <Input id="asunto" className="mt-1" placeholder="¿En qué podemos ayudarte?" {...register("asunto")} />
-              {errors.asunto && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.asunto.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="mensaje">Mensaje</Label>
-              <Textarea id="mensaje" className="mt-1" rows={5} placeholder="Escribe tu mensaje aquí..." {...register("mensaje")} />
-              {errors.mensaje && <p className="text-xs text-[var(--color-destructive)] mt-1">{errors.mensaje.message}</p>}
-            </div>
-
-            <Button type="submit" variant="default" size="lg" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Enviando..." : "Enviar mensaje"}
-            </Button>
-          </form>
+      <form onSubmit={handleSave} className="space-y-4 max-w-md">
+        <div className="space-y-1.5">
+          <Label htmlFor="gps-server">URL del servidor</Label>
+          <Input
+            id="gps-server"
+            value={form.servidor_url}
+            onChange={set("servidor_url")}
+            placeholder="https://www.whatsgps.com"
+          />
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            Normalmente es https://www.whatsgps.com — no cambiar salvo indicación
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="gps-user">Usuario / Correo de WhatsGPS *</Label>
+          <Input
+            id="gps-user"
+            value={form.usuario}
+            onChange={set("usuario")}
+            required
+            placeholder="usuario@ejemplo.com"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="gps-pass">
+            Contraseña de WhatsGPS {configuracionActual && "(dejar vacío para no cambiar)"}
+          </Label>
+          <div className="relative">
+            <Input
+              id="gps-pass"
+              type={showPass ? "text" : "password"}
+              value={form.clave}
+              onChange={set("clave")}
+              placeholder={configuracionActual ? "••••••••" : "Contraseña"}
+              required={!configuracionActual}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+            >
+              {showPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
         </div>
 
-        {/* Info + mapa */}
-        <div className="space-y-6">
-          <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-8">
-            <h2 className="font-semibold text-lg mb-6">Información de contacto</h2>
-            <ul className="space-y-4">
-              {info.map((item) => (
-                <li key={item.label} className="flex items-start gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-[var(--color-accent)]/10 shrink-0">
-                    <item.icon className="size-5 text-[var(--color-accent)]" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-[var(--color-muted-foreground)]">{item.label}</p>
-                    <p className="text-sm font-medium">{item.value}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {MAPS_EMBED && (
-            <div className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)]">
-              <iframe
-                src={MAPS_EMBED}
-                width="100%"
-                height="300"
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Ubicación Alma 3D Rent Card"
-                className="block"
-              />
-            </div>
+        <div className="flex gap-3 pt-2">
+          <Button type="submit" variant="accent" disabled={loading}>
+            {loading ? "Guardando..." : "Guardar y conectar"}
+          </Button>
+          {configuracionActual && (
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
           )}
         </div>
-      </div>
+      </form>
     </div>
   );
 }
