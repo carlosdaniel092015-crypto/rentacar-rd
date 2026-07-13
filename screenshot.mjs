@@ -1,36 +1,39 @@
 "use client";
 
-import { create } from "zustand";
-import type { CategoriaVehiculo, TipoTransmision } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface FiltrosState {
-  categorias: CategoriaVehiculo[];
-  transmision: TipoTransmision | "todos";
-  pasajeros: "todos" | "2-4" | "5-7" | "8+";
-  precioMax: number;
-  soloDisponibles: boolean;
-  setCategorias: (categorias: CategoriaVehiculo[]) => void;
-  setTransmision: (transmision: TipoTransmision | "todos") => void;
-  setPasajeros: (pasajeros: "todos" | "2-4" | "5-7" | "8+") => void;
-  setPrecioMax: (precio: number) => void;
-  setSoloDisponibles: (solo: boolean) => void;
-  limpiarFiltros: () => void;
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
+const MESSAGE = encodeURIComponent("Hola, me interesa rentar un vehículo");
+
+export function WhatsAppButton() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setVisible(true);
+    } else {
+      const timer = setTimeout(() => setVisible(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  return (
+    <a
+      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${MESSAGE}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chatear por WhatsApp"
+      className={cn(
+        "fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-500",
+        "bg-[#25D366] text-white hover:bg-[#20BA5C] hover:scale-110",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}
+    >
+      <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#25D366] opacity-30" />
+      <MessageCircle className="size-7 fill-white" />
+    </a>
+  );
 }
-
-const DEFAULTS = {
-  categorias: [] as CategoriaVehiculo[],
-  transmision: "todos" as const,
-  pasajeros: "todos" as const,
-  precioMax: 500000,
-  soloDisponibles: false,
-};
-
-export const useFiltrosStore = create<FiltrosState>((set) => ({
-  ...DEFAULTS,
-  setCategorias: (categorias) => set({ categorias }),
-  setTransmision: (transmision) => set({ transmision }),
-  setPasajeros: (pasajeros) => set({ pasajeros }),
-  setPrecioMax: (precioMax) => set({ precioMax }),
-  setSoloDisponibles: (soloDisponibles) => set({ soloDisponibles }),
-  limpiarFiltros: () => set(DEFAULTS),
-}));

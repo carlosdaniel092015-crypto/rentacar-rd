@@ -1,59 +1,69 @@
-import type { Metadata } from "next";
-import { Hero } from "@/components/landing/Hero";
-import { Features } from "@/components/landing/Features";
-import { HowItWorks } from "@/components/landing/HowItWorks";
-import { Testimonials } from "@/components/landing/Testimonials";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Alma 3D Rent Card — Alquiler de Vehículos en República Dominicana",
-};
+import { motion } from "framer-motion";
+import { Search, CalendarCheck, Car } from "lucide-react";
 
-export const revalidate = 3600;
+const steps = [
+  {
+    number: "01",
+    icon: Search,
+    title: "Elige tu vehículo",
+    description:
+      "Explora nuestra flota y filtra por categoría, precio o capacidad. Encuentra el vehículo perfecto.",
+  },
+  {
+    number: "02",
+    icon: CalendarCheck,
+    title: "Reserva en minutos",
+    description:
+      "Completa el formulario de reserva en menos de 2 minutos. Sin tarjeta de crédito por adelantado.",
+  },
+  {
+    number: "03",
+    icon: Car,
+    title: "¡Disfruta tu viaje!",
+    description:
+      "Recoge el vehículo en nuestra oficina o pedimos entregarlo en tu ubicación. Paga al recibirlo.",
+  },
+];
 
-const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "18091234567";
-
-export default function LandingPage() {
+export function HowItWorks() {
   return (
-    <>
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <Testimonials />
+    <section className="py-20 bg-[var(--color-muted)]">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-3xl font-bold sm:text-4xl">Reservar es muy fácil</h2>
+          <p className="mt-3 text-[var(--color-muted-foreground)]">3 pasos y listo</p>
+        </motion.div>
 
-      {/* CTA final */}
-      <section className="bg-[var(--color-primary)] py-20 text-center">
-        <div className="mx-auto max-w-3xl px-4">
-          <h2 className="text-3xl font-extrabold text-white sm:text-4xl mb-4">
-            ¿Listo para tu próxima aventura?
-          </h2>
-          <p className="text-white/80 mb-8">
-            Reserva en minutos y paga al recoger el vehículo. Sin complicaciones.
-          </p>
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Button asChild variant="accent" size="xl">
-              <Link href="/catalogo">Ver catálogo completo</Link>
-            </Button>
-            <Button
-              asChild
-              size="xl"
-              className="border-white text-white bg-transparent border hover:bg-white/10"
+        <div className="relative grid gap-8 md:grid-cols-3">
+          {/* Línea conectora */}
+          <div className="absolute top-12 left-1/4 right-1/4 h-px bg-[var(--color-border)] hidden md:block" />
+
+          {steps.map((step, i) => (
+            <motion.div
+              key={step.number}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15 }}
+              className="relative flex flex-col items-center text-center"
             >
-              <a
-                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hola, me interesa rentar un vehículo")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
-              >
-                <MessageCircle className="size-5" />
-                Escribir por WhatsApp
-              </a>
-            </Button>
-          </div>
+              <div className="relative z-10 mb-6 flex size-24 flex-col items-center justify-center rounded-full bg-[var(--color-primary)] text-white shadow-lg">
+                <step.icon className="size-8 mb-1" />
+                <span className="text-xs font-bold opacity-70">{step.number}</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
+              <p className="text-sm text-[var(--color-muted-foreground)]">{step.description}</p>
+            </motion.div>
+          ))}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
