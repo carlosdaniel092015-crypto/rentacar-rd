@@ -24,6 +24,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  // Manifest enlazado en todo el sitio: al instalar (móvil o PC, desde cualquier
+  // página) la app abre siempre en el login (start_url: "/login").
+  manifest: "/admin/manifest.webmanifest",
   title: {
     default: "Alma 3D Rent Card — Alquiler de Vehículos en República Dominicana",
     template: "%s | Alma 3D Rent Card",
