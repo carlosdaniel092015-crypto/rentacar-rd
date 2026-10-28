@@ -33,7 +33,7 @@ updates:
       # major hasta que Next actualice su config. Quitar cuando sea compatible.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
-
+#
   # Actualiza las propias GitHub Actions usadas en los workflows
   - package-ecosystem: "github-actions"
     directory: "/"
